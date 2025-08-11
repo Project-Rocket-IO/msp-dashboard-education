@@ -1,0 +1,1 @@
+function showConfirmationPopup({title:o,text:t,confirmButtonText:n,onConfirm:e}){Swal.fire({title:o||"Are you sure?",text:t||"You won't be able to revert this!",icon:"warning",showCancelButton:!0,confirmButtonColor:"#3085d6",cancelButtonColor:"#d33",confirmButtonText:n||"Yes, delete it!"}).then(o=>{o.isConfirmed&&"function"==typeof e&&e()})}export{showConfirmationPopup};

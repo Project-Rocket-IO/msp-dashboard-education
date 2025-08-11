@@ -1,0 +1,96 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}FAQs{% endblock title %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card rounded-0 bg-soft-info mx-n4 mt-n4 border-top">
+                                    <div class="px-4">
+                                        <div class="row">
+                                            <div class="col-xxl-5 align-self-center">
+                                                <div class="py-4">
+                                                    <h4 class="display-2 coming-soon-text">Help Center</h4>
+                                                    <p class="text-indigo fs-3 mt-3">If you have a question or are experiencing an issue reach out to our support team below. We will answer you shortly!</p>
+                                                    <div class="hstack flex-wrap gap-2">
+                                                        <a type="button" href="mailto:support@rocketpsa.com?
+                                                        &subject=Support Request - {{user.username}}
+                                                        &body=Support Request: {{user.username}}" class="btn btn-primary btn-label rounded-pill"><i class="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"></i> Email Us</a>
+                                                        <button type="button" onclick="window.open('https://twitter.com/RocketPSA','_blank')" rel="noopener noreferrer" class="btn btn-info btn-label rounded-pill"><i class="ri-twitter-line label-icon align-middle rounded-pill fs-16 me-2"></i> Tweet Us</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-4 ms-auto">
+                                                <div class="mb-n5 pb-1 faq-img d-none d-xl-block">
+                                                    <img src="{% static 'images/svg/astronaut-help.svg'%}" alt="" class="img-fluid" style="transform: translate(-300px,100px);">>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- end card body -->
+                                </div>
+                                <!-- end card -->
+                                 
+
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <div class="mt-3">
+                                            <div class="d-flex align-items-center mb-2">
+                                                    <h6 class="display-6 coming-soon-text">General Support</h6>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <a href="mailto:support@rocketpsa.com">
+                                                        <h5 class="fs-16 mb-0 fw-semibold">
+                                                          <i class="ri-mail-line fs-24 align-middle text-success me-1"></i>support@rocketpsa.com
+                                                        </h5>
+                                                    </a>  
+                                                </div>
+                                            </div>
+                                        </div>                                        
+                                        <div class="d-flex align-items-center mb-2">
+                                            <br><br><br>
+                                            <h6 class="display-6 coming-soon-text">Account Manager</h6>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h5 class="fs-16 mb-0 fw-semibold"><i class="ri-user-line fs-24 align-middle text-success me-1"></i>Celine Striano</h5>
+                                            <a href="mailto:celine@rocketpsa.com">
+                                                <h5 class="fs-16 mb-0 fw-semibold">
+                                                  <i class="ri-mail-line fs-24 align-middle text-success me-1"></i>celine@rocketpsa.com
+                                                </h5>
+                                            </a>  
+                                            <a href="tel:8008000000">
+                                                <h5 class="fs-16 mb-0 fw-semibold">
+                                                  <i class="ri-phone-line fs-24 align-middle text-success me-1"></i>800-800-0000
+                                                </h5>
+                                              </a>
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <br><br><br>
+                                        <h8 class="display-8 coming-soon-text">Looking for something else? Visit our Knowledge Base for answers. </h8>
+                                    </div>
+                                </div>
+                            </div><!--end col-->
+                        </div><!--end row-->                     
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            
+            <!-- end main content-->
+{% endblock content %}

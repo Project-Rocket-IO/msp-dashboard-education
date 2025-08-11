@@ -1,0 +1,290 @@
+{% extends 'account/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+
+{% block title %}Login{% endblock title %}
+
+{% comment %} TODO: Show messages from middleware {% endcomment %}
+
+
+{% block content %}
+<!-- Toast Container for Messages -->
+{% comment %} <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        {% if message.tags == 'error' %}
+                            <i class="ri-error-warning-fill me-2"></i>
+                        {% elif message.tags == 'success' %}
+                            <i class="ri-check-line me-2"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="ri-alert-fill me-2"></i>
+                        {% elif message.tags == 'info' %}
+                            <i class="ri-information-line me-2"></i>
+                        {% endif %}
+                        {{ message }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div> {% endcomment %}
+
+<div class="p-lg-5 p-4">
+
+    {% if wizard.steps.current == 'token' %}
+    <div>
+        <h2 class="text-primary">Two-Factor Authentication</h2>
+        <p class="text-muted"><strong>Enter your verification code to continue</strong></p>
+    </div>
+    {% else %}
+    <div>
+        <h2 class="text-primary">Welcome Back</h2>
+        <p class="text-muted"><strong>Sign in to Continue</strong></p>
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <form method="POST" class="needs-validation" novalidate>
+            {% csrf_token %}
+            {{ wizard.management_form }}
+
+            {% if wizard.steps.current == 'auth' %}
+                <div class="mb-3">
+                    <label for="id_auth-username" class=" requiredField">
+                        Username<span class="asteriskField">*</span>
+                    </label>
+                    <input type="text" name="auth-username" autofocus="true" autocapitalize="none"
+                        autocomplete="username" maxlength="150" class="textinput form-control"
+                        required="true" id="id_auth-username" placeholder="Enter Username">
+                </div>
+                <div class="mb-3">
+                    <div class="position-relative">
+                        <label for="id_auth-password" class=" requiredField">
+                            Password<span class="asteriskField">*</span>
+                        </label>
+                        <input type="password" name="auth-password" autocomplete="current-password"
+                            class="form-control password-input" required="true" id="id_auth-password"
+                            placeholder="Enter Password">
+                        <button onclick="togglePasswordVisibility()" class="btn btn-link position-absolute end-0 bottom-0 text-decoration-none text-muted"
+                            type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
+                    </div>
+                </div>
+            {% elif wizard.steps.current == 'token' %}
+                <div class="mb-3">
+                    {{ wizard.form.otp_token|as_crispy_field }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-check-label">
+                        {{ wizard.form.remember }}
+                        Remember this device for 30 days
+                    </label>
+                </div>
+            {% elif wizard.steps.current == 'backup' %}
+                <div class="mb-3">
+                    <label for="id_backup-otp_token" class="requiredField">
+                        Backup Code<span class="asteriskField">*</span>
+                    </label>
+                    <input type="text" name="backup-otp_token" class="textinput form-control" required="true" id="id_backup-otp_token" placeholder="Backup Code">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-check-label">
+                            {{ wizard.form.remember }}
+                            Remember this device for 30 days
+                        </label>
+                    </div>
+                </div>
+                {% endif %}
+                
+            <!-- Show any error messages from the server -->
+            {% if wizard.form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    <i class="ri-error-warning-fill me-2"></i>
+                    {% for error in wizard.form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Submit button -->
+            <div class="mt-4">
+                <button class="btn btn-primary w-100" type="submit">
+                    {% if wizard.steps.current == 'auth' %}
+                        Sign In
+                    {% elif wizard.steps.current == 'backup' %}
+                        Verify Backup Code
+                    {% else %}
+                        Verify
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    {% block 'backup_tokens' %}
+    {% if backup_tokens %}
+       <div class="backup_tokens_form">
+       <form action="" method="post">
+           {% csrf_token %}
+           <div class="d-flex justify-content-center">
+            <button class="btn btn-link text-muted" name="wizard_goto_step" type="submit" value="backup">Use backup code instead</button>
+           </div>
+       </form>
+       </div>
+    {% endif %}
+    {% endblock %}
+
+    {% if wizard.steps.current == 'token' %}
+        <div class="mt-3 text-center">
+            <p class="mb-0"><a href="{% url 'account_login' %}" class="text-muted">Back to Sign In</a></p>
+        </div>
+    {% endif %}
+</div>
+
+
+{% endblock content %}
+
+{% block extra_js %}
+    <!-- password-addon init -->
+    <script src="{% static 'js/pages/password-addon.init.js'%}"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Handle form validation
+        let form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            form.classList.add('was-validated')
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+                return;
+            }
+        });
+
+        // Toggle password visibility
+        function togglePasswordVisibility() {
+            let passwordInput = document.getElementById('id_auth-password');
+            let passwordToggle = document.getElementById('password-addon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordToggle.innerHTML = '<i class="ri-eye-off-fill align-middle"></i>';
+            } else {
+                passwordInput.type = 'password';
+                passwordToggle.innerHTML = '<i class="ri-eye-fill align-middle"></i>';
+            }
+        }
+
+        // Test function for SweetAlert (remove in production)
+        function testSweetAlert() {
+            if (typeof Swal === 'undefined') {
+                alert('SweetAlert2 is not loaded!');
+                return;
+            }
+            Swal.fire({
+                icon: 'success',
+                title: 'SweetAlert Test',
+                text: 'SweetAlert is working correctly!',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#28a745'
+            });
+        }
+
+        // Function to show SweetAlert
+        function showSweetAlert(icon, title, text, timer = null) {
+            const options = {
+                icon: icon,
+                title: title,
+                text: text,
+                showConfirmButton: timer === null,
+                confirmButtonText: 'OK'
+            };
+            
+            if (timer) {
+                options.timer = timer;
+            }
+            
+            // Add color based on icon
+            switch(icon) {
+                case 'success':
+                    options.confirmButtonColor = '#28a745';
+                    break;
+                case 'error':
+                    options.confirmButtonColor = '#dc3545';
+                    break;
+                case 'warning':
+                    options.confirmButtonColor = '#ffc107';
+                    break;
+                case 'info':
+                    options.confirmButtonColor = '#17a2b8';
+                    break;
+            }
+            
+            Swal.fire(options);
+        }
+
+        // Initialize messages when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, checking for messages...');
+            
+            // Check for form errors
+            {% if wizard.form.non_field_errors %}
+                console.log('Form errors detected');
+                var errorMessages = [];
+                {% for error in wizard.form.non_field_errors %}
+                    errorMessages.push("{{ error|escapejs|striptags }}");
+                {% endfor %}
+
+                if (errorMessages.length > 0) {
+                    console.log('Showing error SweetAlert');
+                    showSweetAlert('error', 'Login Error', errorMessages.join('<br>'));
+                }
+            {% endif %}
+
+            // Check for Django messages
+            {% if messages %}
+                console.log('Django messages detected');
+                {% for message in messages %}
+                    {% if message.extra_tags == "2fa_required" %}
+                        showSweetAlert('error', 'Two-Factor Authentication Required', '{{ message|escapejs }}');
+                    {% elif message.tags == 'success' %}
+                        showSweetAlert('success', 'Success!', '{{ message|escapejs }}', 3000);
+                    {% elif message.tags == 'error' %}
+                        showSweetAlert('error', 'Error', '{{ message|escapejs }}');
+                    {% elif message.tags == 'warning' %}
+                        showSweetAlert('warning', 'Warning', '{{ message|escapejs }}');
+                    {% elif message.tags == 'info' %}
+                        showSweetAlert('info', 'Information', '{{ message|escapejs }}');
+                    {% else %}
+                        // Default to info for unknown message types
+                        showSweetAlert('info', 'Message', '{{ message|escapejs }}');
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        });
+
+        // Also check on window load as backup
+        window.addEventListener('load', function() {
+            console.log('Window loaded, checking for messages again...');
+            
+            // Check if SweetAlert is available
+            if (typeof Swal === 'undefined') {
+                console.error('SweetAlert2 is not loaded!');
+                return;
+            }
+            
+            // Check for any alert elements that might indicate errors
+            const alertElements = document.querySelectorAll('.alert');
+            if (alertElements.length > 0) {
+                console.log('Found alert elements, showing SweetAlert');
+                const alertText = Array.from(alertElements).map(el => el.textContent.trim()).join('\n');
+                if (alertText) {
+                    showSweetAlert('error', 'Error', alertText);
+                }
+            }
+        });
+    </script>
+{% endblock extra_js %} 

@@ -1,0 +1,805 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% load humanize %}
+{% block title %}Leads Overview{% endblock title %}
+
+{% block extra_css %}
+<link href="{% static 'libs/dropzone/dist/dropzone.css'%}" rel="stylesheet" type="text/css" />
+{% endblock extra_css %}
+{% block content %}
+        <!-- ============================================================== --> 
+        <!-- Start right Content here -->
+        <!-- ============================================================== -->
+        <div class="main-content">
+
+            <div class="page-content">
+                <div class="container-fluid">
+
+                    {% block pagetitle %}
+                    {% include "partials/page-title.html" with pagetitle="CRM" title="Leads" %}
+                    {% endblock pagetitle %}
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card mt-n4 mx-n4">
+                                <div class="bg-soft-warning">
+                                    <div class="card-body px-4 pb-4">
+                                        <div class="row mb-3">
+                                            <div class="col-md">
+                                                <div class="row align-items-center g-3">
+                                                    <div class="col-md-auto">
+                                                        <div class="avatar-md">
+                                                            <div class="avatar-title bg-white rounded-circle">
+                                                                <img src="{{leads.logo.get_photo_url}}" alt="" class="avatar-xs">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md">
+                                                        <div>
+                                                            <h4 class="fw-bold">{{leads.name}}</h4>
+                                                            <div class="hstack gap-3 flex-wrap">
+                                                                <div><i class="ri-building-line align-bottom me-1"></i> {{leads.name}}</div>
+                                                                <div class="vr"></div>
+                                                                <div><i class="ri-map-pin-2-line align-bottom me-1"></i> {{leads.city}}, {{leads.country}}</div>
+                                                                <div class="vr"></div>
+                                                                <div>Created : <span class="fw-medium">{{ leads.date_added | date:"d M, Y" }}</span></div>
+                                                                <div class="vr"></div>
+                                                                <div class="badge rounded-pill bg-success fs-12">Full Time</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-auto">
+                                                <div class="hstack gap-1 flex-wrap mt-4 mt-md-0">
+                                                    <button type="button" class="btn py-0 fs-16 text-body" id="settingDropdown" data-bs-toggle="dropdown">
+                                                        <i class="ri-stack-line"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu" aria-labelledby="settingDropdown">
+                                                        <li><a class="dropdown-item" href="{% url 'apps:leads.update' leads.pk %}"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit Lead</a></li>
+                                                        <li><a class="dropdown-item" href="#shareTicketModal" data-bs-toggle="modal" data-bs-target="#shareTicketModal"><i class="ri-share-forward-fill align-bottom me-2 text-muted"></i> Share Lead</a></li>
+                                                        <div class="dropdown-divider"></div>
+                                                        <li><a class="dropdown-item" href="{% url 'apps:leads.delete_leads' leads.pk %}" data-bs-toggle="modal"
+                                                        data-bs-target="#removeTicketModal{{tickets.id}}"><i
+                                                            class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                        Delete</a></li>
+                                                    </ul> 
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- end card body -->
+                                </div>
+                            </div>
+                            <!-- end card -->
+                        </div>
+                        <!--end col-->
+                    </div>
+                    <!--end row-->
+                    
+
+                    <div class="row mt-n5">
+                        <div class="col-xxl-9">
+                            <div class="card">
+                                <div class="card-body">
+                                    <ul class="nav nav-tabs-custom border-bottom-0" role="tablist">
+                                        <li class="nav-item">
+                                            <a class="nav-link menu-link" href="{% url 'apps:leads' %}">
+                                                Return to Leads
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#leads-progress"
+                                                role="tab">
+                                                Progress Log
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#leads-opportunity"
+                                                role="tab">
+                                                Opportunity Info
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#leads-documents"
+                                                role="tab">
+                                                Documents
+                                            </a>
+                                        </li>
+                                    </ul> 
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="tab-content">
+                                        <div class="tab-pane active" id="leads-progress" role="tabpanel">
+                                            <div class="row">
+                                                <div class="col-sm-6 col-md-4">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">Lead Activities</h5>                                                
+                                                            <div class="acitivity-timeline py-3">
+                                                                {% if leads_log %}
+                                                                {% for log in leads_log %}
+                                                                {% if log.get_action_display == "create" %}
+                                                                <div class="acitivity-item py-3 d-flex">
+                                                                    <div class="flex-shrink-0">
+                                                                        <img src="{{log.actor.get_profile_picture}}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
+                                                                    </div>
+                                                                    <div class="flex-grow-1 ms-3">
+                                                                        <h6 class="mb-1">Lead Created! <span class="badge bg-soft-danger text-danger align-middle ms-1">Test Label</span></h6>
+                                                                        <p class="text-muted mb-2">{{log.changes.name.1}} Was Created!</p>
+                                                                        <small class="mb-0 text-muted">{{log.timestamp}} <span class="badge bg-soft-info text-info align-middle ms-1">{{log.actor.get_name}}</span></small>
+                                                                    </div>
+                                                                </div>
+                                                                {% elif log.get_action_display == "update" %}
+                                                                <div class="acitivity-item py-3 d-flex">
+                                                                    <div class="flex-shrink-0">
+                                                                        <img src="{{log.actor.get_profile_picture}}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
+                                                                    </div>
+                                                                    <div class="flex-grow-1 ms-3">
+                                                                        <h6 class="mb-1">{{leads.name}} Updates:</h6>
+                                                                        {% for key, value in log.changes_dict.items %}
+                                                                        <tr>
+                                                                            <td>{{ key|upper }}</td>
+                                                                            <td>
+                                                                                <p class="text-muted mb-2">{{ value.0|default:"None"|striptags|safe }} <i class="ri-arrow-right-line"></i> {{ value.1|default:"None"|striptags|safe }}</p> 
+                                                                            </td>   
+                                                                        </tr>
+                                                                        {% empty %}
+                                                                        <p>No history for this item has been logged yet.</p>
+                                                                        {% endfor %}
+                                                                        <small class="mb-0 text-muted">{{log.timestamp}} <span class="badge bg-soft-info text-info align-middle ms-1">{{log.actor.get_name}}</span></small>
+                                                                    </div>
+                                                                </div>
+                                                                {% endif %}
+                                                                {% endfor %}
+                                                                {% else %}
+                                                                <div class="acitivity-item py-3 d-flex">
+                                                                    <div class="flex-shrink-0">
+                                                                        <div class="avatar-xs acitivity-avatar">
+                                                                            <div class="avatar-title rounded-circle bg-soft-info text-info">
+                                                                                <i class="ri-line-chart-line"></i>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex-grow-1 ms-3">
+                                                                        <h6 class="mb-1">No Activity Yet</h6>
+                                                                        <p class="text-muted mb-2"><span class="text-danger">Awaiting Updates</span></p>
+                                                                        <small class="mb-0 text-muted">Stagnant</small>
+                                                                    </div>
+                                                                </div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div><!--end card-body-->
+                                                    </div><!--end card-->
+                                                </div>
+                                                <div class="col-sm-6 col-md-4">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">Opportunity Activities</h5>                                                
+                                                            <div class="acitivity-timeline py-3">
+                                                                {% if opportunity_log %}
+                                                                {% for log in opportunity_log %}
+                                                                {% if log.get_action_display == "create" %}
+                                                                <div class="acitivity-item py-3 d-flex">
+                                                                    <div class="flex-shrink-0">
+                                                                        <img src="{{log.actor.get_profile_picture}}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
+                                                                    </div>
+                                                                    <div class="flex-grow-1 ms-3">
+                                                                        <h6 class="mb-1">Opportunity Created! <span class="badge bg-soft-primary text-primary align-middle ms-1">{{leads.name}}</span></h6>
+                                                                        <p class="text-muted mb-2">A New Attempt Was Made!: {{log.changes.attempts.1}}</p>
+                                                                        <small class="mb-0 text-muted">{{log.timestamp}} <span class="badge bg-soft-info text-info align-middle ms-1">{{log.actor.get_name}}</span></small>
+                                                                    </div>
+                                                                </div>
+                                                                {% elif log.get_action_display == "update" %}
+                                                                <div class="acitivity-item py-3 d-flex">
+                                                                    <div class="flex-shrink-0">
+                                                                        <img src="{{log.actor.get_profile_picture}}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
+                                                                    </div>
+                                                                    <div class="flex-grow-1 ms-3">
+                                                                        <h6 class="mb-1">{{leads.name}} Updates:</h6>
+                                                                        {% for key, value in log.changes_dict.items %}
+                                                                        <tr>
+                                                                            <td>{{ key|upper }}</td>
+                                                                            <td>
+                                                                                <p class="text-muted mb-2">{{ value.0|default:"None"|striptags|safe }} <i class="ri-arrow-right-line"></i> {{ value.1|default:"None"|striptags|safe }}</p> 
+                                                                            </td>   
+                                                                        </tr>
+                                                                        {% empty %}
+                                                                        <p>No history for this item has been logged yet.</p>
+                                                                        {% endfor %}
+                                                                        <small class="mb-0 text-muted">{{log.timestamp}} <span class="badge bg-soft-info text-info align-middle ms-1">{{log.actor.get_name}}</span></small>
+                                                                    </div>
+                                                                </div>
+                                                                {% endif %}
+                                                                {% endfor %}
+                                                                {% else %}
+                                                                <div class="acitivity-item py-3 d-flex">
+                                                                    <div class="flex-shrink-0">
+                                                                        <div class="avatar-xs acitivity-avatar">
+                                                                            <div class="avatar-title rounded-circle bg-soft-info text-info">
+                                                                                <i class="ri-line-chart-line"></i>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex-grow-1 ms-3">
+                                                                        <h6 class="mb-1">No Activity Yet</h6>
+                                                                        <p class="text-muted mb-2"><span class="text-danger">Awaiting Updates</span></p>
+                                                                        <small class="mb-0 text-muted">Stagnant</small>
+                                                                    </div>
+                                                                </div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div><!--end card-body-->
+                                                    </div><!--end card-->
+                                                </div>
+                                                <div class="col-sm-6 col-md-4">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">File Activities</h5>                                                
+                                                            <div class="acitivity-timeline py-3">
+                                                                {% if leads_files_log %}
+                                                                {% for log in leads_files_log %}
+                                                                
+                                                                {% if log.get_action_display == "create" %}
+                                                                <div class="acitivity-item py-3 d-flex">
+                                                                    <div class="flex-shrink-0">
+                                                                        <img src="{{log.actor.get_profile_picture}}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
+                                                                    </div>
+                                                                    <div class="flex-grow-1 ms-3">
+                                                                        <h6 class="mb-1">File Activity Created! <span class="badge bg-soft-danger text-danger align-middle ms-1">Test Label</span></h6>
+                                                                        <p class="text-muted mb-2">{{log.changes.file.1}} Was Added!</p>
+                                                                        <small class="mb-0 text-muted">{{log.timestamp}} <span class="badge bg-soft-info text-info align-middle ms-1">{{log.actor.get_name}}</span></small>
+                                                                    </div>
+                                                                </div>
+                                                                {% elif log.get_action_display == "update" %}
+                                                                <div class="acitivity-item py-3 d-flex">
+                                                                    <div class="flex-shrink-0">
+                                                                        <img src="{{log.actor.get_profile_picture}}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
+                                                                    </div>
+                                                                    <div class="flex-grow-1 ms-3">
+                                                                        <h6 class="mb-1">{{leads.name}} Updates:</h6>
+                                                                        {% for key, value in log.changes_dict.items %}
+                                                                        <tr>
+                                                                            <td>{{ key|upper }}</td>
+                                                                            <td>
+                                                                                <p class="text-muted mb-2">{{ value.0|default:"None"|striptags|safe }} <i class="ri-arrow-right-line"></i> {{ value.1|default:"None"|striptags|safe }}</p> 
+                                                                            </td>   
+                                                                        </tr>
+                                                                        {% empty %}
+                                                                        <p>No history for this item has been logged yet.</p>
+                                                                        {% endfor %}
+                                                                        <small class="mb-0 text-muted">{{log.timestamp}} <span class="badge bg-soft-info text-info align-middle ms-1">{{log.actor.get_name}}</span></small>
+                                                                    </div>
+                                                                </div>
+                                                                {% endif %}
+                                                                {% endfor %}
+                                                                {% else %}
+                                                                <div class="acitivity-item py-3 d-flex">
+                                                                    <div class="flex-shrink-0">
+                                                                        <div class="avatar-xs acitivity-avatar">
+                                                                            <div class="avatar-title rounded-circle bg-soft-info text-info">
+                                                                                <i class="ri-line-chart-line"></i>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex-grow-1 ms-3">
+                                                                        <h6 class="mb-1">No Activity Yet</h6>
+                                                                        <p class="text-muted mb-2"><span class="text-danger">Awaiting Updates</span></p>
+                                                                        <small class="mb-0 text-muted">Stagnant</small>
+                                                                    </div>
+                                                                </div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div><!--end card-body-->
+                                                    </div><!--end card-->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="tab-pane fade" id="leads-opportunity" role="tabpanel">
+                                            <div class="card">
+                                                <div class="card-header border-0">
+                                                    <div class="row g-4 align-items-center">
+                                                        <div class="col-sm-auto ms-auto">
+                                                            <div class="hstack gap-2">
+                                                                <button class="btn btn-danger add-btn" data-bs-toggle="modal" data-bs-target="#editOpportunityModal"><i class="ri-add-line align-bottom me-1"></i> Update Opportunity</button>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <br><br>
+                                                <div class="card-body">
+                                                    {% if leads_opportunity %}
+                                                    <div class="row">
+                                                        <div class="col-xl-4">
+                                                            <div class="card card-animate">
+                                                                <div class="card-body">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="avatar-sm flex-shrink-0">
+                                                                            <span
+                                                                                class="avatar-title bg-soft-primary text-primary rounded-2 fs-2">
+                                                                                <i data-feather="briefcase" class="text-primary"></i>
+                                                                            </span>
+                                                                        </div>
+                                                                        <div class="flex-grow-1 overflow-hidden ms-3">
+                                                                            <p class="text-uppercase fw-medium text-muted text-truncate mb-3">
+                                                                                First Contact</p>
+                                                                            <div class="d-flex align-items-center mb-3">
+                                                                                <h4 class="fs-4 flex-grow-1 mb-0">{{leads_opportunity.first_contact}}</h4>
+                                                                            </div>
+                                                                            <p class="text-muted text-truncate mb-0">{{leads_opportunity.first_contact|naturalday}}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div><!-- end card body -->
+                                                            </div>
+                                                        </div><!-- end col -->
+                                                        <div class="col-xl-4">
+                                                            <div class="card card-animate">
+                                                                <div class="card-body">
+                                                                    <div class="d-flex align-items-right">
+                                                                        <div class="avatar-sm flex-shrink-0">
+                                                                            <span
+                                                                                class="avatar-title bg-soft-primary text-primary rounded-2 fs-2">
+                                                                                <i data-feather="briefcase" class="text-primary"></i>
+                                                                            </span>
+                                                                        </div>
+                                                                        <div class="flex-grow-1 overflow-hidden ms-3">
+                                                                            <p class="text-uppercase fw-medium text-muted text-truncate mb-3">
+                                                                                Created By</p>
+                                                                            <div class="d-flex align-items-center mb-3">
+                                                                                <h4 class="fs-4 flex-grow-1 mb-0">{{leads_opportunity.created_by.auth_user.username}}</span></h4>
+                                                                            </div>
+                                                                            <p class="text-muted text-truncate mb-0">{{leads_opportunity.created_by.auth_user.role}}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div><!-- end card body -->
+                                                            </div>
+                                                        </div><!-- end col -->
+                                                        <div class="col-xl-4">
+                                                            <div class="card card-animate">
+                                                                <div class="card-body">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="avatar-sm flex-shrink-0">
+                                                                            <span
+                                                                                class="avatar-title bg-soft-primary text-primary rounded-2 fs-2">
+                                                                                <i data-feather="briefcase" class="text-primary"></i>
+                                                                            </span>
+                                                                        </div>
+                                                                        <div class="flex-grow-1 overflow-hidden ms-3">
+                                                                            <p class="text-uppercase fw-medium text-muted text-truncate mb-3">
+                                                                                Assigned To</p>
+                                                                            <div class="d-flex align-items-center mb-3">
+                                                                                <h4 class="fs-4 flex-grow-1 mb-0">{{leads_opportunity.created_by.auth_user.username}}</span></h4>
+                                                                            </div>
+                                                                            <p class="text-muted text-truncate mb-0">{{leads_opportunity.assigned_to.auth_user.role}}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div><!-- end card body -->
+                                                            </div>
+                                                        </div><!-- end col -->
+                                                        <div class="col-xl-4">
+                                                            <div class="card card-animate">
+                                                                <div class="card-body">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="avatar-sm flex-shrink-0">
+                                                                            <span
+                                                                                class="avatar-title bg-soft-primary text-primary rounded-2 fs-2">
+                                                                                <i data-feather="briefcase" class="text-primary"></i>
+                                                                            </span>
+                                                                        </div>
+                                                                        <div class="flex-grow-1 overflow-hidden ms-3">
+                                                                            <p class="text-uppercase fw-medium text-muted text-truncate mb-3">
+                                                                                Conversion Rate</p>
+                                                                            <div class="d-flex align-items-center mb-3">
+                                                                                <h4 class="fs-4 flex-grow-1 mb-0">{{leads_opportunity.conversion_rate}}</span></h4>
+                                                                            </div>
+                                                                            <p class="text-muted text-truncate mb-0">{{leads_opportunity.conversion_rate}} Left</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div><!-- end card body -->
+                                                            </div>
+                                                        </div><!-- end col -->
+                                                        <div class="col-xl-4">
+                                                            <div class="card card-animate">
+                                                                <div class="card-body">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="avatar-sm flex-shrink-0">
+                                                                            <span
+                                                                                class="avatar-title bg-soft-primary text-primary rounded-2 fs-2">
+                                                                                <i data-feather="briefcase" class="text-primary"></i>
+                                                                            </span>
+                                                                        </div>
+                                                                        <div class="flex-grow-1 overflow-hidden ms-3">
+                                                                            <p class="text-uppercase fw-medium text-muted text-truncate mb-3">
+                                                                                Website</p>
+                                                                            <div class="d-flex align-items-center mb-3">
+                                                                                <h4 class="fs-4 flex-grow-1 mb-0">{{leads.website}}</span></h4>
+                                                                            </div>
+                                                                            <p class="text-muted text-truncate mb-0">Projects this month</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div><!-- end card body -->
+                                                            </div>
+                                                        </div><!-- end col -->
+                                                        <div class="col-xl-4">
+                                                            <div class="card card-animate">
+                                                                <div class="card-body">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="avatar-sm flex-shrink-0">
+                                                                            <span
+                                                                                class="avatar-title bg-soft-primary text-primary rounded-2 fs-2">
+                                                                                <i data-feather="briefcase" class="text-primary"></i>
+                                                                            </span>
+                                                                        </div>
+                                                                        <div class="flex-grow-1 overflow-hidden ms-3">
+                                                                            <p class="text-uppercase fw-medium text-muted text-truncate mb-3">
+                                                                                Attempts Made</p>
+                                                                            <div class="d-flex align-items-center mb-3">
+                                                                                <h4 class="fs-4 flex-grow-1 mb-0">{{leads_opportunity.attempts}}</h4>
+                                                                            </div>
+                                                                            <p class="text-muted text-truncate mb-0">Projects this month</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div><!-- end card body -->
+                                                            </div>
+                                                        </div><!-- end col -->
+                                                        <div class="col-xl-6">
+                                                            <div class="card card-animate">
+                                                                <div class="card-body">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="avatar-sm flex-shrink-0">
+                                                                            <span
+                                                                                class="avatar-title bg-soft-primary text-primary rounded-2 fs-2">
+                                                                                <i data-feather="briefcase" class="text-primary"></i>
+                                                                            </span>
+                                                                        </div>
+                                                                        <div class="flex-grow-1 overflow-hidden ms-3">
+                                                                            <p class="text-uppercase fw-medium text-muted text-truncate mb-3">
+                                                                                Promo or Discount</p>
+                                                                            <div class="d-flex align-items-center mb-3">
+                                                                                <h4 class="fs-4 flex-grow-1 mb-0">{{leads_opportunity.promo}}</span></h4>
+                                                                            </div>
+                                                                            <p class="text-muted text-truncate mb-0">Projects this month</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div><!-- end card body -->
+                                                            </div>
+                                                        </div><!-- end col -->
+                                                        <div class="col-xl-6">
+                                                            <div class="card card-animate">
+                                                                <div class="card-body">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="avatar-sm flex-shrink-0">
+                                                                            <span
+                                                                                class="avatar-title bg-soft-primary text-primary rounded-2 fs-2">
+                                                                                <i data-feather="briefcase" class="text-primary"></i>
+                                                                            </span>
+                                                                        </div>
+                                                                        <div class="flex-grow-1 overflow-hidden ms-3">
+                                                                            <p class="text-uppercase fw-medium text-muted text-truncate mb-3">
+                                                                                Converted Date</p>
+                                                                            <div class="d-flex align-items-center mb-3">
+                                                                                <h4 class="fs-4 flex-grow-1 mb-0">{{leads_opportunity.converted_date}}</span></h4>
+                                                                            </div>
+                                                                            <p class="text-muted text-truncate mb-0">Projects this month</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div><!-- end card body -->
+                                                            </div>
+                                                        </div><!-- end col -->
+                                                    </div>
+                                                    {% else %}
+                                                    <div class="row">
+                                                        <h5 class="card-title">No Opportunity Set</h5>   
+                                                        <p class="text-muted">Create one in the top right</p>
+                                                    </div>
+                                                    {% endif %}
+                                                    </div>
+                                                    <div class="modal fade zoomIn" id="editOpportunityModal" tabindex="-1" aria-labelledby="exampleeditOpportunityModal" aria-hidden="true">
+                                                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                            <div class="modal-content border-0">
+                                                                <div class="modal-header p-3 bg-soft-info">
+                                                                    <h5 class="modal-title" id="exampleTicketModalLabel"></h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+                                                                </div>
+                                                                <form action="{% url 'apps:leads.detail' leads.pk%}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                                                    {% csrf_token %}
+                                                                    {{ form.media }}
+                                                                    {{ form.as_p }}
+                                                                    <div class="modal-body">
+                                                                        <div class="row g-3">
+                                                                            <div class="col-lg-12">
+                                                                                <div id="modal-id">
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="row g-3">
+                                                                                <div class="col-lg-6">
+                                                                                    <div class="mb-3">
+                                                                                        <input class="form-control" id="choices-text-input" type="hidden" name="lead" value="{{leads.pk}}" readonly />  
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="row">
+                                                                                <div class="col-lg-4">
+                                                                                    <label for="duedate-field" class="form-label">First Contact<span class="required-asterix">*</span></label>
+                                                                                    <input type="text" name="first_contact" class="form-control" data-provider="flatpickr" data-date-format="Y-m-d" placeholder="Due Date" value="{{leads_opportunity.first_contact}}" />
+                                                                                    <div class="invalid-feedback">Please select an initial contact date</div>
+                                                                                </div>
+                                                                                <div class="col-lg-4">
+                                                                                    <div>
+                                                                                        <label for="choices-text-input" class="form-label">Creator<span class="required-asterix">*</span></label>
+                                                                                        <select class="form-select" data-choices data-choices-search-false data-choices-removeItem
+                                                                                        id="choices-lead-input" name="created_by" id="created_by" value="{{tech.id}}" multiple required>
+                                                                                            {% if leads_opportunity.created_by %}
+                                                                                            <option value="{{leads_opportunity.created_by.id}}" selected>{{leads_opportunity.created_by.auth_user.username}}</option>
+                                                                                            {% for tech in technicians %}
+                                                                                            {% if tech not in leads_opportunity.created_by %}
+                                                                                            <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                                                            {% endif %}
+                                                                                            {% endfor %}
+                                                                                            {% else %}
+                                                                                            {% for tech in technicians %}
+                                                                                            <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                                                            {% endfor %}
+                                                                                            {% endif %}
+                                                                                        </select>
+                                                                                        <div class="invalid-feedback">Please select a creator</div>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="col-lg-4">
+                                                                                    <div>
+                                                                                        <label for="choices-text-input" class="form-label">Assigned To<span class="required-asterix">*</span></label>
+                                                                                        <select class="form-select" data-choices data-choices-search-false data-choices-removeItem
+                                                                                        id="choices-lead-input" name="assigned_to" id="assigned_to" value="{{tech.id}}" multiple required>
+                                                                                        {% if leads_opportunity.assigned_to %}
+                                                                                        <option value="{{leads_opportunity.assigned_to.id}}" selected>{{leads_opportunity.assigned_to.auth_user.username}}</option>
+                                                                                        {% for tech in technicians %}
+                                                                                        {% if tech not in leads_opportunity.assigned_to %}
+                                                                                        <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                                                        {% endif %}
+                                                                                        {% endfor %}
+                                                                                        {% else %}
+                                                                                        {% for tech in technicians %}
+                                                                                        <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                                                        {% endfor %}
+                                                                                        {% endif %}
+                                                                                        </select>
+                                                                                        <div class="invalid-feedback">Please select an assigned tech</div>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="col-lg-4">
+                                                                                    <label for="duedate-field" class="form-label">Converted Date</label>
+                                                                                    <input type="text" name="converted_date" class="form-control" data-provider="flatpickr" data-date-format="Y-m-d" placeholder="Due Date" value="{{leads_opportunity.due_date}}" />
+                                                                                </div>
+                                                                                <div class="col-lg-4">
+                                                                                    <div>
+                                                                                        <label for="status-field" class="form-label">Attempts Made<span class="required-asterix">*</span></label>
+                                                                                        <input class="form-control" type="number" step="1" name="attempts" value="{{leads_opportunity.attempts}}" required/>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="col-lg-4">
+                                                                                    <div>
+                                                                                        <label for="status-field" class="form-label">Conversion Rate (%)<span class="required-asterix">*</span></label>
+                                                                                        <input class="form-control" type="number" step="1" name="conversion_rate" value="{{leads_opportunity.conversion_rate}}" required/>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        
+                                                                        <div><br></div>
+                                                                        <div class="row">
+                                                                            <div class="col-lg-12">
+                                                                                <div class="mb-3 mb-lg-0">
+                                                                                    <label class="form-label">Promo or Discount<span class="required-asterix">*</span></label>
+                                                                                        <textarea class="form-control" name="promo" required type="text" rows="5" value={{leads_opportunity.promo}}>
+                                                                                    </textarea> 
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        
+                                                                        <div class="modal-footer">
+                                                                            <div class="hstack gap-2 justify-content-end">
+                                                                                <button type="button" class="btn btn-light" name="ticketsubmission" data-bs-dismiss="modal">Close</button>
+                                                                                <button type="submit" class="btn btn-success" name="ticketsubmission" id="add-btn">Add Opportunity</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                    </div>
+                                                </div><!--end card-body-->
+                                            </div><!--end card-->
+                                        </div>
+                                        <!--end tab-pane-->
+                                        <div class="tab-pane" id="leads-documents" role="tabpanel">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <div class="d-flex align-items-center mb-4">
+                                                        <h5 class="card-title flex-grow-1">Documents</h5>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-lg-12">
+                                                            <div class="table-responsive table-card">
+                                                                <table class="table table-borderless align-middle mb-0">
+                                                                    <thead class="table-light">
+                                                                        <tr>
+                                                                            <th scope="col">File Name</th>
+                                                                            <th scope="col">Type</th>
+                                                                            <th scope="col">Size</th>
+                                                                            <th scope="col">Upload Date</th>
+                                                                            <th scope="col" style="width: 120px;">Action</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {% if leads_files %}
+                                                                        {% for file in leads_files %}
+                                                                        <tr>
+                                                                            <td>
+                                                                                <div class="d-flex align-items-center">
+                                                                                    <div class="avatar-sm">
+                                                                                        <div class="avatar-title bg-light text-secondary rounded fs-24">
+                                                                                            <i class="ri-folder-zip-line"></i>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="ms-3 flex-grow-1">
+                                                                                        <h5 class="fs-14 mb-0"><a href="javascript:void(0)" class="text-dark">{{file.file_name}}</a></h5>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td>{{file.extension}}</td>
+                                                                            <td>{{file.file_size}}</td>
+                                                                            <td>{{file.upload_date}}</td>
+                                                                            <td>
+                                                                                <div class="dropdown">
+                                                                                    <a href="javascript:void(0);" class="btn btn-soft-secondary btn-sm btn-icon" data-bs-toggle="dropdown" aria-expanded="true">
+                                                                                        <i class="ri-more-fill"></i>
+                                                                                    </a>
+                                                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill me-2 align-bottom text-muted"></i>View</a></li>
+                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-download-2-fill me-2 align-bottom text-muted"></i>Download</a></li>
+                                                                                        <li class="dropdown-divider"></li>
+                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-fill me-2 align-bottom text-muted"></i>Delete</a></li>
+                                                                                    </ul>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                        {% endfor %}
+                                                                        {% endif %}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            <div class="text-center mt-3">
+                                                                <a href="javascript:void(0);" class="text-success "><i class="mdi mdi-loading mdi-spin fs-20 align-middle me-2"></i> Load more </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xxl-3">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Leads Overview</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive table-card">
+                                        <table class="table mb-0">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="fw-medium">Title</td>
+                                                    <td>{{leads.name}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-medium">Industry</td>
+                                                    <td>{{leads.industry}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-medium">Location</td>
+                                                    <td>{{leads.city}}, {{leads.country}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-medium">Time</td>
+                                                    <td><span class="badge badge-soft-success">{{leads.timezone}}</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-medium">Owner</td>
+                                                    <td>{{leads.contact_first}} {{leads.contact_last}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-medium">Created Date</td>
+                                                    <td>{{leads.date_added}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-medium">Phone</td>
+                                                    <td>{{leads.phone}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-medium">Website</td>
+                                                    <td>{{leads.website}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-medium">Email</td>
+                                                    <td>{{leads.email}}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <!--end table-->
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end card-->
+                            <div class="card">
+                                <div class="card-header align-items-center d-flex border-bottom-dashed">
+                                    <h4 class="card-title mb-0 flex-grow-1">Attachments</h4>
+                                </div>
+
+                                <div class="card-body">
+                                    <div class="vstack gap-2">
+                                        {% if leads_files %}
+                                        {% for file in leads_files %}
+                                        <div class="border rounded border-dashed p-2">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <div class="avatar-sm">
+                                                        <div class="avatar-title bg-light text-secondary rounded fs-24">
+                                                            {% if file.extension == 'Zip File' %}
+                                                            <i class="ri-folder-zip-line"></i>
+                                                            {% elif file.extension == 'Power Point' %}
+                                                            <i class="ri-file-ppt-2-line"></i>
+                                                            {% elif file.extension == 'Image' %}
+                                                            <i class="ri-image-2-line"></i>
+                                                            {% elif file.extension == 'CSV' %}
+                                                            <i class="ri-excel-2-line"></i>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1 overflow-hidden">
+                                                    <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">{{file.file_name}}</a></h5>
+                                                    <div>{{file.file_size}}</div>
+                                                </div>
+                                                <div class="flex-shrink-0 ms-2">
+                                                    <div class="d-flex gap-1">
+                                                        <a class="btn btn-icon text-muted fs-18" href="{% url 'apps:projects.download_file' file.id%}"><i class="ri-download-2-line"></i></a>
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                <i class="ri-more-fill"></i>
+                                                            </button>
+                                                            <ul class="dropdown-menu">
+                                                                <li><a class="dropdown-item" href="#"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Rename</a></li>
+                                                                <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <!-- end card body -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- container-fluid -->
+            </div>
+            <!-- End Page-content -->
+                
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+        
+        </div>
+        <!-- end main content-->
+
+{% endblock content %} {% block extra_js %}
+<!-- Calendar init -->
+<script src="{% static 'js/pages/lead-details.init.js'%}"></script>
+{% endblock extra_js %}

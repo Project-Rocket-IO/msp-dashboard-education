@@ -1,0 +1,1133 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% load mathfilters %}
+{% load humanize %}
+{% block title %}Ticket Details{% endblock title %}
+{% block extra_css %}
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        {% comment %} {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Dashboards" title="Dashboard" %}
+                        {% endblock pagetitle %} {% endcomment %}
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card mt-n4 mx-n4 mb-n5">
+                                    <div class="bg-soft-warning">
+                                        <div class="card-body pb-4 mb-5">
+                                            <div class="row">
+                                                <div class="col-md">
+                                                    <div class="row align-items-center">
+                                                        <div class="col-md-auto">
+                                                            <div class="avatar-md mb-md-0 mb-4">
+                                                                <div class="avatar-title bg-white rounded-circle">
+                                                                    <img src="{{tickets.get_photo_url}}" alt="" class="avatar-sm" />
+                                                                </div>
+                                                            </div>
+                                                        </div><!--end col-->
+                                                        <div class="col-md">
+                                                            <h4 class="fw-semibold">{{ tickets.name }}</h4>
+                                                            <div class="hstack gap-3 flex-wrap">
+                                                                <div class="text-muted"><i class="ri-building-line align-bottom me-1"></i>{{tickets.client.name}}</div>
+                                                                <div class="vr"></div>
+                                                                <div class="text-muted">Create Date : <span class="fw-medium">{{tickets.create_date}}</span></div>
+                                                                <div class="vr"></div>
+                                                                <div class="text-muted">Due Date : <span class="fw-medium">{{tickets.due_date}}</span></div>
+                                                                <div class="vr"></div>
+                                                                {% if tickets.status == "Closed" %}
+                                                                <span class="badge badge-soft-danger text-uppercase">Closed</span>
+                                                                {% elif tickets.status == "In Progress" %}
+                                                                <span class="badge badge-soft-info text-uppercase">In Progress</span>
+                                                                {% elif tickets.status == "New" %}
+                                                                <span class="badge badge-soft-primary text-uppercase">New</span>
+                                                                {% elif tickets.status == "Postponed" %}
+                                                                <span class="badge badge-soft-dark text-uppercase">Postponed</span>
+                                                                {% elif tickets.status == "Waiting on Client" %}
+                                                                <span class="badge badge-soft-light text-uppercase">Waiting on Client</span>
+                                                                {% elif tickets.status == "Waiting on Vendor" %}
+                                                                <span class="badge badge-soft-light text-uppercase">Waiting on Vendor</span>
+                                                                {% elif tickets.status == "Follow-Up" %}
+                                                                <span class="badge badge-soft-secondary text-uppercase">Follow-Up</span>
+                                                                {% elif tickets.status == "Need to Post" %}
+                                                                <span class="badge badge-soft-secondary text-uppercase">Need to Post</span>
+                                                                {% elif tickets.status == "Scheduled" %}
+                                                                <span class="badge badge-soft-success text-uppercase">Scheduled</span>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div><!--end col-->
+                                                    </div><!--end row-->
+                                                </div><!--end col-->
+                                                <div class="col-md-auto mt-md-0 mt-4" id="navbar-app">
+                                                    <div class="hstack gap-1 flex-wrap">
+                                                        <div class="navbar-item" id="start-timer-section">
+                                                            <div class="buttons">
+                                                                <button class="btn btn-success add-btn" id="start-timer-btn"><i class="ri-timer-line align-bottom me-1"></i>
+                                                                   Start Timer
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                            
+                                                        <div class="navbar-item" id="timer-section" style="display: none;">
+                                                            <div class="buttons">
+                                                                <div class="buttons">
+                                                                    <button class="btn btn-warning add-btn" id="stop-timer-btn"><i class="ri-stop-circle-line align-bottom me-1"></i>
+                                                                        <span id="timer-display">0s</span> (stop)
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <button class="btn btn-danger add-btn mb-0" data-bs-toggle="modal" data-bs-target="#timetrackModal"><i class="ri-add-line align-bottom me-1"></i> Add Time Entry</button>
+                                                        <button type="button" class="btn py-0 fs-16 text-body" id="settingDropdown" data-bs-toggle="dropdown">
+                                                            <i class="ri-stack-line"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu" aria-labelledby="settingDropdown">
+                                                            {% if perms.apps.close_ticketlist %}
+                                                            <li><a class="dropdown-item" href="{% url 'apps:tickets.close' tickets.pk %}"><i class="align-bottom me-2 text-muted"></i> Close Ticket</a></li>
+                                                            {% endif %}
+                                                            {% if perms.apps.complete_ticketlist %}
+                                                            <li><a class="dropdown-item" href="{% url 'apps:tickets.complete' tickets.pk %}"><i class="align-bottom me-2 text-muted"></i> Complete Ticket</a></li>
+                                                            {% endif %}
+
+                                                            {% if perms.apps.change_ticketlist %}
+                                                            <li><a class="dropdown-item" href="{% url 'apps:tickets.edit' tickets.pk %}"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit Ticket</a></li>
+                                                            {% endif %}
+                                                            <li><a class="dropdown-item" href="#shareTicketModal" data-bs-toggle="modal" data-bs-target="#shareTicketModal"><i class="ri-share-forward-fill align-bottom me-2 text-muted"></i> Share Ticket</a></li>
+                                                            {% if perms.apps.delete_ticketlist %}
+                                                            <div class="dropdown-divider"></div>
+                                                            <li><a class="dropdown-item" href="{% url 'apps:tickets.delete_list' tickets.pk %}" data-bs-toggle="modal"
+                                                            data-bs-target="#removeTicketModal{{tickets.id}}"><i
+                                                                class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                            Delete</a></li>
+                                                            {% endif %}
+                                                        </ul>                                                        
+                                                    </div>
+                                                </div><!--end col-->
+                                            </div><!--end row-->
+                                        </div><!-- end card body -->
+                                    </div>
+                                </div><!-- end card -->
+                            </div><!-- end col -->
+                        </div><!-- end row -->
+                        <ul class="nav nav-tabs-custom border-bottom-0" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link menu-link" href="{% url 'apps:tickets.list' %}">
+                                    <i class="ri-arrow-go-back-line"></i> Return to Tickets
+                                </a>
+                            </li>
+                        </ul>
+                        
+                        <div class="row" style="margin: 0;">
+                            <div class="col-xxl-9" style="padding-right: 15px;">
+                                <div class="card">
+                                    <div class="card-body p-4">
+                                        <h6 class="fw-semibold text-uppercase mb-3">Ticket Description</h6>
+                                        {% if tickets.description %}
+                                        <p class="text-muted">{{tickets.description|safe}}</p> 
+                                        {% else %}
+                                        <h5 class="card-title mb-4">No Description</h5>
+                                        {% endif %}                                       
+                                    </div><!--end card-body-->
+                                    <div class="card-body p-4">
+                                        {% if comments %}
+                                        <h2 class="card-title mb-4">Comments</h5>
+                                        {% else %}
+                                        <h5 class="card-title mb-4">No Comments</h5>
+                                        {% endif %}
+                                        <div data-simplebar class="px-3 mx-n3" style="max-width: 100%; overflow-x: hidden;">
+                                            
+                                            {% for comment in comments %}
+                                            
+                                            <div class="mb-4 w-100">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="rounded-circle avatar-xs">
+                                                            <div class="avatar-title rounded-circle bg-info">
+                                                                {{comment.user.username|first}}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                    <h5 class="fs-13"> {{comment.user.username}} <small class="text-muted"> {{comment.date_added}} </small>
+                                                    {% if comment.private %}
+                                                    <button class="badge text bg-danger" type="badge" data-bs-toggle="collapse" data-bs-target="#makePublic{{comment.pk}}" aria-expanded="false" aria-controls="collapseExample" >
+                                                        <i class="mdi mdi-account-key"></i> Private</button>
+                                                    {% else %}
+                                                    <button class="badge text bg-success" type="badge" data-bs-toggle="collapse" data-bs-target="#makePrivate{{comment.pk}}" aria-expanded="false" aria-controls="collapseExample" >
+                                                        <i class="mdi mdi-account-multiple-plus"></i> Public</button>
+                                                    {% endif %}    
+                                                    <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="float: right;">
+                                                        <i class="ri-more-fill align-middle"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li><button class="dropdown-item" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample{{comment.pk}}" aria-expanded="false" aria-controls="collapseExample"><i class="ri-reply-fill align-bottom me-2 text-muted"></i>Reply</button>
+                                                        <li><a class="dropdown-item" href="{% url 'apps:tickets.comments.toggle_visibility' tickets.pk comment.pk %}"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> Change Visibility</a></li>
+                                                    {% if perms.apps.delete_own_ticket_comments %}
+                                                    <div class="dropdown-divider"></div>
+                                                    <form action="{% url 'apps:tickets.comments.delete' tickets.pk comment.pk %}" method="post">
+                                                        {% csrf_token %}
+                                                        <li>
+                                                            <button class="dropdown-item" href="#" data-bs-toggle="modal" type="submit">
+                                                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                                Delete
+                                                            </button>
+                                                        </li>
+                                                    </form>
+                                                    {% endif %}
+                                                    </ul> 
+                                                </h5>
+                                                    <p class="text-muted">{{comment.body}}</p>
+                                                </div>
+                                            </div>
+                                                    
+                                                    {% if replies %}
+                                                    {% for reply in replies %}
+                                                    {% if reply.comment.pk == comment.pk %}
+                                                    <div class="mt-4" style="margin-left: 20px; border-left: 2px solid #e9ecef; padding-left: 15px;">
+                                                        <div class="d-flex align-items-start">
+                                                            <div class="flex-shrink-0">
+                                                                <div class="rounded-circle avatar-xs">
+                                                                    <div class="avatar-title rounded-circle bg-info">
+                                                                        {{reply.user.username|first}}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex-grow-1 ms-3">
+                                                            <h5 class="fs-13">{{reply.user}} <small class="text-muted">{{reply.date_added}}</small>
+                                                            {% if reply.private %}
+                                                            <button class="badge text bg-danger" type="badge">
+                                                                <i class="mdi mdi-account-key"></i> Private</button>
+                                                            {% else %}
+                                                            <button class="badge text bg-success" type="badge">
+                                                                <i class="mdi mdi-account-multiple-plus"></i> Public</button>
+                                                            {% endif %}
+                                                            <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="float: right;">
+                                                                <i class="ri-more-fill align-middle"></i>
+                                                            </button>
+                                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                                <li><a class="dropdown-item" href="{% url 'apps:tickets.replies.toggle_visibility' tickets.pk reply.pk %}"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> Change Visibility</a></li>
+                                                            </ul>
+                                                            </h5>
+                                                            <p class="text-muted">{{ reply.body }}</p>
+                                                        </div>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                            
+                                                    <div class="collapse" id="collapseExample{{comment.pk}}">
+                                                        <div class="card card-body">
+                                                            <form method="POST" action="{% url 'apps:tickets.replies' tickets.pk %}" enctype="multipart/form-data" class="mt-3">
+                                                                {% csrf_token %}
+                                                                {{ form.as_p }}
+                                                                <div class="row g-3">
+                                                                    <div class="col-lg-12">
+                                                                        <label for="bodyTextarea1" class="form-label">Post Reply</label>
+                                                                        <textarea class="form-control bg-light border-light" id="bodyTextarea1" rows="3" placeholder="Leave reply" name="body"></textarea>
+                                                                        <input name="user" type="hidden" value="{{user.pk}}"> 
+                                                                        <input name="ticket" type="hidden" value="{{tickets.pk}}"> 
+                                                                        <input name="comment" type="hidden" value="{{comment.pk}}"> 
+                                                                    </div>
+                                                                    <div class="col-lg-12 text-end">
+                                                                        <button type="button" class="btn btn-light" data-bs-toggle="collapse" data-bs-target="#collapseExample{{comment.pk}}" aria-controls="collapseExample">Close</button>
+                                                                        <button type="submit" class="btn btn-success" id="add-btn">Post Reply</button>
+                                                                    </div>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                            
+                                            
+                                        </div>
+                                        <form method="POST" action="{% url 'apps:tickets.comments' tickets.pk %}" enctype="multipart/form-data" class="mt-3">
+                                            {% csrf_token %}
+                                            {{ form.as_p }}
+                                            <div class="row g-3">
+                                                <div class="col-lg-12">
+                                                    <label for="bodyTextarea1" class="form-label">Leave a Comment</label>
+                                                    <textarea class="form-control bg-light border-light" id="bodyTextarea1" rows="3" placeholder="Enter comment" name="body"></textarea>
+                                                    <input name="user" type="hidden" value="{{user.pk}}"> 
+                                                    <input name="ticket" type="hidden" value="{{tickets.pk}}"> 
+                                                </div>
+                                                <div class="col-lg-12 text-end">
+                                                    <button type="submit" class="btn btn-success" id="add-btn">Post Comment</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <!-- end card body -->
+                                </div><!--end card-->
+                            </div><!--end col-->
+                            <div class="col-xxl-3" style="padding-left: 15px;">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-3" >Ticket Details</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive table-card">
+                                            <table class="table table-borderless align-middle mb-0">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-medium">Ticket</td>
+                                                        <td>{{tickets.pk | add:1000}}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Client</td>
+                                                        {% if tickets.client %}
+                                                        <td>
+                                                            <button class="btn btn-light" onclick="location.href = '{% url 'apps:client.details' tickets.client.pk %}';">{{ tickets.client.name }}</button>
+                                                        </td>
+                                                        {% else %}
+                                                        <td>{{tickets.client}}</td>
+                                                        {% endif %}
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Project</td>
+                                                        {% if tickets.project %}
+                                                        <td>
+                                                            <button class="btn btn-light" onclick="location.href = '{% url 'apps:projects.overview' tickets.project.pk %}';">{{tickets.project}}</button>
+                                                        </td>
+                                                        {% else %}
+                                                        <td>- Not connected to a project</td>
+                                                        {% endif %}
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Assigned To:</td>   
+                                                        <td>
+                                                            <div class="avatar-group">
+                                                                {% for tech in tickets.assignment.all %}
+                                                                <a href="#userProfileCanvasExample{{tech.pk}}" class="avatar-group-item" data-bs-toggle="offcanvas" data-bs-trigger="hover"
+                                                    data-bs-target="#userProfileCanvasExample{{tech.pk}}" aria-controls="userProfileCanvasExample{{tech.pk}}" title={{tech.auth_user.username}}>
+                                                                    <div class="rounded-circle avatar-xs">
+                                                                        <div class="avatar-title rounded-circle bg-info">
+                                                                            {{tech.auth_user.username|first}}
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                                {% endfor %}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        
+                                                        <td class="fw-medium">Status:</td>
+                                                        <td>
+                                                            {% if tickets.status == "Closed" %}
+                                                            <span class="badge badge-soft-danger text-uppercase">Closed</span>
+                                                            {% elif tickets.status == "In Progress" %}
+                                                            <span class="badge badge-soft-info text-uppercase">In Progress</span>
+                                                            {% elif tickets.status == "New" %}
+                                                            <span class="badge badge-soft-primary text-uppercase">New</span>
+                                                            {% elif tickets.status == "Postponed" %}
+                                                            <span class="badge badge-soft-dark text-uppercase">Postponed</span>
+                                                            {% elif tickets.status == "Waiting on Client" %}
+                                                            <span class="badge badge-soft-light text-uppercase">Waiting on Client</span>
+                                                            {% elif tickets.status == "Waiting on Vendor" %}
+                                                            <span class="badge badge-soft-light text-uppercase">Waiting on Vendor</span>
+                                                            {% elif tickets.status == "Follow-Up" %}
+                                                            <span class="badge badge-soft-secondary text-uppercase">Follow-Up</span>
+                                                            {% elif tickets.status == "Need to Post" %}
+                                                            <span class="badge badge-soft-secondary text-uppercase">Need to Post</span>
+                                                            {% elif tickets.status == "Scheduled" %}
+                                                            <span class="badge badge-soft-success text-uppercase">Scheduled</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Priority</td>
+                                                        <td class="priority">
+                                                            {% if tickets.priority == "Emergency" %}
+                                                            <span class="badge badge-pill bg-danger text-uppercase">Emergency</span>
+                                                            {% elif tickets.priority == "High" %}
+                                                            <span class="badge bg-danger text-uppercase">High</span>
+                                                            {% elif tickets.priority == "Low" %}
+                                                            <span class="badge bg-info text-uppercase">Low</span>
+                                                            {% elif tickets.priority == "Medium" %}
+                                                            <span class="badge bg-warning text-uppercase">Medium</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Create Date</td>
+                                                        <td>{{tickets.create_date}}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Due Date</td>
+                                                        <td>{{tickets.due_date}}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Last Activity</td>
+                                                        <td>{{tickets.updated_at|naturaltime}}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Tags</td>
+                                                        <td class="hstack text-wrap gap-1">
+                                                            {% if tickets.tag %}
+                                                            {% for tag in tickets.tag.all %}
+                                                            <span class="badge badge-soft-primary">{{tag.name}}</span>
+                                                            {% endfor %}
+                                                            {% else %}
+                                                            <span class="badge badge-soft-primary">No Tags</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div><!--end card-body-->
+                                </div><!--end card-->
+                                <div class="card">
+                                    <div class="card-header d-flex align-items-center">
+                                        <h6 class="card-title fw-semibold mb-0 flex-grow-1">Files Attachment</h6>
+                                        {% if not perms.apps.change_ticketlist %}
+                                        <div class="flex-shrink-0">
+                                            <a href="{% url 'apps:tickets.edit' tickets.pk %}" class="btn btn-soft-info btn-sm"><i class="ri-upload-2-fill me-1 align-bottom"></i> Upload</a>
+                                        </div>
+                                        {% endif %}
+
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="vstack gap-2">
+                                            {% if ticket_files %}
+                                            {% for file in ticket_files %}
+                                            <div class="border rounded border-dashed p-2">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0 me-3">
+                                                        <div class="avatar-sm">
+                                                            <div class="avatar-title bg-light text-secondary rounded fs-24">
+                                                                {% if file.extension == 'Zip File' %}
+                                                                <i class="ri-folder-zip-line"></i>
+                                                                {% elif file.extension == 'Power Point' %}
+                                                                <i class="ri-file-ppt-2-line"></i>
+                                                                {% elif file.extension == 'Image' %}
+                                                                <i class="ri-image-2-line"></i>
+                                                                {% elif file.extension == 'CSV' %}
+                                                                <i class="ri-excel-2-line"></i>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 overflow-hidden">
+                                                        <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">{{file.file_name}}</a></h5>
+                                                        <div class="text-muted fs-12">{{file.file_size}}</div>
+                                                    </div>
+                                                    <div class="flex-shrink-0 ms-2">
+                                                        <div class="d-flex gap-1">
+                                                            <a class="btn btn-icon text-muted fs-18" href="{% url 'apps:tickets.download_file' file.id%}"><i class="ri-download-2-line"></i></a>
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                    <i class="ri-more-fill"></i>
+                                                                </button>
+                                                                <ul class="dropdown-menu">
+                                                                    <li><a class="dropdown-item rename-file-btn" href="javascript:void(0);" data-file-id="{{file.id}}" data-file-name="{{file.file_name}}"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Rename</a></li>
+                                                                    <li><a class="dropdown-item delete-file-btn" href="javascript:void(0);" data-file-id="{{file.id}}" data-file-name="{{file.file_name}}"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete</a></li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!--end col-->
+                        </div><!--end row-->
+                        
+                    </div><!-- container-fluid -->
+                </div><!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div><!-- end main content-->
+{% endblock content %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // File rename functionality
+    document.querySelectorAll('.rename-file-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const fileId = this.getAttribute('data-file-id');
+            const fileName = this.getAttribute('data-file-name');
+            
+            // Remove file extension for display
+            const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+            
+            const newName = prompt('Enter new file name:', nameWithoutExt);
+            
+            if (newName && newName.trim() !== '') {
+                // Send AJAX request to rename file
+                fetch(`/apps/support-tickets/file/${fileId}/rename`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: `new_name=${encodeURIComponent(newName.trim())}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload the page to show updated file name
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error renaming file');
+                });
+            }
+        });
+    });
+    
+    // File delete functionality
+    document.querySelectorAll('.delete-file-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const fileId = this.getAttribute('data-file-id');
+            const fileName = this.getAttribute('data-file-name');
+            
+            if (confirm(`Are you sure you want to delete "${fileName}"?`)) {
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/apps/support-tickets/file/${fileId}/delete`;
+                
+                // Add CSRF token
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+});
+</script>
+{% block extra_content %}
+    <!-- removeTicketModal -->
+    <div id="removeTicketModal{{tickets.id}}" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mt-2 text-center">
+                        <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                        <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                            <h4>Are you Sure ?</h4> 
+                            <p class="text-muted mx-4 mb-0">Are you Sure You want to Delete this Ticket ?</p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn w-sm btn-danger" id="remove-project" onclick="location.href = '{% url 'apps:tickets.delete_list' tickets.pk %}';">Yes, Delete It!</button>
+                    </div>
+                </div>
+
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <!-- shareTicketModal -->
+    <div id="shareTicketModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mt-2 text-center">
+                        <lord-icon src="https://cdn.lordicon.com/wzrwaorf.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:250px;height:250px;"></lord-icon>
+                        <div class="row">
+                            <h4 class="text-muted mx-4 mb-0">Ticket {{tickets.pk|add:1000}} : {{tickets.name}}</h4>
+                        </div>
+                        <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                            <h4>Copy Link Below: </h4> 
+                        </div>
+                    </div>
+                    <div class="copy-link">
+                        <div class="input-group mb-12">
+                            <div class="input-group-prepend">
+                                <button type="button" class="btn btn-light copy-link-button" style="height: 38px;">
+                                    <span class="material-icons">content_copy</span>
+                                </button>
+                            </div>
+                            <div>
+                                <input type="text" style="width: 350px;" class="form-control copy-link-input input-group" value="https://{{ request.get_full_path }}" aria-label="{{request.get_full_path}}" aria-describedby="basic-addon1" readonly>
+                            </div>
+                        </div>
+                        <div>
+                            <br>
+                            <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+        <!-- timetrackModal -->
+
+    <div class="modal fade zoomIn" id="timetrackModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0">
+                <div class="modal-header p-3 bg-soft-info">
+                    <h5 class="modal-title" id="exampleModalLabel"> Add Ticket Labor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+                </div>
+                <form action="{% url 'apps:tickets.time_entry' tickets.pk%}" method="POST" 
+                        enctype="multipart/form-data" novalidate class="needs-validation" >
+                    {% csrf_token %}
+                    {{ form.media }}
+                    {{ form.as_p }}
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-lg-12">
+                                <div id="modal-id">
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div>
+                                    <label for="ticket" class="form-label">Add Time Entry for Ticket</label>
+                                    <input type="text" id="ticket" name="ticket" class="form-control" placeholder="Title" value="{{tickets.pk|add:1000}} | {{tickets.name}}" readonly/>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4">
+                                <div>
+                                    <label for="choices-text-input" class="form-label">Hours<span class="required-asterix">*</span></label>
+                                    <select class="form-select" data-choices data-choices-search-false  
+                                    id="hours" name="hours" data-time-group="duration">
+                                        <option value="">0h</option>
+                                        {% for i in "x"|rjust:"10" %}
+                                            <option value="{{forloop.counter}}">{{forloop.counter}} h</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div id="hours-invalid-feedback" class="invalid-feedback">Please select either hours or minutes</div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4">
+                                <div>
+                                    <label for="choices-text-input" class="form-label">Minutes<span class="required-asterix">*</span></label>
+                                    <select class="form-select" data-choices data-choices-search-false 
+                                        id="minutes" name="minutes" data-time-group="duration">
+                                        <option value="">0m</option>
+                                        {% for i in "x"|rjust:"59" %}
+                                        <option value="{{forloop.counter}}">{{forloop.counter}} m</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div id="minutes-invalid-feedback" class="invalid-feedback"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4">
+                                <div>
+                                    <label for="choices-text-input" class="form-label">Technician<span class="required-asterix">*</span></label>
+                                    <select class="form-select" data-choices data-choices-search-false
+                                        name="created_by" id="created_by" required >
+                                        <option value="{{request.user.technician.pk}}" selected>{{request.user}}</option>
+                                        {% for tech in technicians %}
+                                        <option value="{{tech.technician_id}}">{{tech.username}}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">Please select a technician</div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-8">
+                                <label for="date-field" class="form-label">Working Date<span class="required-asterix">*</span></label>
+                                <input type="text" name="created_at" class="form-control flatpickr-input" id="date-field" 
+                                data-disable-mobile="true" data-provider="flatpickr" 
+                                data-date-format="Y-m-d" placeholder="Choose Work Date" required />
+                                <div class="invalid-feedback">Please select working date</div>
+                            </div>
+
+                            <div class="col-lg-8">
+                                <label for="bodyTextarea1" class="form-label">Log Comment </label>
+                                <textarea class="form-control bg-light" id="bodyTextarea1" rows="3" placeholder="Enter comment" name="comment"></textarea>
+                            </div>
+
+                            <div class="modal-footer">
+                                <div class="hstack gap-2 justify-content-end">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-success" id="add-btn">Add Time</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% for tech in tickets.assignment.all %}
+    <div class="offcanvas offcanvas-end border-0" tabindex="-1" id="userProfileCanvasExample{{tech.pk}}">
+        <!--end offcanvas-header-->
+        <div class="offcanvas-body profile-offcanvas p-0">
+            <div class="team-cover">
+                <img src="{% static 'images/small/img-9.jpg'%}" alt="" class="img-fluid" />
+            </div>
+            <div class="p-1 pb-4 pt-0">
+                <div class="team-settings">
+                    <div class="row g-0">
+                        <div class="col">
+                            <div class="btn nav-btn">
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="user-chat-nav d-flex">
+                                <div class="dropdown">
+                                    <a class="btn nav-btn" href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="ri-more-2-fill"></i>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-inbox-archive-line align-bottom text-muted me-2"></i>Archive</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-mic-off-line align-bottom text-muted me-2"></i>Muted</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>Delete</a></li>
+                                    </ul>
+                                </div>
+                            </div>  
+                        </div>
+                    </div>
+                </div><!--end col-->
+            </div>
+            <div class="p-3 text-center">
+                {% if tech.picture %}
+                <img src="{% static 'images/users/avatar-2.jpg'%}" alt="" class="avatar-lg img-thumbnail rounded-circle mx-auto profile-img">
+                {% else %}
+                <div class="avatar-lg img-thumbnail rounded-circle mx-auto profile-img">
+                    {{tech.username|make_list|first}}
+                </div>
+                {% endif %}
+                <div class="mt-3">
+                    <h5 class="fs-16 mb-1"><a href="javascript:void(0);" class="link-primary username">{{tech.username}}</a></h5>
+                    <p class="text-muted"><i class="ri-checkbox-blank-circle-fill me-1 align-bottom text-success"></i>Online</p>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Message">
+                        <span class="avatar-title rounded bg-light text-body">
+                            <i class="ri-question-answer-line"></i>
+                        </span>
+                    </button>
+
+                    <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Favourite">
+                        <span class="avatar-title rounded bg-light text-body">
+                            <i class="ri-star-line"></i>
+                        </span>
+                    </button>
+
+                    <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Phone">
+                        <span class="avatar-title rounded bg-light text-body">
+                            <i class="ri-phone-line"></i>
+                        </span>
+                    </button>
+
+                    <div class="dropdown">
+                        <button class="btn avatar-xs p-0" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="avatar-title bg-light text-body rounded">
+                                <i class="ri-more-fill"></i>
+                            </span>
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-inbox-archive-line align-bottom text-muted me-2"></i>Archive</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-mic-off-line align-bottom text-muted me-2"></i>Muted</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>Delete</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-top border-top-dashed p-3">
+                <h5 class="fs-15 mb-3">Personal Details</h5>
+                <div class="mb-3">
+                    <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Number</p>
+                    <h6>{{tech.mobile}}</h6>
+                </div>
+                <div class="mb-3">
+                    <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Email</p>
+                    <h6>{{tech.email}}</h6>
+                </div>
+                <div>
+                    <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Location</p>
+                    <h6 class="mb-0">{{tech.city}}, {{tech.state}}</h6>
+                </div>
+            </div>
+            
+            <div class="border-top border-top-dashed p-3">    
+                <h5 class="fs-15 mb-3">Attached Files</h5>
+                
+                <div class="vstack gap-2">
+                    <div class="border rounded border-dashed p-2">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light text-secondary rounded fs-20">
+                                        <i class="ri-folder-zip-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">App pages.zip</a></h5>
+                                <div class="text-muted">2.2MB</div>
+                            </div>
+                            <div class="flex-shrink-0 ms-2">
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded border-dashed p-2">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light text-secondary rounded fs-20">
+                                        <i class="ri-file-ppt-2-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">Project Rocket admin.ppt</a></h5>
+                                <div class="text-muted">2.4MB</div>
+                            </div>
+                            <div class="flex-shrink-0 ms-2">
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded border-dashed p-2">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light text-secondary rounded fs-20">
+                                        <i class="ri-folder-zip-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">Images.zip</a></h5>
+                                <div class="text-muted">1.2MB</div>
+                            </div>
+                            <div class="flex-shrink-0 ms-2">
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded border-dashed p-2">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light text-secondary rounded fs-20">
+                                        <i class="ri-image-2-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">bg-pattern.png</a></h5>
+                                <div class="text-muted">1.1MB</div>
+                            </div>
+                            <div class="flex-shrink-0 ms-2">
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-2">
+                        <button type="button" class="btn btn-danger">Load more <i class="ri-arrow-right-fill align-bottom ms-1"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div><!--end offcanvas-body-->
+    </div><!--end offcanvas-->
+    {% endfor %}
+
+
+{% endblock extra_content %}
+{% block extra_js %}
+    <!-- ticketdetail init js -->
+    <script>
+        // Simple vanilla JavaScript timer implementation to avoid CSP issues
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbarApp = document.getElementById('navbar-app');
+            if (!navbarApp) return;
+            
+            let seconds = {{ active_entry_seconds }};
+            let trackingTime = false;
+            let timer = null;
+            let startTime = new Date('{{ start_time }}');
+            
+            // Update the timer display
+            function updateTimerDisplay() {
+                const timerDisplay = document.getElementById('timer-display');
+                if (timerDisplay) {
+                    const readableSeconds = formatTime(seconds);
+                    timerDisplay.textContent = readableSeconds;
+                }
+            }
+            
+            // Format time as readable string
+            function formatTime(totalSeconds) {
+                const h = Math.floor(totalSeconds / 3600);
+                const m = Math.floor(totalSeconds % 3600 / 60);
+                const s = Math.floor(totalSeconds % 3600 % 60);
+                
+                const hDisplay = h > 0 ? h + (h == 1 ? "h, " : "h, ") : "";
+                const mDisplay = m > 0 ? m + (m == 1 ? "m, " : "m, ") : "";
+                const sDisplay = s >= 0 ? s + (s == 1 ? "s" : "s") : "";
+                
+                return hDisplay + mDisplay + sDisplay;
+            }
+            
+            // Start timer function
+            function startTimer() {
+                fetch('/apps/api/start_timer/{{tickets.pk}}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then((response) => response.json())
+                .then((result) => {
+                    if (!result.success) return;
+                    
+                    startTime = new Date();
+                    trackingTime = true;
+                    seconds = 0;
+                    
+                    // Show timer section, hide start section
+                    const startSection = document.getElementById('start-timer-section');
+                    const timerSection = document.getElementById('timer-section');
+                    if (startSection) startSection.style.display = 'none';
+                    if (timerSection) timerSection.style.display = 'block';
+                    
+                    timer = setInterval(() => {
+                        seconds = (new Date() - startTime) / 1000;
+                        updateTimerDisplay();
+                    }, 1000);
+                })
+                .catch((error) => {
+                    console.error('Error starting timer:', error);
+                });
+            }
+            
+            // Stop timer function
+            function stopTimer() {
+                fetch('/apps/api/stop_timer/{{tickets.pk}}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then((response) => response.json())
+                .then((result) => {
+                    trackingTime = false;
+                    
+                    // Show start section, hide timer section
+                    const startSection = document.getElementById('start-timer-section');
+                    const timerSection = document.getElementById('timer-section');
+                    if (startSection) startSection.style.display = 'block';
+                    if (timerSection) timerSection.style.display = 'none';
+                    
+                    if (timer) {
+                        clearInterval(timer);
+                        timer = null;
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error stopping timer:', error);
+                });
+            }
+            
+            // Initialize timer state
+            if (seconds !== 0) {
+                trackingTime = true;
+                updateTimerDisplay();
+                
+                timer = setInterval(() => {
+                    seconds = (new Date() - startTime) / 1000;
+                    updateTimerDisplay();
+                }, 1000);
+                
+                // Show timer section, hide start section
+                const startSection = document.getElementById('start-timer-section');
+                const timerSection = document.getElementById('timer-section');
+                if (startSection) startSection.style.display = 'none';
+                if (timerSection) timerSection.style.display = 'block';
+            }
+            
+            // Add event listeners
+            const startButton = document.getElementById('start-timer-btn');
+            const timerButton = document.getElementById('stop-timer-btn');
+            
+            if (startButton) {
+                startButton.addEventListener('click', startTimer);
+            }
+            
+            if (timerButton) {
+                timerButton.addEventListener('click', stopTimer);
+            }
+        });
+    </script>
+    <script src="{% static 'js/pages/ticketdetail.init.js'%}" type="module"></script>
+    <script src="{% static 'js/pages/project-list.init.js'%}" type="module"></script>
+    <script>
+        document.querySelectorAll(".copy-link").forEach(copyLinkContainer => {
+            const inputField = copyLinkContainer.querySelector(".copy-link-input");
+            const copyButton = copyLinkContainer.querySelector(".copy-link-button");
+
+            inputField.addEventListener("focus", () => inputField.select())
+
+            copyButton.addEventListener("click", () => {
+                const text = inputField.value;
+                inputField.select();
+                navigator.clipboard.writeText(text);
+
+                inputField.value = "Link Copied!"
+                setTimeout(() => inputField.value = text, 2000)
+            })
+        });
+    </script>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // File rename functionality
+        document.querySelectorAll('.rename-file-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const fileId = this.getAttribute('data-file-id');
+                const fileName = this.getAttribute('data-file-name');
+                
+                // Remove file extension for display
+                const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+                
+                const newName = prompt('Enter new file name:', nameWithoutExt);
+                
+                if (newName && newName.trim() !== '') {
+                    // Send AJAX request to rename file
+                    fetch(`/apps/support-tickets/file/${fileId}/rename`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: `new_name=${encodeURIComponent(newName.trim())}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload the page to show updated file name
+                            location.reload();
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error renaming file');
+                    });
+                }
+            });
+        });
+        
+        // File delete functionality
+        document.querySelectorAll('.delete-file-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const fileId = this.getAttribute('data-file-id');
+                const fileName = this.getAttribute('data-file-name');
+                
+                if (confirm(`Are you sure you want to delete "${fileName}"?`)) {
+                    // Create a form and submit it
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/apps/support-tickets/file/${fileId}/delete`;
+                    
+                    // Add CSRF token
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrfmiddlewaretoken';
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+    });
+    </script>
+
+{% endblock extra_js %}

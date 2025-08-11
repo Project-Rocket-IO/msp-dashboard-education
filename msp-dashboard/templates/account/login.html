@@ -1,0 +1,120 @@
+{% extends 'account/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load account socialaccount %}
+{% load crispy_forms_tags %}
+{% block extra_css %}
+<link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+{% endblock extra_css %}
+
+{% block header %}
+<div>
+    {% if messages %}
+    {% for message in messages %}
+    <input type="hidden" id="login-msg" value="{{ message }}">
+    
+    <button type="button" class="btn btn-primary" id="liveToastBtn" hidden></button>
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+        <div class="toast align-items-right text-white bg-primary border-0" id="toast-message" role="alert"
+        aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                {{ message }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+            aria-label="Close"></button>
+        </div>
+        </div>
+    </div>
+    
+    {% endfor %}
+    {% endif %}
+</div>
+{% endblock header %}
+
+{% block title %}Sign In{% endblock title %}
+    
+{% block content %}
+                <div class="p-lg-5 p-4">
+                    <div>
+                        <h2 class="text-primary">Welcome Back</h2>
+                        <p class="text-muted"><strong>Sign in to Continue</strong></p>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="mt-4">
+                            <form class="needs-validation" novalidate method="POST" action="{% url 'account_login' %}">
+                                {% for message in messages %}
+                                {% if not "client_threshold_warning" in message.extra_tags %}
+                                <div class="alert {{ message.tags }} mb-4" role="alert">
+                                    <strong>{{ message }}</strong>
+                                </div>
+                                {% endif %}
+                                {% endfor %} 
+                                {% if field.help_text %}
+                                    <div class="alert alert-danger mb-4" role="alert">
+                                        <strong>{{ field.help_text }}</strong>
+                                    </div>
+                                {% endif %}
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    {{ form.login|as_crispy_field }}
+                                </div>
+
+                                <div class="mb-3 position-relative">
+                                    {{ form.password|as_crispy_field }}
+                                    <button style="right: 15px;" class="btn btn-link position-absolute mt-4 top-0 text-decoration-none text-muted" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
+                                    <div class="float-end">
+                                        <a href="{% url 'account_reset_password' %}" class="text-muted">Forgot password?</a>
+                                    </div>
+                                </div>
+
+                                <div class="form-check">
+                                    {{ form.remember|as_crispy_field }}
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <button class="btn btn-primary w-100" type="submit">Sign In</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 text-center">
+                        <p class="mb-0">Don't have an account ? <a href="{{ signup_url }}" class="fw-semibold text-primary text-decoration-underline"> Signup</a> </p>
+                    </div>
+                </div>
+{% endblock content %}
+
+{% block extra_js %}
+    <!-- password-addon init -->
+    <script src="{% static 'js/pages/password-addon.init.js'%}"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Handle form validation and submission
+        let form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            // Remove the preventDefault to allow normal form submission
+            form.classList.add('was-validated')
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+                return;
+            }
+            
+            // Let the form submit normally - django-allauth will handle the rest
+            // If 2FA is required, the view will redirect to the 2FA page
+        });
+
+        // Show any error messages from the server
+        {% if form.errors %}
+            Swal.fire({
+                icon: 'error',
+                title: 'Login Error',
+                text: 'Please check your credentials and try again.',
+                showConfirmButton: true,
+            });
+        {% endif %}
+    </script> 
+{% endblock extra_js %}
+    

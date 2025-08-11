@@ -1,0 +1,188 @@
+{% extends 'account/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}Setup Two-Factor Authentication{% endblock title %}
+
+{% block content %}
+<div class="p-lg-5 p-4">
+    <div>
+        <h2 class="text-primary">Setup Two-Factor Authentication</h2>
+        <p class="text-muted"><strong>Configure your authenticator app</strong></p>
+    </div>
+
+    <div class="mt-4">
+        {% if wizard.steps.current == 'welcome' %}
+            <div class="mb-4">
+                <h5 class="alert-heading">Welcome to Two-Factor Authentication!</h5>
+                <p>Two-factor authentication adds an extra layer of security to your account by requiring more than just a password to sign in.</p>
+            </div>
+            
+            <div class="mb-4">
+                <h6>Recommended Apps:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="ri-check-line text-success me-2"></i>Google Authenticator</li>
+                    <li><i class="ri-check-line text-success me-2"></i>Microsoft Authenticator</li>
+                    <li><i class="ri-check-line text-success me-2"></i>Authy</li>
+                    <li><i class="ri-check-line text-success me-2"></i>1Password</li>
+                </ul>
+            </div>
+        {% elif wizard.steps.current == 'generator' %}
+
+            <div> <h1>Hello</h1></div>
+            <div class="alert alert-info mb-4" role="alert">
+                <h5 class="alert-heading">Step 1: Scan the QR Code</h5>
+                <p>Open your authenticator app and scan the QR code below, or manually enter the setup key.</p>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="text-center mb-4">
+                        <img src="{{ QR_URL }}" alt="QR Code" class="img-fluid border rounded">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Setup Key:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{ secret_key }}" readonly>
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard(this.previousElementSibling)">
+                                <i class="ri-file-copy-line"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">Use this key if you can't scan the QR code</small>
+                    </div>
+                </div>
+            </div>
+        {% elif wizard.steps.current == 'validation' %}
+            <div class="alert alert-info mb-4" role="alert">
+                <h5 class="alert-heading">Step 2: Verify Setup</h5>
+                <p>Enter the verification code from your authenticator app to complete the setup.</p>
+            </div>
+        {% elif wizard.steps.current == 'method' %}
+        {% elif wizard.steps.current == 'token' %}
+             <p>{% blocktrans trimmed %}Please select which authentication method you would
+            like to use.{% endblocktrans %}</p>
+        {% endif %}
+
+        
+        <form method="POST" class="needs-validation" novalidate action="">
+            {% csrf_token %}
+            {{ wizard.management_form }}
+
+            {% if wizard.steps.current == 'validation' %}
+                <div class="mb-3">
+                    {{ wizard.form.token|as_crispy_field }}
+                    
+                </div>
+            {% elif wizard.steps.current == 'method' %}
+                <div class="mb-3">
+                    {{ wizard.form.method|as_crispy_field }}
+                </div>
+                <div class="invalid-feedback">
+                    {{ wizard.form.method.errors }}
+                </div>
+            {% elif wizard.steps.current == 'token' %}
+                <div class="mb-3">
+                    {{ wizard.form.token|as_crispy_field }}
+                </div>
+            {% elif wizard.steps.current == 'generator' %}
+                <div class="mb-3">
+                    <label for="id_generator-token">Verification Code</label>
+                    <input class="form-control" type="number" name="generator-token" min="0" max="999999" autofocus="autofocus"
+                     inputmode="numeric" autocomplete="one-time-code" required="" aria-invalid="true" 
+                     aria-describedby="id_generator-token_error" id="id_generator-token">
+                </div>
+            {% endif %}
+
+
+
+            
+                <div class="invalid-feedback">
+                {{ wizard.form.token.errors }}
+            </div>
+
+            <div class="mt-4">
+                <button class="btn btn-primary w-100" type="submit">
+                    {% if wizard.steps.current == 'welcome' %}
+                        Get Started
+                    {% elif wizard.steps.current == 'generator' %}
+                        Next
+                    {% elif wizard.steps.current == 'validation' %}
+                        Verify and Enable
+                    {% elif wizard.steps.current == 'method' %}
+                        Next
+                    {% endif %}
+                </button>
+            </div>
+
+
+        </form>
+    </div>
+
+    <div class="mt-5 text-center">
+        <p class="mb-0"><a href="{% url 'home' %}" class="text-muted">Cancel Setup</a></p>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function copyToClipboard(element) {
+            element.select();
+            element.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Copied!',
+                text: 'Setup key copied to clipboard',
+                showConfirmButton: false,
+                timer: 1500,
+            });
+        }
+
+        // Handle form validation
+        let form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            form.classList.add('was-validated')
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+                return;
+            }
+        });
+
+        // Show any error messages from the server
+        {% if wizard.form.errors %}
+            Swal.fire({
+                icon: 'error',
+                title: 'Setup Error',
+                text: 'Please check your verification code and try again.',
+                showConfirmButton: true,
+            });
+        {% endif %}
+    </script>
+    
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Display Django messages using SweetAlert2
+        {% if messages %}
+            {% for message in messages %}
+            {% if message.extra_tags == "2fa_required" %}
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Two-Factor Authentication Required',
+                    text: 'You must enable two-factor authentication to access this application.',
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    timer: 0,
+                    timerProgressBar: false,
+                });
+            {% endif %}
+            {% endfor %}
+        {% endif %}
+    </script>
+{% endblock extra_js %}

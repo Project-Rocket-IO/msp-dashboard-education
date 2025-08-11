@@ -1,0 +1,194 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Invoice Details{% endblock title %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Invoices" title="Invoice Details" %}
+                        {% endblock pagetitle %}
+
+                        
+                    <div class="row justify-content-center">
+                        <div class="col-xxl-9">
+                            <div class="card" id="demo">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="card-header border-bottom-dashed p-4">
+                                            <div class="d-flex">
+                                                <div class="flex-grow-1">
+                                                    <img src="{% static 'images/logo-dark.png' %}" class="card-logo card-logo-dark" alt="logo dark" height="17">
+                                                    <img src="{% static 'images/logo-light.png' %}" class="card-logo card-logo-light" alt="logo light" height="17">
+                                                    <div class="mt-sm-5 mt-4">
+                                                        <h6 class="text-muted text-uppercase fw-semibold">Address</h6>
+                                                        {% if invoice.client.state and invoice.client.country %}
+                                                            <p class="text-muted mb-1" id="address-details">{{invoice.client.state}}, {{invoice.client.country}}</p>
+                                                        {% elif invoice.client.country %}
+                                                            <p class="text-muted mb-1" id="address-details">{{invoice.client.country}}</p>
+                                                        {% elif invoice.client.state %}
+                                                            <p class="text-muted mb-1" id="address-details">{{invoice.client.state}}</p>
+                                                        {% else %}
+                                                            <p class="text-muted mb-1" id="address-details">No address found.</p>
+                                                        {% endif %}
+                                                        {% if invoice.client.zip %}
+                                                            <p class="text-muted mb-0" id="zip-code"><span>Zip-code:</span> {{invoice.client.zip}}</p>
+                                                        {% else %}
+                                                            <p class="text-muted mb-0" id="zip-code"><span>Zip-code:</span> No zip code found.</p>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="flex-shrink-0 mt-sm-0 mt-3">
+                                                    <h6><span class="text-muted fw-normal">QuickBooks Invoice ID:</span><span id="quickbooks-invoice-id">{{invoice.id}}</span></h6>
+                                                    {% if invoice.client.email %}
+                                                        <h6><span class="text-muted fw-normal">Email:</span><span id="email">{{invoice.client.email}}</span></h6>
+                                                    {% else %}
+                                                        <h6><span class="text-muted fw-normal">Email:</span><span id="email">No email found.</span></h6>
+                                                    {% endif %}
+                                                    {% if invoice.client.website %}
+                                                        <h6><span class="text-muted fw-normal">Website:</span> <a href="https://themesbrand.com/" class="link-primary" target="_blank" id="website">{{invoice.client.website}}</a></h6>
+                                                    {% else %}
+                                                        <h6><span class="text-muted fw-normal">Website:</span> <a href="https://themesbrand.com/" class="link-primary" target="_blank" id="website">No website found. </a></h6>
+                                                    {% endif %}
+                                                    {% if invoice.client.phone %}
+                                                        <h6 class="mb-0"><span class="text-muted fw-normal">Contact No: </span><span id="contact-no"> {{invoice.client.phone}}</span></h6>
+                                                    {% else %}
+                                                        <h6 class="mb-0"><span class="text-muted fw-normal">Contact No: </span><span id="contact-no">No phone number found.</span></h6>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--end card-header-->
+                                    </div><!--end col-->
+                                    <div class="col-lg-12">
+                                        <div class="card-body p-4">
+                                            <div class="row g-3">
+                                                <div class="col-lg-3 col-6">
+                                                    <p class="text-muted mb-2 text-uppercase fw-semibold">Invoice No</p>
+                                                    <h5 class="fs-14 mb-0">#<span id="invoice-no">{{invoice.id}}</span></h5>
+                                                </div>
+                                                <!--end col-->
+                                                <div class="col-lg-3 col-6">
+                                                    <p class="text-muted mb-2 text-uppercase fw-semibold">Date</p>
+                                                    <h5 class="fs-14 mb-0"><span id="invoice-date">{{invoice.created_at.date|date:"M d, Y"}}</span> <small class="text-muted" id="invoice-time">{{invoice.created_at.time|time:"h:i A"}}</small></h5>
+                                                </div>
+                                                <!--end col-->
+                                                <div class="col-lg-3 col-6">
+                                                    <p class="text-muted mb-2 text-uppercase fw-semibold">Payment Status</p>
+                                                    <span class="badge {% if invoice.status == 'Paid' %}badge-soft-success {% elif invoice.status == 'Pending' %}badge-soft-warning{% else %}badge-soft-danger{% endif %} fs-11" id="payment-status">{{invoice.status}}</span>
+                                                </div>
+                                                <!--end col-->
+                                                <div class="col-lg-3 col-6">
+                                                    <p class="text-muted mb-2 text-uppercase fw-semibold">Total Amount</p>
+                                                    <h5 class="fs-14 mb-0">$<span id="total-amount">{{total_amount}}</span></h5>
+                                                </div>
+                                                <!--end col-->
+                                            </div>
+                                            <!--end row-->
+                                        </div>
+                                        <!--end card-body-->
+                                    </div><!--end col-->
+                                    <div class="col-lg-12">
+                                        <div class="card-body p-4 border-top border-top-dashed">
+                                            <div class="row g-3">
+                                                <div class="col-6">
+                                                    <h6 class="text-muted text-uppercase fw-semibold mb-3">Billing Address</h6>
+                                                    <p class="fw-medium mb-2" id="billing-name">{{invoice.client.name}}</p>
+                                                    {% if invoice.client.address_1 %}
+                                                        <p class="text-muted mb-1" id="billing-address-line-1">{{invoice.client.address_1}}</p>
+                                                    {% elif invoice.client.address_2 %}
+                                                        <p class="text-muted mb-1" id="billing-address-line-2">{{invoice.client.address_2}}</p>
+                                                    {% else %}
+                                                        <p class="text-muted mb-1" id="billing-address-line-1">No address found. Please add address in client profile</p>
+                                                    {% endif %}
+                                                    {% if invoice.client.phone %}
+                                                        <p class="text-muted mb-1"><span>Phone: +</span><span id="billing-phone-no">{{invoice.client.phone}}</span></p>
+                                                    {% else %}
+                                                        <p class="text-muted mb-1"><span>Phone: </span><span id="billing-phone-no">No phone number found. Please add phone number in client profile</span></p>
+                                                    {% endif %}
+                                                </div>
+                                                <!--end col-->
+                                            </div>
+                                            <!--end row-->
+                                        </div>
+                                        <!--end card-body-->
+                                    </div><!--end col-->
+                                    <div class="col-lg-12">
+                                        <div class="card-body p-4">
+                                            <div class="table-responsive">
+                                                <table class="table table-borderless text-center table-nowrap align-middle mb-0">
+                                                    <thead>
+                                                        <tr class="table-active">
+                                                            <th scope="col" style="width: 50px;">#</th>
+                                                            <th scope="col">Product Details</th>
+                                                            <th scope="col">Rate</th>
+                                                            <th scope="col">Hours</th>
+                                                            <th scope="col" class="text-end">Amount</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="products-list">
+                                                        {% for line_item in line_items %}
+                                                        <tr>
+                                                            <th scope="row">{{ line_item.identifier }}</th>
+                                                            <td class="text-start">
+                                                                <span class="fw-medium">{{ line_item.name }}</span>
+                                                                <p class="text-muted mb-0"></p>
+                                                            </td>
+                                                            <td>${{ line_item.work_type.rate }}</td>
+                                                            <td>{{ line_item.hours }}</td>
+                                                            <td class="text-end">${{ line_item.amount }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    </tbody>
+                                                </table><!--end table-->
+                                            </div>
+                                            <div class="border-top border-top-dashed mt-2">
+                                                <table class="table table-borderless table-nowrap align-middle mb-0 ms-auto" style="width:250px">
+                                                    <tbody>
+                                                        <tr class="border-top border-top-dashed fs-15">
+                                                            <th scope="row">Total Amount</th>
+                                                            <th class="text-end">${{ total_amount }}</th>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                                <!--end table-->
+                                            </div>
+                                            <div class="mt-4">
+                                                <div class="alert alert-info">
+                                                    <p class="mb-0"><span class="fw-semibold">NOTES:</span>
+                                                        <span id="note">All accounts are to be paid within 7 days from receipt of invoice. To be paid by cheque or
+                                                            credit card or direct payment online. If account is not paid within 7
+                                                            days the credits details supplied as confirmation of work undertaken
+                                                            will be charged the agreed quoted fee noted above.
+                                                        </span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="hstack gap-2 justify-content-end d-print-none mt-4">
+                                                <a href="javascript:window.print()" class="btn btn-success"><i class="ri-printer-line align-bottom me-1"></i> Print</a>
+                                                <a href="javascript:void(0);" class="btn btn-primary"><i class="ri-download-2-line align-bottom me-1"></i> Download</a>
+                                            </div>
+                                        </div>
+                                        <!--end card-body-->
+                                    </div><!--end col-->
+                                </div><!--end row-->
+                            </div>
+                            <!--end card-->
+                        </div>
+                        <!--end col-->
+                    </div>
+                    <!--end row-->
+
+                </div><!-- container-fluid -->
+            </div><!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div><!-- end main content-->
+{% endblock content %}

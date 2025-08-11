@@ -1,0 +1,32 @@
+# write all files and folder that shouldn't be copied 
+
+# virtual environment
+env
+venv
+
+# Large files
+node_modules
+
+# Cache
+__pycache__
+**/*.pyc
+
+# Logs
+*.log
+
+# Database
+db.sqlite3
+
+# Static
+staticfiles
+
+# media
+media/*
+!media/public/images/default/users/
+
+# Git
+.git
+.gitignore
+
+# VSCODE
+.vscode

@@ -1,0 +1,41 @@
+# Use the official Python image as the base image
+FROM python:3.11
+
+# Set the working directory to /app
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV C_FORCE_ROOT true
+
+# Install system dependencies required for psycopg2
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the requirements file
+COPY requirements.txt .
+
+# Install Python packages
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install spaCy model with simple retry
+RUN python -m spacy download en_core_web_sm || \
+    (sleep 10 && python -m spacy download en_core_web_sm) || \
+    (echo "spaCy model download failed, but continuing...")
+
+# Copy the application code
+COPY . .
+
+# Create log directory for Django
+RUN mkdir -p /var/log/django
+
+# Expose a default port
+EXPOSE 8000
+
+# Make bash file executable
+RUN chmod +x /app/build-celery.sh
+
+# Start celery with memory optimizations
+CMD ["bash", "build-celery.sh"] 

@@ -1,0 +1,117 @@
+[
+    {
+        "model": "auth.group",
+        "pk": 1,
+        "fields": {
+            "name": "Administrator",
+            "permissions": [
+                "add_user", "delete_user", "change_user", "view_user",
+                "add_ticket_list", "delete_ticket_list", "change_ticket_list", "view_ticket_list",
+                "add_contract", "delete_contract", "change_contract", "view_contract",
+                "add_filesystem", "delete_filesystem", "change_filesystem", "view_filesystem",
+                "add_customer", "delete_customer", "change_customer", "view_customer",
+                "change_globalsettings", "use_stripe", "change_personalsettings",
+                "add_comment", "delete_comment", "change_comment", "view_comment"
+            ]
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 2,
+        "fields": {
+            "name": "Bookkeeper",
+            "permissions": [
+                "view_user", "view_ticket_list", "view_contract",
+                "view_filesystem", "view_customer", "change_personalsettings",
+                "add_comment", "view_comment"
+            ]
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 3,
+        "fields": {
+            "name": "Lead Technician",
+            "permissions": [
+                "view_user", "add_ticket_list", "change_ticket_list", "view_ticket_list",
+                "view_filesystem", "view_customer", "change_personalsettings",
+                "add_comment", "view_comment"
+            ]
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 4,
+        "fields": {
+            "name": "Technician",
+            "permissions": [
+                "view_ticket_list", "change_ticket_list", "view_filesystem",
+                "view_customer", "change_personalsettings",
+                "add_comment", "view_comment"
+            ]
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 5,
+        "fields": {
+            "name": "Subcontractor",
+            "permissions": [
+                "view_ticket_list", "view_filesystem",
+                "view_customer", "change_personalsettings",
+                "add_comment", "view_comment"
+            ]
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 6,
+        "fields": {
+            "name": "Sales",
+            "permissions": [
+                "add_customer", "change_customer", "view_customer",
+                "view_ticket_list", "add_comment", "view_comment",
+                "change_personalsettings"
+            ]
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 7,
+        "fields": {
+            "name": "ServiceManager",
+            "permissions": [
+                "view_user", "view_ticket_list", "view_filesystem",
+                "view_customer", "change_personalsettings",
+                "add_comment", "view_comment"
+            ]
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 8,
+        "fields": {
+            "name": "Scheduler",
+            "permissions": [
+                "view_ticket_list", "view_filesystem", "view_customer",
+                "change_personalsettings", "add_comment", "view_comment"
+            ]
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 9,
+        "fields": {
+            "name": "Super User",
+            "permissions": [
+                "add_user", "delete_user", "change_user", "view_user",
+                "add_ticket_list", "delete_ticket_list", "change_ticket_list", "view_ticket_list",
+                "add_contract", "delete_contract", "change_contract", "view_contract",
+                "add_filesystem", "delete_filesystem", "change_filesystem", "view_filesystem",
+                "add_customer", "delete_customer", "change_customer", "view_customer",
+                "change_globalsettings", "use_stripe", "change_personalsettings",
+                "add_comment", "delete_comment", "change_comment", "view_comment"
+            ]
+        }
+    }
+]

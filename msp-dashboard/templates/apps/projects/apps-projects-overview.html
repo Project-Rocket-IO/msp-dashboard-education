@@ -1,0 +1,1177 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Project Overview{% endblock title %}
+{% block extra_css %}
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card mt-n4 mx-n4">
+                                    <div class="bg-soft-warning">
+                                        <div class="card-body pb-0 px-4">
+                                            <div class="row mb-3">
+                                                <div class="col-md">
+                                                    <div class="row align-items-center g-3">
+                                                        <div class="col-md-auto">
+                                                            <div class="avatar-md">
+                                                                <div class="avatar-title bg-white rounded-circle">
+                                                                    <img src="{{project.get_photo_url}}" alt="" class="avatar-xs">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md">
+                                                            <div>
+                                                                <h4 class="fw-bold">{{ project.name }}</h4>
+                                                                <div class="hstack gap-3 flex-wrap">
+                                                                    {% if project.client %}
+                                                                    <div><i class="ri-building-line align-bottom me-1"></i> <a href="{% url 'apps:client.details' project.client.pk%}"> {{project.client.name}} </a></div>
+                                                                    {% else %}
+                                                                    <div><i class="ri-building-line align-bottom me-1"></i> No Attached Client </div>
+                                                                    {% endif %}
+                                                                    <div class="vr"></div>
+                                                                    <div>Create Date : <span class="fw-medium">{{ project.create_date }}</span></div>
+                                                                    <div class="vr"></div>
+                                                                    <div>Due Date : <span class="fw-medium">{{ project.due_date }}</span></div>
+                                                                    <div class="vr"></div>
+                                                                    {% if project.status == "Closed" %}
+                                                                    <span class="badge badge-soft-danger text-uppercase">Closed</span>
+                                                                    {% elif project.status == "In Progress" %}
+                                                                    <span class="badge badge-soft-warning text-uppercase">In Progress</span>
+                                                                    {% elif project.status == "New" %}
+                                                                    <span class="badge badge-soft-info text-uppercase">New</span>
+                                                                    {% elif project.status == "Scheduled" %}
+                                                                    <span class="badge badge-soft-success text-uppercase">Scheduled</span>
+                                                                    {% endif %}
+                                                                    
+                                                                    {% if project.priority == "High" %}
+                                                                    <span class="badge bg-danger text-uppercase">High</span>
+                                                                    {% elif project.priority == "Low" %}
+                                                                    <span class="badge bg-success text-uppercase">Low</span>
+                                                                    {% elif project.priority == "Medium" %}
+                                                                    <span class="badge bg-warning text-uppercase">Medium</span>
+                                                                    {% endif %}
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-auto">
+                                                    <div class="hstack gap-1 flex-wrap">
+                                                        <button type="button" class="btn py-0 fs-16 text-body" id="settingDropdown" data-bs-toggle="dropdown">
+                                                            <i class="ri-stack-line"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu" aria-labelledby="settingDropdown">
+                                                            {% if perms.apps.change_projectlist %}
+                                                            <li><a class="dropdown-item" href="{% url 'apps:projects.edit' project.pk %}"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit Project</a></li>
+                                                            {% endif %}
+                                                            <li><a class="dropdown-item" href="#"><i class="ri-share-forward-fill align-bottom me-2 text-muted"></i> Share with</a></li>
+                                                            {% if perms.apps.delete_projectlist %}
+                                                            <div class="dropdown-divider"></div>
+                                                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                                data-bs-target="#removeTicketModal{{project.id}}"><i
+                                                                class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                                Delete</a></li>
+                                                            </ul>
+                                                            {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <ul class="nav nav-tabs-custom border-bottom-0" role="tablist">
+                                                <li class="nav-item">
+                                                    <a class="nav-link menu-link" href="{% url 'apps:projects.list' %}">
+                                                        Return to Projects
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#project-overview"
+                                                        role="tab">
+                                                        Overview
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#project-documents"
+                                                        role="tab">
+                                                        Documents
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#project-activities"
+                                                        role="tab">
+                                                        Activities
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#project-team"
+                                                        role="tab">
+                                                        Team
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <!-- end card body -->
+                                    </div>
+                                </div>
+                                <!-- end card -->
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="tab-content text-muted">
+                                    <div class="tab-pane fade show active" id="project-overview" role="tabpanel">
+                                        <div class="row" style="margin: 0;">
+                                            <div class="col-xl-9 col-lg-8" style="padding-right: 15px; max-height: 80vh; overflow-y: auto;">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <div class="text-muted">
+                                                            <h6 class="mb-3 fw-semibold text-uppercase">DESCRIPTION</h6>
+                                                            <p>{{project.description | safe}}</p>
+                
+                                                            <div class="pt-3 border-top border-top-dashed mt-4">
+                                                                <div class="row">
+                                                                    
+                                                                    <div class="col-lg-3 col-sm-6">
+                                                                        <div>
+                                                                            <p class="mb-2 text-uppercase fw-medium">Create Date :</p>
+                                                                            <h5 class="fs-15 mb-0">{{project.create_date}}</h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-3 col-sm-6">
+                                                                        <div>
+                                                                            <p class="mb-2 text-uppercase fw-medium">Due Date :</p>
+                                                                            <h5 class="fs-15 mb-0">{{ project.due_date }}</h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-3 col-sm-6">
+                                                                        <div>
+                                                                            <p class="mb-2 text-uppercase fw-medium">Status :</p>
+                                                                            {% if project.status == "Closed" %}
+                                                                            <span class="badge badge-soft-danger fs-12">Closed</span>
+                                                                            {% elif project.status == "In Progress" %}
+                                                                            <div class="badge bg-warning fs-12">In Progress</div>
+                                                                            {% elif project.status == "New" %}
+                                                                            <div class="badge badge-soft-info fs-12">New</div>
+                                                                            {% elif project.status == "Scheduled" %}
+                                                                            <div class="badge badge-soft-success fs-12">Scheduled</div>
+                                                                            {% endif %}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-3 col-sm-6">
+                                                                        <div>
+                                                                            <p class="mb-2 text-uppercase fw-medium">Priority :</p>
+                                                                            {% if project.priority == "High" %}
+                                                                            <div class="badge bg-danger fs-12">High</div>
+                                                                            {% elif project.priority == "Low" %}
+                                                                            <div class="badge bg-success fs-12">Low</div>
+                                                                            {% elif project.priority == "Medium" %}
+                                                                            <div class="badge bg-warning fs-12">Medium</div>
+                                                                            {% endif %}   
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                {% if tickets %}
+                                                <div class="d-flex flex-wrap" style="gap: 10px">
+                                                    {% for ticket in tickets %}
+                                                        <div style="min-width: 275px; max-width: max-content" class="card">
+                                                            <div class="card-body">
+                                                                {% if perms.apps.change_ticketlist %}
+                                                                <button type="button" class="btn btn-icon btn-soft-primary float-end" onclick="location.href = '{% url 'apps:tickets.edit' ticket.pk %}';"
+                                                                data-bs-toggle="button" aria-pressed="true"><i class="mdi mdi-pencil fs-16"></i></button>
+                                                                {% endif %}
+                                                                <div class="avatar-sm mb-4">
+                                                                    <div class="avatar-title bg-soft-secondary rounded">
+                                                                        <img src="{{ticket.logo.get_photo_url}}" alt="" class="avatar-xxs" />
+                                                                    </div>
+                                                                </div>
+                                                                <a href="{% url 'apps:tickets.details' ticket.pk %}">
+                                                                    <h5>{{ticket.name}}</h5>
+                                                                </a>
+                                                                <p class="text-muted">{{ticket.description|striptags|safe|truncatechars:15}}</p>
+                    
+                                                                <div class="d-flex gap-4 mb-3">
+                                                                    <div>
+                                                                        <i class="ri-map-pin-2-line text-primary me-1 align-bottom"></i> {{ticket.create_date}}
+                                                                    </div>
+                    
+                                                                    <div>
+                                                                        <i class="ri-time-line text-primary me-1 align-bottom"></i> {{ticket.due_date}}
+                                                                    </div>
+                                                                </div>
+                    
+                                                                <div class="hstack gap-2">
+                                                                    {% for tech in ticket.assignment.all %}
+                                                                    <span class="badge badge-soft-success">{{tech.auth_user.username}}</span>
+                                                                    {% endfor %}
+                                                                    <span class="badge badge-soft-primary">{{ticket.priority}}</span>
+                                                                    <span class="badge badge-soft-danger">{{ticket.status}}</span>
+                                                                </div>
+                    
+                                                                <div class="mt-4 hstack gap-2">
+                                                                    <a href="{% url 'apps:tickets.details' ticket.pk %}" class="btn btn-soft-primary w-100">Ticket Overview</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+
+                                                {% else %}
+                                                <div class="col-xl-4">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <div class="avatar-sm mb-4">
+                                                                <div class="avatar-title bg-soft-secondary rounded">
+                                                                    <img src="{% static 'images/companies/img-1.png' %}" alt="" class="avatar-xxs" />
+                                                                </div>
+                                                            </div>
+                                                            <a href="{% url 'apps:tickets.list' %}">
+                                                                <h5>No Tickets for {{project.name}}</h5>
+                                                            </a>
+                
+                                                            <div class="mt-4 hstack gap-2">
+                                                                <a href="{% url 'apps:tickets.list' %}" class="btn btn-soft-primary w-100">Assign Some at Ticket Overview</a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                                <div class="card" style="height: fit-content; max-width: 100%; overflow: hidden; width: 100%; max-height: 400px;">
+                                                    <div class="card-body p-4" style="width: 100%; max-height: 350px; overflow-y: auto;">
+                                                        {% if comments %}
+                                                        <h2 class="card-title mb-4">Comments</h5>
+                                                        {% else %}
+                                                        <h5 class="card-title mb-4">No Comments</h5>
+                                                        {% endif %}
+                                                        <div data-simplebar class="px-3 mx-n3" style="max-width: 100%; overflow-x: hidden; width: 100%; max-height: 300px;">
+                                                            
+                                                            {% for comment in comments %}
+                                                            
+                                                            <div class="mb-4 w-100">
+                                                                <div class="d-flex align-items-start">
+                                                                    <div class="flex-shrink-0">
+                                                                        <div class="rounded-circle avatar-xs">
+                                                                            <div class="avatar-title rounded-circle bg-info">
+                                                                                {{comment.user.username|first}}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex-grow-1 ms-3">
+                                                                    <h5 class="fs-13"> {{comment.user}} <small class="text-muted"> {{comment.date_added}} </small>
+                                                                    {% if comment.private %}
+                                                                    <button class="badge text bg-danger" type="badge" data-bs-toggle="collapse" data-bs-target="#makePublic{{comment.pk}}" aria-expanded="false" aria-controls="collapseExample" >
+                                                                        <i class="mdi mdi-account-key"></i> Private</button>
+                                                                    {% else %}
+                                                                    <button class="badge text bg-success" type="badge" data-bs-toggle="collapse" data-bs-target="#makePrivate{{comment.pk}}" aria-expanded="false" aria-controls="collapseExample" >
+                                                                        <i class="mdi mdi-account-multiple-plus"></i> Public</button>
+                                                                    {% endif %}    
+                                                                    <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="float: right;">
+                                                                        <i class="ri-more-fill align-middle"></i>
+                                                                    </button>
+                                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                                        <li><button class="dropdown-item" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample{{comment.pk}}" aria-expanded="false" aria-controls="collapseExample"><i class="ri-reply-fill align-bottom me-2 text-muted"></i>Reply</button>
+                                                                        <li><a class="dropdown-item" href="{% url 'apps:projects.comments.toggle_visibility' project.pk comment.pk %}"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> Change Visibility</a></li>
+                                                                    <div class="dropdown-divider"></div>
+                                                                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                                        data-bs-target="#removeTicketModal{{comment.pk}}"><i
+                                                                            class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                                        Delete</a></li>
+                                                                    </ul> 
+                                                                </h5>
+                                                                    <p class="text-muted">{{comment.body}}</p>
+                                                                </div>
+                                                            </div>
+                                                                    
+                                                                    {% if replies %}
+                                                                    {% for reply in replies %}
+                                                                    {% if reply.comment.pk == comment.pk %}
+                                                                    <div class="mt-4" style="margin-left: 20px; border-left: 2px solid #e9ecef; padding-left: 15px;">
+                                                                        <div class="d-flex align-items-start">
+                                                                            <div class="flex-shrink-0">
+                                                                                <div class="rounded-circle avatar-xs">
+                                                                                    <div class="avatar-title rounded-circle bg-info">
+                                                                                        {{reply.user.username|first}}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="flex-grow-1 ms-3">
+                                                                            <h5 class="fs-13">{{reply.user}} <small class="text-muted">{{reply.date_added}}</small>
+                                                                            {% if reply.private %}
+                                                                            <button class="badge text bg-danger" type="badge">
+                                                                                <i class="mdi mdi-account-key"></i> Private</button>
+                                                                            {% else %}
+                                                                            <button class="badge text bg-success" type="badge">
+                                                                                <i class="mdi mdi-account-multiple-plus"></i> Public</button>
+                                                                            {% endif %}
+                                                                            <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="float: right;">
+                                                                                <i class="ri-more-fill align-middle"></i>
+                                                                            </button>
+                                                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                                                <li><a class="dropdown-item" href="{% url 'apps:projects.replies.toggle_visibility' project.pk reply.pk %}"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> Change Visibility</a></li>
+                                                                            </ul>
+                                                                            </h5>
+                                                                            <p class="text-muted">{{ reply.body }}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    {% endif %}
+                                                                    {% endfor %}
+                                                                    {% endif %}
+                                                                            
+                                                                    <div class="collapse" id="collapseExample{{comment.pk}}">
+                                                                        <div class="card card-body">
+                                                                            <form method="POST" action="{% url 'apps:projects.replies' project.pk %}" enctype="multipart/form-data" class="mt-3">
+                                                                                {% csrf_token %}
+                                                                                {{ form.as_p }}
+                                                                                <div class="row g-3">
+                                                                                    <div class="col-lg-12">
+                                                                                        <label for="bodyTextarea1" class="form-label">Post Reply</label>
+                                                                                        <textarea class="form-control bg-light border-light" id="bodyTextarea1" rows="3" placeholder="Leave reply" name="body"></textarea>
+                                                                                        <input name="technician" type="hidden" value="{{user.auth_user.pk}}"> 
+                                                                                        <input name="project" type="hidden" value="{{project.pk}}"> 
+                                                                                        <input name="comment" type="hidden" value="{{comment.pk}}"> 
+                                                                                    </div>
+                                                                                    <div class="col-lg-12 text-end">
+                                                                                        <button type="button" class="btn btn-light" data-bs-toggle="collapse" data-bs-target="#collapseExample{{comment.pk}}" aria-controls="collapseExample">Close</button>
+                                                                                        <button type="submit" class="btn btn-success" id="add-btn">Post Reply</button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            {% endfor %}
+                                                            
+                                                            
+                                                        </div>
+                                                        <form method="POST" action="{% url 'apps:projects.comments' project.pk %}" enctype="multipart/form-data" class="mt-3">
+                                                            {% csrf_token %}
+                                                            {{ form.as_p }}
+                                                            <div class="row g-3">
+                                                                <div class="col-lg-12">
+                                                                    <label for="bodyTextarea1" class="form-label">Leave a Comment</label>
+                                                                    <textarea class="form-control bg-light border-light" id="bodyTextarea1" rows="3" placeholder="Enter comment" name="body"></textarea>
+                                                                    <input name="technician" type="hidden" value="{{user.auth_user.pk}}"> 
+                                                                    <input name="project" type="hidden" value="{{project.pk}}"> 
+                                                                </div>
+                                                                <div class="col-lg-12 text-end">
+                                                                    <button type="submit" class="btn btn-success" id="add-btn">Post Comment</button>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- end col -->
+                                            <div class="col-xl-3 col-lg-4" style="padding-left: 15px;">
+                                                <div class="card">
+                                                    <div class="card-header align-items-center d-flex border-bottom-dashed">
+                                                        <h4 class="card-title mb-0 flex-grow-1">Technicians</h4>
+                                                    </div>
+
+                                                    <div class="card-body">
+                                                        <div data-simplebar style="height: 235px;" class="mx-n3 px-3">
+                                                            <div class="vstack gap-3">
+                                                                {% for tech in project.assignment.all %}
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="avatar-xs flex-shrink-0 me-3">
+                                                                        <a href="#userProfileCanvasExample{{tech.pk}}" data-bs-toggle="offcanvas" data-bs-target="#userProfileCanvasExample{{tech.pk}}" aria-controls="userProfileCanvasExample{{tech.pk}}"
+                                                                        data-bs-toggle="tooltip" data-bs-trigger="hover"
+                                                                        data-bs-placement="top" data-bs-original-title={{tech.auth_user.username}}>
+                                                                            <div class="rounded-circle avatar-xs">
+                                                                                <div class="avatar-title rounded-circle bg-info">
+                                                                                    {{tech.auth_user.username|first}}
+                                                                                </div>
+                                                                            </div>
+                                                                        </a>
+                                                                    </div>
+                                                                    <div class="flex-grow-1">
+                                                                        <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">{{tech.auth_user.username}}</a></h5>
+                                                                    </div>
+                                                                    <div class="flex-shrink-0">
+                                                                        <div class="d-flex align-items-center gap-1">
+                                                                            <button type="button" class="btn btn-light btn-sm" onclick="location.href = '{% url 'chat:chat.chat' %}';">Message</button>
+                                                                            <div class="dropdown">
+                                                                                <button class="btn btn-icon btn-sm fs-16 text-muted dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                                    <i class="ri-more-fill"></i>
+                                                                                </button>
+                                                                                <ul class="dropdown-menu">
+                                                                                    <li><a class="dropdown-item" href="#userProfileCanvasExample{{tech.pk}}" data-bs-toggle="offcanvas" data-bs-target="#userProfileCanvasExample{{tech.pk}}" aria-controls="userProfileCanvasExample{{tech.pk}}"
+                                                                                        data-bs-toggle="tooltip" data-bs-trigger="hover"
+                                                                                        data-bs-placement="top">
+                                                                                        <i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
+                                                                                        {% if not perms.accounts.delete_technicianuser %}
+                                                                                        <li><a class="dropdown-item" href="{% url 'apps:projects.removetech' project.pk tech.pk %}"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Remove</a></li>
+                                                                                        {% endif %}
+                                                                                </ul>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>                                                                    
+                                                                </div>
+                                                                {% endfor %}
+                                                                <!-- end member item -->
+                                                            </div>
+                                                            <!-- end list -->
+                                                        </div>
+                                                    </div>
+                                                    <!-- end card body -->
+                                                </div>
+                                                <!-- end card -->
+
+                                                <div class="card">
+                                                    <div class="card-header align-items-center d-flex border-bottom-dashed">
+                                                        <h4 class="card-title mb-0 flex-grow-1">Attachments</h4>
+                                                        {% if perms.apps.change_projectlist %}
+                                                        <div class="flex-shrink-0">
+                                                            <a href="{% url 'apps:projects.edit' project.pk %}" class="btn btn-soft-info btn-sm"><i class="ri-upload-2-fill me-1 align-bottom"></i> Upload</a>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+
+                                                    <div class="card-body">
+                                                        <div class="vstack gap-2">
+                                                            {% if project_files %}
+                                                            {% for file in project_files %}
+                                                            <div class="border rounded border-dashed p-2">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="flex-shrink-0 me-3">
+                                                                        <div class="avatar-sm">
+                                                                            <div class="avatar-title bg-light text-secondary rounded fs-24">
+                                                                                {% if file.extension == 'Zip File' %}
+                                                                                <i class="ri-folder-zip-line"></i>
+                                                                                {% elif file.extension == 'Power Point' %}
+                                                                                <i class="ri-file-ppt-2-line"></i>
+                                                                                {% elif file.extension == 'Image' %}
+                                                                                <i class="ri-image-2-line"></i>
+                                                                                {% elif file.extension == 'CSV' %}
+                                                                                <i class="ri-excel-2-line"></i>
+                                                                                {% endif %}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex-grow-1 overflow-hidden">
+                                                                        <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">{{file.file_name}}</a></h5>
+                                                                        <div>{{file.file_size}}</div>
+                                                                    </div>
+                                                                    <div class="flex-shrink-0 ms-2">
+                                                                        <div class="d-flex gap-1">
+                                                                            <a class="btn btn-icon text-muted fs-18" href="{% url 'apps:projects.download_file' file.id%}"><i class="ri-download-2-line"></i></a>
+                                                                            <div class="dropdown">
+                                                                                <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                                    <i class="ri-more-fill"></i>
+                                                                                </button>
+                                                                                <ul class="dropdown-menu">
+                                                                                    <li><a class="dropdown-item" href="#"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Rename</a></li>
+                                                                                    <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete</a></li>
+                                                                                </ul>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            {% endfor %}
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    <!-- end card body -->
+                                                </div>
+                                                <!-- end card -->
+                                            </div>
+                                            <!-- end col -->
+                                        </div>
+                                        <!-- end row -->
+                                    </div>
+                                    <!-- end tab pane -->
+                                    <div class="tab-pane fade" id="project-documents" role="tabpanel">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center mb-4">
+                                                    <h5 class="card-title flex-grow-1">Documents</h5>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-lg-12">
+                                                        <div class="table-responsive table-card">
+                                                            <table class="table table-borderless align-middle mb-0">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th scope="col">File Name</th>
+                                                                        <th scope="col">Type</th>
+                                                                        <th scope="col">Size</th>
+                                                                        <th scope="col">Upload Date</th>
+                                                                        <th scope="col" style="width: 120px;">Action</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        {% if project_files %}
+                                                                        {% for file in project_files %}
+                                                                        <td>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <div class="avatar-sm">
+                                                                                    <div class="avatar-title bg-light text-secondary rounded fs-24">
+                                                                                        {% if file.extension == 'Zip File' %}
+                                                                                        <i class="ri-folder-zip-line"></i>
+                                                                                        {% elif file.extension == 'Power Point' %}
+                                                                                        <i class="ri-file-pdf-fill"></i>
+                                                                                        {% elif file.extension == 'Image' %}
+                                                                                        <i class="ri-image-2-line"></i>
+                                                                                        {% elif file.extension == 'CSV' %}
+                                                                                        <i class="ri-excel-fill"></i>
+                                                                                        {% elif file.extension == 'Excel' %}
+                                                                                        <i class="ri-file-excel-fill"></i>
+                                                                                        {% elif file.extension == 'MP4' %}
+                                                                                        <i class="ri-video-line"></i>
+                                                                                        {% endif %}
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="ms-3 flex-grow-1">
+                                                                                    <h5 class="fs-14 mb-0"><a href="javascript:void(0)" class="text-dark">{{file.file_name}}</a></h5>
+                                                                                </div>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td>{{file.extension}}</td>
+                                                                        <td>{{file.file_size}}</td>
+                                                                        <td>{{file.upload_date}}</td>
+                                                                        <td>
+                                                                            <div class="dropdown">
+                                                                                <a href="javascript:void(0);" class="btn btn-soft-secondary btn-sm btn-icon" data-bs-toggle="dropdown" aria-expanded="true">
+                                                                                    <i class="ri-more-fill"></i>
+                                                                                </a>
+                                                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill me-2 align-bottom text-muted"></i>View</a></li>
+                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-download-2-fill me-2 align-bottom text-muted"></i>Download</a></li>
+                                                                                    <li class="dropdown-divider"></li>
+                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-fill me-2 align-bottom text-muted"></i>Delete</a></li>
+                                                                                </ul>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                    {% endfor %}
+                                                                    {% endif %}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                        <div class="text-center mt-3">
+                                                            <a href="javascript:void(0);" class="text-success "><i class="mdi mdi-loading mdi-spin fs-20 align-middle me-2"></i> Load more </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- end tab pane -->
+                                    <div class="tab-pane fade" id="project-activities" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-sm-6 col-md-6">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title">Project Activities</h5>
+                                                        <div class="acitivity-timeline py-3">
+                                                            {% for log in projects_log %}
+                                                            {% if log.get_action_display == "create" %}
+                                                            <div class="acitivity-item py-3 d-flex">
+                                                                <div class="flex-shrink-0">
+                                                                    <img src="{{log.actor.get_profile_picture}}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
+                                                                </div>
+                                                                <div class="flex-grow-1 ms-3">
+                                                                    <h6 class="mb-1">Project Created! <span class="badge bg-soft-danger text-danger align-middle ms-1">Test Label</span></h6>
+                                                                    <p class="text-muted mb-2">{{log.changes.name.1}} Was Created!</p>
+                                                                    <small class="mb-0 text-muted">{{log.timestamp}} <span class="badge bg-soft-info text-info align-middle ms-1">{{log.actor.get_name}}</span></small>
+                                                                </div>
+                                                            </div>
+                                                            {% elif log.get_action_display == "update" %}
+                                                            <div class="acitivity-item py-3 d-flex">
+                                                                <div class="flex-shrink-0">
+                                                                    <img src="{{log.actor.get_profile_picture}}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
+                                                                </div>
+                                                                <div class="flex-grow-1 ms-3">
+                                                                    <h6 class="mb-1">{{leads.name}} Updates:</h6>
+                                                                    {% for key, value in log.changes_dict.items %}
+                                                                    <tr>
+                                                                        <td>{{ key|upper }}</td>
+                                                                        <td>
+                                                                            <p class="text-muted mb-2">{{ value.0|default:"None"|striptags|safe }} <i class="ri-arrow-right-line"></i> {{ value.1|default:"None"|striptags|safe }}</p> 
+                                                                        </td>   
+                                                                    </tr>
+                                                                    {% empty %}
+                                                                    <p>No history for this item has been logged yet.</p>
+                                                                    {% endfor %}
+                                                                    <small class="mb-0 text-muted">{{log.timestamp}} <span class="badge bg-soft-info text-info align-middle ms-1">{{log.actor.get_name}}</span></small>
+                                                                </div>
+                                                            </div>
+                                                            {% endif %}
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div><!--end card-body-->
+                                                </div><!--end card-->
+                                            </div>
+                                            <div class="col-sm-6 col-md-6">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title">File Activities</h5>                                                
+                                                        <div class="acitivity-timeline py-3">
+                                                            {% if projects_files_log %}
+                                                            {% for log in projects_files_log %}                                                        
+                                                            {% if log.get_action_display == "create" %}
+                                                            <div class="acitivity-item py-3 d-flex">
+                                                                <div class="flex-shrink-0">
+                                                                    <img src="{{log.actor.get_profile_picture}}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
+                                                                </div>
+                                                                <div class="flex-grow-1 ms-3">
+                                                                    <h6 class="mb-1">File Activity Created! <span class="badge bg-soft-danger text-danger align-middle ms-1">Test Label</span></h6>
+                                                                    <p class="text-muted mb-2">{{log.changes.file.1}} Was Added!</p>
+                                                                    <small class="mb-0 text-muted">{{log.timestamp}} <span class="badge bg-soft-info text-info align-middle ms-1">{{log.actor.get_name}}</span></small>
+                                                                </div>
+                                                            </div>
+                                                            {% elif log.get_action_display == "update" %}
+                                                            <div class="acitivity-item py-3 d-flex">
+                                                                <div class="flex-shrink-0">
+                                                                    <img src="{{log.actor.get_profile_picture}}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
+                                                                </div>
+                                                                <div class="flex-grow-1 ms-3">
+                                                                    <h6 class="mb-1">{{leads.name}} Updates:</h6>
+                                                                    {% for key, value in log.changes_dict.items %}
+                                                                    <tr>
+                                                                        <td>{{ key|upper }}</td>
+                                                                        <td>
+                                                                            <p class="text-muted mb-2">{{ value.0|default:"None"|striptags|safe }} <i class="ri-arrow-right-line"></i> {{ value.1|default:"None"|striptags|safe }}</p> 
+                                                                        </td>   
+                                                                    </tr>
+                                                                    {% empty %}
+                                                                    <p>No history for this item has been logged yet.</p>
+                                                                    {% endfor %}
+                                                                    <small class="mb-0 text-muted">{{log.timestamp}} <span class="badge bg-soft-info text-info align-middle ms-1">{{log.actor.get_name}}</span></small>
+                                                                </div>
+                                                            </div>
+                                                            {% endif %}
+                                                            {% endfor %}
+                                                            {% else %}
+                                                            <div class="acitivity-item py-3 d-flex">
+                                                                <div class="flex-shrink-0">
+                                                                    <div class="avatar-xs acitivity-avatar">
+                                                                        <div class="avatar-title rounded-circle bg-soft-info text-info">
+                                                                            <i class="ri-line-chart-line"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex-grow-1 ms-3">
+                                                                    <h6 class="mb-1">No Activity Yet</h6>
+                                                                    <p class="text-muted mb-2"><span class="text-danger">Awaiting Updates</span></p>
+                                                                    <small class="mb-0 text-muted">Stagnant</small>
+                                                                </div>
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div><!--end card-body-->
+                                                </div><!--end card-->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- end tab pane -->
+                                    <div class="tab-pane fade" id="project-team" role="tabpanel">
+                                        <div class="row g-4 mb-3">
+                                            <div class="col-sm">
+                                                <div class="d-flex">
+                                                    <div class="search-box me-2">
+                                                        <input type="text" class="form-control" placeholder="Search member...">
+                                                        <i class="ri-search-line search-icon"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-auto">
+                                                <div>
+                                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#inviteMembersModal"><i class="ri-share-line me-1 align-bottom"></i> Invite Member</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- end row -->
+
+                                        <div class="team-list list-view-filter">
+                                            <h5 class="fs-16 mb-1">Technicians</h5>
+                                            {% for tech in project.assignment.all %}
+                                            <div class="card team-box">
+                                                <div class="card-body px-4">
+                                                    <div class="row align-items-center team-row">
+                                                        <div class="col team-settings">
+                                                            <div class="row align-items-center">
+                                                                <div class="col">
+                                                                    <div class="flex-shrink-0 me-2">
+                                                                        <button type="button" class="btn fs-16 p-0 favourite-btn">
+                                                                            <i class="ri-star-fill"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-4 col">
+                                                            <div class="team-profile-img">
+                                                                <div class="avatar-lg img-thumbnail rounded-circle">
+                                                                    <img src="{{tech.auth_user.get_profile_picture}}" alt="" class="img-fluid d-block rounded-circle" />
+                                                                </div>
+                                                                <div class="team-content">
+                                                                    <a href="#" class="d-block"><h5 class="fs-16 mb-1">{{tech.auth_user.username}}</h5></a>
+                                                                    <p class="text-muted mb-0">{{tech.role}}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-4 col">
+                                                            <div class="row text-muted text-center">
+                                                                <div class="col-6 border-end border-end-dashed">
+                                                                    <h5 class="mb-1">225</h5>
+                                                                    <p class="text-muted mb-0">Projects</p>
+                                                                </div>
+                                                                <div class="col-6">
+                                                                    <h5 class="mb-1">197</h5>
+                                                                    <p class="text-muted mb-0">Tasks</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-2 col">
+                                                            <div class="text-end">
+                                                                <a href="{% url 'pages:pages.profile' %}" class="btn btn-light view-btn">View Profile</a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div><!--end card-->
+                                            {% endfor %}
+                                            <h5 class="fs-16 mb-1">Clients</h5>
+                                            {% if teammembers %}
+                                            {% for member in teammembers %}
+                                            <div class="card team-box">
+                                                <div class="card-body px-4">
+                                                    <div class="row align-items-center team-row">
+                                                        <div class="col-lg-2 col">
+                                                            <div class="team-profile-img">
+                                                                <div class="rounded-circle avatar-xs">
+                                                                    <div class="avatar-title rounded-circle bg-info">
+                                                                        {{member.first_name|first}} {{member.last_name|first}}
+                                                                    </div>
+                                                                </div>
+                                                                <div class="team-content">
+                                                                    <a href="#" class="d-block"><h5 class="fs-16 mb-1">{{member.first_name}} {{member.last_name}}</h5></a>
+                                                                    <p class="text-muted mb-0">{{member.title}}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-8 col">
+                                                            <div class="row text-muted text-center">
+                                                                <div class="col-3 border-end border-end-dashed">
+                                                                    <h5 class="mb-1">{{member.work_phone}}</h5>
+                                                                    <p class="text-muted mb-0">Phone</p>
+                                                                </div>
+                                                                <div class="col-3">
+                                                                    <h5 class="mb-1">{{member.work_email}}</h5>
+                                                                    <p class="text-muted mb-0">Email</p>
+                                                                </div>
+                                                                <div class="col-3">
+                                                                    <h5 class="mb-1">{{member.location|default_if_none:"No Location"}}</h5>
+                                                                    <p class="text-muted mb-0">Location</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-2 col">
+                                                            <div class="text-end">
+                                                                <a href="{% url 'pages:pages.profile' %}" class="btn btn-light view-btn">View Profile</a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div><!--end card-->
+                                            {% endfor %}
+                                            {% else %}
+                                            <div class="card team-box">
+                                                <div class="card-body px-4">
+                                                    <div class="row align-items-center team-row">
+                                                        <div class="col team-settings">
+                                                            <div class="row align-items-center">
+                                                                <div class="col">
+                                                                    <div class="flex-shrink-0 me-2">
+                                                                        <button type="button" class="btn fs-16 p-0 favourite-btn">
+                                                                            <i class="ri-star-fill"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-4 col">
+                                                            <div class="team-profile-img">
+                                                                <div class="avatar-lg img-thumbnail rounded-circle">
+                                                                    <img src="{% static 'images/users/avatar-2.jpg'%}" alt="" class="img-fluid d-block rounded-circle" />
+                                                                </div>
+                                                                <div class="team-content">
+                                                                    <a href="#" class="d-block"><h5 class="fs-16 mb-1">No Assigned Team Members at this Company</h5></a>
+                                                                    <p class="text-muted mb-0">Check it son</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div><!--end card-->
+                                            {% endif %}
+                                        </div>
+                                        <!-- end team list -->
+
+                                        <div class="row g-0 text-center text-sm-start align-items-center mb-3">
+                                            <div class="col-sm-6">
+                                                <div>
+                                                    <p class="mb-sm-0">Showing 1 to 10 of 12 entries</p>
+                                                </div>
+                                            </div> <!-- end col -->
+                                            <div class="col-sm-6">
+                                                <ul class="pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
+                                                    <li class="page-item disabled"> <a href="#" class="page-link"><i class="mdi mdi-chevron-left"></i></a> </li>
+                                                    <li class="page-item"> <a href="#" class="page-link">1</a> </li>
+                                                    <li class="page-item active"> <a href="#" class="page-link">2</a> </li>
+                                                    <li class="page-item"> <a href="#" class="page-link">3</a> </li>
+                                                    <li class="page-item"> <a href="#" class="page-link">4</a> </li>
+                                                    <li class="page-item"> <a href="#" class="page-link">5</a> </li>
+                                                    <li class="page-item"> <a href="#" class="page-link"><i class="mdi mdi-chevron-right"></i></a> </li>
+                                                </ul>
+                                            </div><!-- end col -->
+                                        </div><!-- end row -->
+                                    </div>
+                                    <!-- end tab pane -->
+                                </div>
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+
+{% block extra_content %}
+    <!-- Modal -->
+    <div class="modal fade" id="inviteMembersModal" tabindex="-1" aria-labelledby="inviteMembersModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0">
+                <div class="modal-header p-3 ps-4 bg-soft-success">
+                    <h5 class="modal-title" id="inviteMembersModalLabel">Tickets</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="search-box mb-3">
+                        <input type="text" class="form-control bg-light border-light" placeholder="Search here...">
+                        <i class="ri-search-line search-icon"></i>
+                    </div>
+
+                    <div class="mb-4 d-flex align-items-center">
+                        <div class="me-2">
+                            <h5 class="mb-0 fs-13">Members :</h5>
+                        </div>
+                        <div class="avatar-group justify-content-center">
+                            {% for tech in technicians %}
+                            <a href="#userProfileCanvasExample{{tech.id}}" class="avatar-group-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title={{tech.username}}>
+                                <div class="avatar-xs">
+                                    {% if tech.picture %}
+                                    <img src={{tech.picture}} alt="" class="rounded-circle img-fluid">
+                                    {% else %}
+                                    <div class="avatar-title rounded-circle bg-info">
+                                        {{tech.username|first}}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="mx-n4 px-4" data-simplebar style="max-height: 225px;">
+                        {% for ticket in tickets %}
+                        <div class="vstack gap-3">
+                            <div class="d-flex align-items-center">
+                                <a href="{% url 'apps:tickets.details' ticket.pk %}" class="avatar-group-item"
+                                data-bs-toggle="tooltip" data-bs-trigger="hover"
+                                data-bs-placement="top" title="{{ticket.name}}">
+                                <div class="avatar-xxs">
+                                    <div class="avatar-title rounded-circle bg-info">
+                                        {{ticket.name|make_list|first}}
+                                    </div>
+                                </div>
+                                </a>
+                                <div class="flex-grow-1">
+                                    <h5 class="fs-13 mb-0"><a href="{% url 'apps:tickets.details' ticket.pk %}" class="text-body d-block"> {{ticket.name}}</a></h5>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" class="btn btn-light btn-sm">Add</button>
+                                </div>
+                            </div>
+                            <!-- end member item -->
+                        </div>
+                        {% endfor %}
+                        <!-- end list -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light w-xs" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success w-xs">Done</button>
+                </div>
+            </div>
+            <!-- end modal-content -->
+        </div>
+        <!-- modal-dialog -->
+    </div>
+    <!-- end modal -->
+    {% for tech in project.assignment.all %}
+    <div class="offcanvas offcanvas-end border-0" tabindex="-1" id="userProfileCanvasExample{{tech.pk}}">
+        <!--end offcanvas-header-->
+        <div class="offcanvas-body profile-offcanvas p-0">
+            <div class="team-cover">
+                <img src="{% static 'images/small/img-9.jpg'%}" alt="" class="img-fluid" />
+            </div>
+            <div class="p-1 pb-4 pt-0">
+                <div class="team-settings">
+                    <div class="row g-0">
+                        <div class="col">
+                            <div class="btn nav-btn">
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="user-chat-nav d-flex">
+                                <button type="button" class="btn nav-btn favourite-btn active">
+                                    <i class="ri-star-fill"></i>
+                                </button>
+
+                                <div class="dropdown">
+                                    <a class="btn nav-btn" href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="ri-more-2-fill"></i>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-inbox-archive-line align-bottom text-muted me-2"></i>Archive</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-mic-off-line align-bottom text-muted me-2"></i>Muted</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>Delete</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div><!--end col-->
+            </div>
+            <div class="p-3 text-center">
+                {% if tech.picture %}
+                <img src="{% static 'images/users/avatar-2.jpg'%}" alt="" class="avatar-lg img-thumbnail rounded-circle mx-auto profile-img">
+                {% else %}
+                <div class="avatar-lg img-thumbnail rounded-circle mx-auto profile-img">
+                    {{tech.username|make_list|first}}
+                </div>
+                {% endif %}
+                <div class="mt-3">
+                    <h5 class="fs-16 mb-1"><a href="javascript:void(0);" class="link-primary username">{{tech.username}}</a></h5>
+                    <p class="text-muted"><i class="ri-checkbox-blank-circle-fill me-1 align-bottom text-success"></i>Online</p>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Message">
+                        <span class="avatar-title rounded bg-light text-body">
+                            <i class="ri-question-answer-line"></i>
+                        </span>
+                    </button>
+
+                    <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Favourite">
+                        <span class="avatar-title rounded bg-light text-body">
+                            <i class="ri-star-line"></i>
+                        </span>
+                    </button>
+
+                    <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Phone">
+                        <span class="avatar-title rounded bg-light text-body">
+                            <i class="ri-phone-line"></i>
+                        </span>
+                    </button>
+
+                    <div class="dropdown">
+                        <button class="btn avatar-xs p-0" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="avatar-title bg-light text-body rounded">
+                                <i class="ri-more-fill"></i>
+                            </span>
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-inbox-archive-line align-bottom text-muted me-2"></i>Archive</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-mic-off-line align-bottom text-muted me-2"></i>Muted</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>Delete</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-top border-top-dashed p-3">
+                <h5 class="fs-15 mb-3">Personal Details</h5>
+                <div class="mb-3">
+                    <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Number</p>
+                    <h6>{{tech.mobile}}</h6>
+                </div>
+                <div class="mb-3">
+                    <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Email</p>
+                    <h6>{{tech.email}}</h6>
+                </div>
+                <div>
+                    <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Location</p>
+                    <h6 class="mb-0">{{tech.city}}, {{tech.state}}</h6>
+                </div>
+            </div>
+            
+            <div class="border-top border-top-dashed p-3">    
+                <h5 class="fs-15 mb-3">Attached Files</h5>
+                
+                <div class="vstack gap-2">
+                    <div class="border rounded border-dashed p-2">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light text-secondary rounded fs-20">
+                                        <i class="ri-folder-zip-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">App pages.zip</a></h5>
+                                <div class="text-muted">2.2MB</div>
+                            </div>
+                            <div class="flex-shrink-0 ms-2">
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded border-dashed p-2">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light text-secondary rounded fs-20">
+                                        <i class="ri-file-ppt-2-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">Project Rocket admin.ppt</a></h5>
+                                <div class="text-muted">2.4MB</div>
+                            </div>
+                            <div class="flex-shrink-0 ms-2">
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded border-dashed p-2">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light text-secondary rounded fs-20">
+                                        <i class="ri-folder-zip-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">Images.zip</a></h5>
+                                <div class="text-muted">1.2MB</div>
+                            </div>
+                            <div class="flex-shrink-0 ms-2">
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded border-dashed p-2">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light text-secondary rounded fs-20">
+                                        <i class="ri-image-2-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">bg-pattern.png</a></h5>
+                                <div class="text-muted">1.1MB</div>
+                            </div>
+                            <div class="flex-shrink-0 ms-2">
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-2">
+                        <button type="button" class="btn btn-danger">Load more <i class="ri-arrow-right-fill align-bottom ms-1"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div><!--end offcanvas-body-->
+    </div><!--end offcanvas-->
+    {% endfor %}    
+{% endblock extra_content %}
+    
+{% block extra_js %}
+    <script src="{% static 'js/pages/project-overview.init.js'%}"></script>
+{% endblock extra_js %}

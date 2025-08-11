@@ -1,0 +1,162 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" {% block html %}data-layout="vertical" data-theme="dark" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" {% endblock html %}>
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %}{% endblock title %} | Project Rocket </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Premium Project Rocket PSA Experience" name="description" />
+    <meta content="PRocket" name="author" />
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% static 'images/rocket-favicon.ico'%}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    {% block css %}
+    {% block extra_css %}
+    {% endblock extra_css %}
+    <!-- Layout config Js -->
+    <script src="{% static 'js/layout.js'%}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <!-- Bootstrap Css -->
+    <link href="{% static 'css/bootstrap.min.css'%}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+    <!-- Icons Css -->
+    <link href="{% static 'css/icons.min.css'%}" rel="stylesheet" type="text/css" />
+    <!-- App Css-->
+    <link href="{% static 'css/app.min.css'%}" id="app-style" rel="stylesheet" type="text/css" />
+    <!-- custom Css-->
+    <link href="{% static 'css/custom.min.css'%}" id="app-style" rel="stylesheet" type="text/css" />
+    {% endblock css %}
+</head>
+
+<body>
+
+
+
+    
+    <!-- Begin page -->
+    <div id="layout-wrapper">
+        {% block header %}
+        {% include "partials/topbar.html" %}
+        {% endblock header %}
+        {% block sidebar %}
+        {% include "partials/sidebar.html" %}
+        {% endblock sidebar %}
+        {% block content %}
+        {% block pagetitle %}
+        {% endblock pagetitle %}
+        {% block footer %}
+        {% endblock footer %}
+        {% endblock content %}
+    </div>
+    
+    {% block extra_content %}        
+    {% endblock extra_content %}
+        
+    <!-- END layout-wrapper -->
+    
+
+    
+    {% block right_sidebar %}
+    {% include "partials/customizer.html" %}
+    {% endblock right_sidebar %}
+    
+    <!-- Chatbot and Settings Icons - Always Visible (Outside any blocks) -->
+    <div class="chatbot-setting" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px;">
+        <div class="btn-primary btn-rounded shadow-lg btn btn-icon btn-lg p-2" data-bs-toggle="offcanvas"
+            data-bs-target="#chatbot-offcanvas" aria-controls="chatbot-offcanvas">
+            <i class='mdi mdi-chat fs-22'></i>
+        </div>
+        <div class="btn-primary btn-rounded shadow-lg btn btn-icon btn-lg p-2" data-bs-toggle="offcanvas"
+            data-bs-target="#theme-settings-offcanvas" aria-controls="theme-settings-offcanvas">
+            <i class='mdi mdi-spin mdi-cog-outline fs-22'></i>
+        </div>
+    </div>
+    
+    <!-- Chatbot Offcanvas - Always Available (Outside any blocks) -->
+    <div class="offcanvas offcanvas-end border-0" tabindex="-1" id="chatbot-offcanvas">
+        <div class="d-flex align-items-center bg-primary bg-gradient p-3 offcanvas-header">
+            <h5 class="m-0 me-2 text-white">
+                <i class="mdi mdi-chat me-2"></i>Atlas AI Assistant
+            </h5>
+            <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas"
+                aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <div class="chat-container h-100 d-flex flex-column">
+                <!-- Chat Messages Area -->
+                <div class="chat-messages flex-grow-1 p-3" id="chat-messages" style="height: 400px; overflow-y: auto;">
+                    <div class="text-center text-muted mb-3">
+                        <i class="mdi mdi-chat fs-1 text-success"></i>
+                        <p class="mt-2">Hello! I'm your AI assistant, Atlas. How can I help you today?</p>
+                    </div>
+                </div>
+                
+                <!-- Chat Input Area -->
+                <div class="chat-input-area p-3 border-top">
+                    <form id="chatbot-form" class="d-flex gap-2">
+                        <input type="text" class="form-control" id="chatbot-input" 
+                               placeholder="Type your message..." autocomplete="off">
+                        <button type="submit" class="btn btn-success">
+                            <i class="mdi mdi-send"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block javascript %}
+    <!-- JAVASCRIPT -->
+
+    <script src="{% static 'libs/bootstrap/dist/js/bootstrap.bundle.min.js'%}"></script>
+    <script src="{% static 'libs/simplebar/dist/simplebar.min.js'%}"></script>
+    <script src="{% static 'libs/node-waves/dist/waves.min.js'%}"></script>
+    <script src="{% static 'libs/feather-icons/dist/feather.min.js'%}"></script>
+    <script src="{% static 'js/pages/plugins/lord-icon-2.1.0.js'%}"></script>
+    <script src="{% static 'js/plugins.js'%}"></script>
+
+    
+    <!-- App js -->
+    <script src="{% static 'js/app.js'%}"></script>
+    <!-- Chatbot js -->
+    <script src="{% static 'js/pages/chatbot.js'%}"></script>
+    {% endblock javascript %}
+    
+    {% block extra_js %}
+    {% endblock extra_js %}
+    
+    {% if messages %}
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {% endif %}
+
+    {% for message in messages %}
+            {% if message.tags == 'alert-success' %}
+            <script>
+                var m = "{{ message }}";
+                Swal.fire({
+                    icon: 'success',
+                    iconColor:'#0ab39c',
+                    title: m,
+                    showConfirmButton: false,
+                    timer: 1500,
+                })
+            </script>
+            <!-- This elif statement will make sure whenever the warning message 
+                 is shown, the error message is not show from Swal -->
+            {% elif 'update_password_warning' in message.tags %}
+            {% elif 'client_threshold_warning' in message.tags %}
+            {% else %}
+                <script>
+                var m = "{{ message }}";
+                Swal.fire({
+                    icon: 'error',
+                    title: m,
+                    showConfirmButton: false,
+                    timer: 1500,
+                })
+                </script>
+            {% endif %}
+        {% endfor %}
+
+</body>
+
+</html>

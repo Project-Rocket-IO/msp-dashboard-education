@@ -1,0 +1,47 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Pricing Structure{% endblock title %}
+{% block extra_css %}
+{% endblock extra_css %}
+{% block content %}
+
+
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+              <script src="https://js.stripe.com/v3/"></script>
+              <script src="{% static 'js/main.js' %}"></script> 
+              <script defer src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"></script>
+                <div class="page-content">
+                    <div class="container-fluid">
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Pricing" title="Pricing Structure" %}
+                        {% endblock pagetitle %}
+                      <div class="row">
+                        <p class="title">Pricing Plans</p>
+                        <div class="columns">
+                          {% for product in products %}
+                            <div class="column">
+                              <p class="subtitle">{{ product.name }}</p>
+                              {% for plan in product.plan_set.all %}
+                                <div>
+                                  <p class="heading">{{ plan.nickname }}</p>
+                                  <p>{{ plan.human_readable_price }}</p>
+                                </div>
+                              {% endfor %}
+                            </div>
+                          {% endfor %}
+                        </div>
+                  </div>
+                  <!-- end row -->                    
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}

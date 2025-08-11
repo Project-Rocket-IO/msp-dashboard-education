@@ -1,0 +1,120 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Pricing Structure{% endblock title %}
+{% block extra_css %}
+{% endblock extra_css %}
+{% block content %}
+
+
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+              <script src="https://js.stripe.com/v3/"></script>
+              <script src="{% static 'js/main.js' %}"></script> 
+              <script defer src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"></script>
+                <div class="page-content">
+                    <div class="container-fluid">
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Pricing" title="Pricing Structure" %}
+                        {% endblock pagetitle %}
+                      <div class="row">
+                        <div class="col-xxl-4 col-xl-6">
+                          <div class="card">
+                              <div class="card-header align-items-center d-flex">
+                                  <h4 class="card-title mb-0 flex-grow-1">Base Package</h4>
+                                  <div class="flex-shrink-0">
+                                      <!-- <div class="form-check form-switch form-switch-right form-switch-md">
+                                          <label for="listbutton-showcode" class="form-label text-muted">Show Code</label>
+                                          <input class="form-check-input code-switcher" type="checkbox" id="listbutton-showcode">
+                                      </div> -->
+                                  </div>
+                              </div><!-- end card header -->
+                              <div class="card-body">
+                                  <p class="text-muted"> Our<strong>Basic Package </strong>comes with all the nuts and bolts to keep your business running without worry</p>
+                                  <div class="live-preview">
+                                      <div class="list-group">
+                                        <button type="button" class="list-group-item list-group-item-action active" aria-current="true" onclick="location.href='{% url 'pages:pages.help_center' %}'"><i class="ri-question-line align-middle me-2"></i>FAQ</button>
+                                        <button type="button" class="list-group-item list-group-item-action" onclick="location.href='{% url 'pages:pages.terms_conditions' %}'"><i class="ri-file-paper-2-fill align-middle me-2"></i>Terms of Service</button>
+                                        <button type="button" class="list-group-item list-group-item-action" onclick="location.href='{% url 'pages:pages.privacy_policy' %}'"><i class="ri-folder-shield-2-fill align-middle me-2"></i>Privacy Policy</button>
+                                          <button type="button" class="list-group-item list-group-item-action" id="submitBtnbasic"><i class="ri-vip-crown-fill align-middle me-2"></i>Purchase Subscription</button>
+                                          <button type="button" class="list-group-item list-group-item-action" disabled><i class="ri-forbid-line align-middle me-2"></i>Block Test</button>
+                                      </div>
+                                  </div>
+                              </div><!-- end card-body -->
+                          </div><!-- end card -->
+                      </div>
+
+                      <!-- end col -->
+                      <div class="col-xxl-4 col-xl-6">
+                          <div class="card">
+                              <div class="card-header align-items-center d-flex">
+                                  <h4 class="card-title mb-0 flex-grow-1">Premium Package</h4>
+                                  <div class="flex-shrink-0">
+                                      <div class="form-check form-switch form-switch-right form-switch-md">
+                                      </div>
+                                  </div>
+                              </div><!-- end card header -->
+                              <div class="card-body">
+                                <p class="text-muted"> Our <strong>Premium Package </strong>includes everything the Basic package has to offer, plus a some enhancements to make the workday smoother and convenient</p>
+                                <div class="live-preview">
+                                    <div class="list-group">
+                                        <button type="button" class="list-group-item list-group-item-action active" aria-current="true" onclick="location.href='{% url 'pages:pages.help_center' %}'"><i class="ri-question-line align-middle me-2"></i>FAQ</button>
+                                        <button type="button" class="list-group-item list-group-item-action" onclick="location.href='{% url 'pages:pages.terms_conditions' %}'"><i class="ri-file-paper-2-fill align-middle me-2"></i>Terms of Service</button>
+                                        <button type="button" class="list-group-item list-group-item-action" onclick="location.href='{% url 'pages:pages.privacy_policy' %}'"><i class="ri-folder-shield-2-fill align-middle me-2"></i>Privacy Policy</button>
+                                        <button type="button" class="list-group-item list-group-item-action" id="submitBtnpremium"><i class="ri-vip-crown-fill align-middle me-2"></i>Purchase Subscription</button>
+                                        <button type="button" class="list-group-item list-group-item-action" disabled><i class="ri-forbid-line align-middle me-2"></i>Block Test</button>
+                                    </div>
+                                </div>
+                              </div><!-- end card-body -->
+                          </div><!-- end card -->
+                      </div>
+                      <!-- end col -->
+
+                      <div class="col-xxl-4 col-xl-6">
+                          <div class="card">
+                              <div class="card-header align-items-center d-flex">
+                                  <h4 class="card-title mb-0 flex-grow-1">All Inclusive</h4>
+                                  <div class="flex-shrink-0">
+                                  </div>
+                              </div><!-- end card header -->
+                              <div class="card-body">
+                                <p class="text-muted"> Our<strong>All Inclusive </strong>package is the gold standard in IT Management with its feature rich platform and cutting edge integrations, you will have everything you need and more</p>
+                                <div class="live-preview">
+                                    <div class="list-group">
+                                        <button type="button" class="list-group-item list-group-item-action active" aria-current="true" onclick="location.href='{% url 'pages:pages.help_center' %}'"><i class="ri-question-line align-middle me-2"></i>FAQ</button>
+                                        <button type="button" class="list-group-item list-group-item-action" onclick="location.href='{% url 'pages:pages.terms_conditions' %}'"><i class="ri-file-paper-2-fill align-middle me-2"></i>Terms of Service</button>
+                                        <button type="button" class="list-group-item list-group-item-action" onclick="location.href='{% url 'pages:pages.privacy_policy' %}'"><i class="ri-folder-shield-2-fill align-middle me-2"></i>Privacy Policy</button>
+                                        <button type="button" class="list-group-item list-group-item-action" id="submitBtnallinc"><i class="ri-vip-crown-fill align-middle me-2"></i>Purchase Subscription</button>
+                                        <button type="button" class="list-group-item list-group-item-action" disabled><i class="ri-forbid-line align-middle me-2"></i>Block Test</button>
+                                    </div>
+                                </div>
+                              </div><!-- end card-body -->
+                          </div><!-- end card -->
+                          <div class="columns">
+                            {% for product in products %}
+                              <div class="column">
+                                <p class="subtitle">{{ product.name }}</p>
+                                {% for plan in product.plan_set.all %}
+                                  <div>
+                                    <p class="heading">{{ plan.nickname }}</p>
+                                    <p>{{ plan.human_readable_price }}</p>
+                                  </div>
+                                {% endfor %}
+                              </div>
+                            {% endfor %}
+                          </div>
+                      </div>
+                      <!-- end col -->
+                      </div>
+                  <!-- end row -->                    
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}

@@ -1,0 +1,527 @@
+{% extends "partials/base.html" %}
+{% load static file_extension info_value %}
+{% include mathfilters %}
+{% block title %}TODO Lists{% endblock title %}
+{% block extra_css %}
+    <!-- Dragula css -->
+    <link rel="stylesheet" href="{% static 'libs/dragula/dist/dragula.min.css'%}" />
+    <link rel="stylesheet" href="{% static 'css/filemanager/styles.css' %}">
+
+{% endblock extra_css %}
+{% block content %}
+<div class="main-content">
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="{% static 'js/main.js' %}"></script> 
+    <script defer src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"></script>
+    <div class="page-content">
+        <div class="container-fluid">
+              {% block pagetitle %}
+              {% include "partials/page-title.html" with pagetitle="Files" title="File Manager" %}
+              {% endblock pagetitle %}
+            <div class="row">
+                <div class="col-xxl-3 col-sm-4">
+                    <div class="card filemanager-sidebar me-md-2">
+                        <div class="card-body">
+                            <div class="d-flex flex-column h-100">
+                                <div class="mb-4">
+
+                                  {% if apps.add_fileinfo %}
+                                    <div class="mb-3">
+                                        <div class="dropdown">
+                                            <button class="btn btn-light w-100" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="mdi mdi-plus me-1"></i> Create New
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item" href="{% url 'apps:filemanager.user_directory' user.pk %}"><i class="bx bx-folder me-1"></i> User Directory</a>
+
+                                                    <label for="fileInput" class="dropdown-item">
+                                                      <i class="bx bx-file me-1"></i>Upload File
+                                                    </label>
+                                                    <form method="post" action="{% url 'apps:filemanager.upload_file' %}" id="upload-file" enctype="multipart/form-data">
+                                                      {% csrf_token %}
+                                                      <input type="hidden" name="directory" value="{{ selected_directory }}">
+                                                      <input id="fileInput" class="d-none" onchange="submitForm()" type="file" name="file" required>
+                                                    </form>
+
+                                                <a class="dropdown-item" href="#"><i class="bx bx-share-alt me-1"></i> Storage Link</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                  {% endif %}
+                                        <ul class="list-unstyled categories-list">
+                                            <li>
+                                            <div class="custom-accordion">
+                                                <a class="text-body fw-medium py-1 d-flex align-items-center" data-bs-toggle="collapse" href="#categories-collapse" role="button" aria-expanded="false" aria-controls="categories-collapse">
+                                                    <i class="mdi mdi-folder font-size-16 text-warning me-2"></i> {{company_name}} Directories <i class="mdi mdi-chevron-up accor-down-icon ms-auto"></i>
+                                                </a>
+                                            <div class="collapse show" id="categories-collapse">
+                                                <div class="card border-0 shadow-none ps-2 mb-0">
+                                                    <ul class="list-unstyled mb-0">
+                                                        {% for directory in directories %}
+                                                        {% if directory.directories %}
+                                                        <li class="">
+                                                          <i class="fa-solid fa-folder"></i>
+                                                          <a 
+                                                            data-bs-toggle="collapse" 
+                                                            href="#collapse{{directory.id}}" 
+                                                            role="button" 
+                                                            aria-expanded="false"
+                                                            aria-controls="collapse{{directory.id}}"
+                                                            onclick="window.location.href = '{% url 'apps:filemanager.detail' directory.path|encoded_path %}';"
+                                                          >
+                                                            {{ directory.name }}
+                                                          </a>
+                                                        </li>
+                                                        {% include 'partials/subdirectories.html' with directory=directory depth=depth|add:"3" %}
+                                                      {% else %}
+                                                        <li>
+                                                          <i class="fa-solid fa-folder"></i>
+                                                          <a href="{% url 'apps:filemanager.detail' directory.path|encoded_path %}">{{ directory.name }}</a>
+                                                        </li>
+                                                        {% endif %}
+                                                      {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            </div>
+                                            </li>
+                                            <hr class="mt-2">
+                                            <li>
+                                                <a href="https://drive.google.com/drive/u/0/folders/1Ht9PquWHirf9V_ofWI5JX5mJa2z3_5-c" target="_blank" rel="noopener noreferrer" class="text-body d-flex align-items-center">
+                                                    <i class="mdi mdi-google-drive font-size-16 text-muted me-2"></i> <span class="me-auto">Google Drive</span> 
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a href="javascript: void(0);" class="text-body d-flex align-items-center">
+                                                    <i class="mdi mdi-star-outline text-muted font-size-16 me-2"></i> <span class="me-auto">Pinned</span>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a href="javascript: void(0);" class="text-body d-flex align-items-center">
+                                                    <i class="mdi mdi-trash-can text-danger font-size-16 me-2"></i> <span class="me-auto">Archived</span>
+                                                </a>
+                                            </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mt-auto">
+                                        <div class="alert alert-success alert-dismissible fade show px-3 mb-0" role="alert">
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            <div class="mb-3">
+                                                <i class="bx bxs-folder-open h1 text-success"></i>
+                                            </div>
+            
+                                            <div>
+                                                <h5 class="text-success">Upgrade Storage Space</h5>
+                                                <p>With your license, you have 64 GB. Upgrade for more space!</p>
+                                                <div class="text-center">
+                                                    <button type="button" class="btn btn-link text-decoration-none text-success">Upgrade <i class="mdi mdi-arrow-right"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>  
+                                    </div>
+                                </div>
+                            </div>
+                        </div>   
+                <div class="col-xxl-9 col-sm-8">
+                    <div class="card">
+                        <div class="card-body">
+                          {% if breadcrumbs %}
+                          <div>
+                            <nav aria-label="breadcrumb">
+                              <ol class="breadcrumb">
+                                {% for bread in breadcrumbs %}
+                                {% if bread.url == request.path %}
+                                  <li class="breadcrumb-item active" aria-current="page">{{ bread.name }}</li>
+                                  {% else %}
+                                  <li class="breadcrumb-item">
+                                    <a class="text-primary" href="{{ bread.url }}">{{ bread.name }}</a>
+                                  </li>
+                                {% endif %}
+                                {% endfor %}
+                              </ol>
+                            </nav>
+                          </div>
+                          {% endif %}
+                          <div>
+                              <div class="row mb-3">
+                                  <div class="col-xl-3 col-sm-6">
+                                      <div class="mt-2">
+                                          <h5>My Files</h5>
+                                      </div>
+                                  </div>
+                                  <div class="col-xl-9 col-sm-6">
+                                      <form class="mt-4 mt-sm-0 float-sm-end d-flex align-items-center">
+                                          <div class="search-box mb-2 me-2">
+                                              <div class="position-relative">
+                                                  <input type="text" class="form-control bg-light border-light rounded" placeholder="Search...">
+                                                  <i class="bx bx-search-alt search-icon"></i>
+                                              </div>
+                                          </div>
+  
+                                          <div class="dropdown mb-0">
+                                              <a class="btn btn-link text-muted mt-n2" role="button" data-bs-toggle="dropdown" aria-haspopup="true">
+                                                  <i class="mdi mdi-dots-vertical font-size-20"></i>
+                                              </a>
+                                            
+                                              <div class="dropdown-menu dropdown-menu-end">
+                                                  <a class="dropdown-item" href="#">Share Files</a>
+                                                  <a class="dropdown-item" href="#">Share with me</a>
+                                                  <a class="dropdown-item" href="#">Other Actions</a>
+                                              </div>
+                                          </div>
+                                          
+                                          
+                                      </form>
+                                  </div>
+                              </div>
+                          </div>
+    
+                            <div>
+                                <div class="row">
+                                  {% for directory, file_count in directories|zip_lists:subdir_files_count %}
+                                      {% render_directory directory=directory file_count=file_count %}
+                                  {% endfor %}
+                                </div>
+                                <!-- end row -->
+                            </div>
+    
+                            <div class="mt-4">
+                                <div class="d-flex flex-wrap">
+                                    {% if files %}
+                                      {% for breadcrumb in breadcrumbs %}
+                                        {% if forloop.last %}
+                                        <h5 class="font-size-16 me-3">{{breadcrumb.name}}</h5>
+                                        {% endif %}
+                                      {% endfor %} 
+                                      {% comment %} {% if breadcrumbs %}
+                                      <div>
+                                        <nav aria-label="breadcrumb">
+                                          <ol class="breadcrumb">
+                                            {% for bread in breadcrumbs %}
+                                            {% if bread.url == request.path %}
+                                              <li class="breadcrumb-item active" aria-current="page">{{ bread.name }}</li>
+                                              {% else %}
+                                              <li class="breadcrumb-item">
+                                                <a class="text-primary" href="{{ bread.url }}">{{ bread.name }}</a>
+                                              </li>
+                                            {% endif %}
+                                            {% endfor %}
+                                          </ol>
+                                        </nav>
+                                      </div>
+                                      {% endif %} {% endcomment %}
+                                    {% else %}
+                                    <h5 class="font-size-16 me-3">Recent Files</h5>
+                                    {% endif %}
+                                    <div class="ms-auto">
+                                        
+                                    </div>
+                                </div>
+                                <hr class="mt-2">
+    
+                                <div class="table-responsive">
+                                  <!-- <table class="table align-middle table-nowrap table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                              <th scope="col">Name</th>
+                                              <th scope="col">Date modified</th>
+                                              <th scope="col" colspan="2">Size</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <tr>
+                                              <td><a href="javascript: void(0);" class="text-dark fw-medium"><i class="mdi mdi-file-document font-size-16 align-middle text-primary me-2"></i> {% url 'home' %}</a></td>
+                                              <td>12-10-2020, 09:45</td>
+                                              <td>09 KB</td>
+                                              <td>
+                                                  <div class="dropdown">
+                                                      <a class="font-size-16 text-muted" role="button" data-bs-toggle="dropdown" aria-haspopup="true">
+                                                          <i class="mdi mdi-dots-horizontal"></i>
+                                                      </a>
+                                                      
+                                                      <div class="dropdown-menu dropdown-menu-end">
+                                                          <a class="dropdown-item" href="#">Open</a>
+                                                          <a class="dropdown-item" href="#">Edit</a>
+                                                          <a class="dropdown-item" href="#">Rename</a>
+                                                          <div class="dropdown-divider"></div>
+                                                          <a class="dropdown-item" href="#">Remove</a>
+                                                      </div>
+                                                  </div>
+                                              </td>
+                                          </tr> -->
+                                            {% if files %}
+                                            {{files|length|json_script:"files-count"}}
+                                            <div class="table-responsive">
+                                              <table class="table">
+                                                <tr>
+                                                  <th scope="col">File Name</th>
+                                                  <th scope="col">File Type</th>
+                                                  <th scope="col">Actions</th>
+                                                </tr>
+                                                {% for file in files %}
+                                                <tr data-bs-toggle="tooltip" title="{{file.file_path|info_value}}">
+                                                  <td>
+                                                    <span>
+                                                      {{ file.filename }}
+                                                    </span>
+                                                  </td>
+                                                  <td>{{ file.filename|file_extension|cut:"."|upper }}</td>
+                                                  <td>
+                                                    <div class="d-flex align-items-center actions">
+                                                      <span data-bs-toggle="modal" data-bs-target="#info-{{forloop.counter}}">
+                                                        <i title="Info" class="ri-information-line text-success"></i>
+                                                      </span>
+                                                      <div class="dot-separator mx-2"></div>
+                                                      <span data-bs-toggle="modal" data-bs-target="#file-{{forloop.counter}}">
+                                                        <i title="View" class="ri-eye-fill text-primary"></i>
+                                                      </span>
+                                                      <div class="dot-separator mx-2"></div>
+                                                      <span data-bs-toggle="modal" data-bs-target="#delete-{{forloop.counter}}">
+                                                        <i title="Delete" class="ri-delete-bin-5-line text-danger"></i>
+                                                      </span>
+                                                    </div>
+                                                  </td>
+                                                </tr>
+                                                <!-- Modal -->
+                                                <div class="modal fade" id="file-{{forloop.counter}}" data-bs-backdrop="static" data-bs-keyboard="false"
+                                                  tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                                                  <div class="modal-dialog modal-dialog-centered modal-xl">
+                                                    <div class="modal-content">
+                                                      <div class="modal-header">
+                                                        <h1 class="modal-title fs-5" id="staticBackdropLabel">{{ file.filename }}</h1>
+                                                        <span>
+                                                          <a href="{% url 'apps:filemanager.download_file' file.file_path %}">
+                                                            <i title="Download" class="fa-solid fa-download text-success fs-4"></i>
+                                                          </a>
+                                                        </span>
+                                                        <div class="" id="modal-close-btn-{{forloop.counter}}" data-bs-dismiss="modal" aria-label="Close">
+                                                          <i class="ri ri-apps-2-line"></i>
+                                                        </div>
+                                                      </div>
+                                                      <div class="modal-body">
+                                                        {% if file.filename|file_extension in ".jpg, .png, .gif" %}
+                                                          <img height="700px" class="w-100" src="/media/{{ file.file }}" alt="df">
+                                                        {% elif file.filename|file_extension in ".mp4, .webm, .ogg" %}
+                                                          <video class="w-100" height="700" controls>
+                                                            <source src="/media/{{ file.file }}" type="video/mp4">
+                                                          </video>
+                                                        {% elif file.filename|file_extension in ".pdf, .txt" %}
+                                                          <iframe src="/media/{{ file.file }}" width="100%" height="700px"></iframe>
+                                                        {% elif file.filename|file_extension in ".csv" %}
+                                                          <pre class="bg-dark text-light p-3">{{ file.csv_text }}</pre>
+                                                        {% endif %}
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <!-- Delete Modal -->
+                                                <div class="modal fade" id="delete-{{forloop.counter}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                  <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                      <div class="modal-header">
+                                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Delete File</h1>
+                                                      </div>
+                                                      <div class="modal-body">
+                                                        {{file.filename}}
+                                                      </div>
+                                                      <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <a class="btn btn-danger" href="{% url 'apps:filemanager.delete_file' file.file|encoded_file_path %}">Delete</a>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <!-- Info Modal -->
+                                                <div class="modal fade" id="info-{{forloop.counter}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                  <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                      <div class="modal-header">
+                                                        <h1 class="modal-title fs-5" id="exampleModalLabel">File Info</h1>
+                                                        <div class="" id="modal-close-btn-{{forloop.counter}}" data-bs-dismiss="modal" aria-label="Close">
+                                                          <i class="fa-solid fa-circle-xmark fs-5"></i>
+                                                        </div>
+                                                      </div>
+                                                      <div class="modal-body">
+                                                        <form action="{% url 'apps:filemanager.save_info' file.file_path|encoded_file_path %}" method="post">
+                                                          {% csrf_token %}
+                                                          <div class="form-group mb-2">
+                                                            <label for="" class="form-label">File Info</label>
+                                                            <input type="text" value="{{file.file_path|info_value}}" name="info" id="" class="form-control">
+                                                          </div>
+                                                          <div class="d-flex justify-content-end">
+                                                            <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Save</button>
+                                                          </div>
+                                                        </form>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                {% endfor %}
+                                              </table>
+                                            </div>
+                                          {% else %}
+                                            <p>No files</p>
+                                          {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div></div>
+                <div>
+                  <div class="card">
+                      <div class="card-body">
+                          <div class="text-center">
+                              <h5 class="font-size-15 mb-4">Storage Overview</h5>
+                              <div class="apex-charts" id="radial-chart" data-colors='["--bs-primary"]'></div>
+              
+                              <p class="text-muted">{{storage_overview.used_space}} Used of 64 GB</p>
+                              <p class="text-muted">({{storage_overview.percent_left}}%) Storage Free</p>
+                              <p class="text-muted">You have {{storage_overview.space_left}} remaining</p>
+                          </div>
+              
+                          <div class="mt-4">
+                              <div class="card border shadow-none mb-2">
+                                  <a href="javascript: void(0);" class="text-body">
+                                      <div class="p-2">
+                                          <div class="d-flex">
+                                              <div class="avatar-xs align-self-center me-2">
+                                                  <div class="avatar-title rounded bg-transparent text-success font-size-20">
+                                                      <i class="mdi mdi-image"></i>
+                                                  </div>
+                                              </div>
+              
+                                              <div class="overflow-hidden me-auto">
+                                                  <h5 class="font-size-13 text-truncate mb-1">Images</h5>
+                                                  <p class="text-muted text-truncate mb-0">{{storage_overview.images.count}} Files</p>
+                                              </div>
+              
+                                              <div class="ms-2">
+                                                  <p class="text-muted">{{storage_overview.images.space}}</p>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </a>
+                              </div>
+              
+                              <div class="card border shadow-none mb-2">
+                                  <a href="javascript: void(0);" class="text-body">
+                                      <div class="p-2">
+                                          <div class="d-flex">
+                                              <div class="avatar-xs align-self-center me-2">
+                                                  <div class="avatar-title rounded bg-transparent text-danger font-size-20">
+                                                      <i class="mdi mdi-play-circle-outline"></i>
+                                                  </div>
+                                              </div>
+              
+                                              <div class="overflow-hidden me-auto">
+                                                  <h5 class="font-size-13 text-truncate mb-1">Video</h5>
+                                                  <p class="text-muted text-truncate mb-0">{{storage_overview.videos.count}} Files</p>
+                                              </div>
+              
+                                              <div class="ms-2">
+                                                  <p class="text-muted">{{storage_overview.videos.space}}</p>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </a>
+                              </div>
+
+                              <div class="card border shadow-none mb-2">
+                                  <a href="javascript: void(0);" class="text-body">
+                                      <div class="p-2">
+                                          <div class="d-flex">
+                                              <div class="avatar-xs align-self-center me-2">
+                                                  <div class="avatar-title rounded bg-transparent text-primary font-size-20">
+                                                      <i class="mdi mdi-file-document"></i>
+                                                  </div>
+                                              </div>
+              
+                                              <div class="overflow-hidden me-auto">
+                                                  <h5 class="font-size-13 text-truncate mb-1">Document</h5>
+                                                  <p class="text-muted text-truncate mb-0">{{storage_overview.documents.count}} Files</p>
+                                              </div>
+              
+                                              <div class="ms-2">
+                                                  <p class="text-muted">{{storage_overview.documents.space}}</p>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </a>
+                              </div>
+              
+                              <div class="card border shadow-none">
+                                  <a href="javascript: void(0);" class="text-body">
+                                      <div class="p-2">
+                                          <div class="d-flex">
+                                              <div class="avatar-xs align-self-center me-2">
+                                                  <div class="avatar-title rounded bg-transparent text-warning font-size-20">
+                                                      <i class="mdi mdi-folder"></i>
+                                                  </div>
+                                              </div>
+              
+                                              <div class="overflow-hidden me-auto">
+                                                  <h5 class="font-size-13 text-truncate mb-1">Others</h5>
+                                                  <p class="text-muted text-truncate mb-0">{{storage_overview.others.count}} Files</p>
+                                              </div>
+              
+                                              <div class="ms-2">
+                                                  <p class="text-muted">{{storage_overview.others.space}}</p>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </a>
+                              </div>
+{% comment %} 
+                              <div class="card">
+                                {% for file in all_files %}
+                                <p>
+                                  <a href="/media/{{file.file}}">
+                                    {{file.filename}}
+                                  </a>                                  
+                                </p>
+                                  {% endfor %}
+                              </div>
+                               {% endcomment %}
+                          </div>
+                      </div>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+                                           
+{% endblock %}
+
+{% block extrascripts %}
+
+<script>
+  function submitForm() {
+    document.getElementById("upload-file").submit();
+  }
+  
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' || event.key === 'Esc' || event.key === 27) {
+      let files = document.getElementById('files-count').textContent;
+      for (let i = 1; i <= files; i++) {
+        let closeButtonElements = document.getElementById(`modal-close-btn-${i}`);
+        closeButtonElements.click();
+      }
+    }
+  })
+</script>
+
+{% endblock extrascripts %}
+
+{% block extra_javascript %}
+        <!-- apexcharts -->
+        <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+
+        <!-- file-manager js -->
+        <script src="{% static 'js/pages/file-manager.init.js' %}"></script>
+
+{% endblock %}

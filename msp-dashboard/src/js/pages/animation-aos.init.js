@@ -1,0 +1,13 @@
+/*
+Project Rocket - Admin & Dashboard Template
+Author: John Lang
+Version: 2.0.0
+Website: https://projectrocket-psa.com/
+Contact: projectRocket@gmail.com
+File: Main Js File
+*/
+
+AOS.init({
+	easing: 'ease-out-back',
+	duration: 1000
+});

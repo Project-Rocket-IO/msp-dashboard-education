@@ -1,0 +1,295 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Create Project{% endblock title %}
+{% block extra_css %}
+
+<!-- Plugins css -->
+<link href="{% static 'libs/dropzone/dist/dropzone.css'%}" rel="stylesheet" type="text/css" />
+<!-- Sweet Alert css-->
+<link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Projects" title="Create Project" %}
+                        {% endblock pagetitle %}
+
+                        <div class="row">
+                            <div class="col-lg-8">
+                                
+                                <div id="messageContainer"></div>
+
+                                <form action="{% url 'apps:projects.create'%}" method="POST" enctype="multipart/form-data" class="dropzone needs-validation" id="createProjectDropzone" novalidate>
+                                    {% csrf_token %}
+                                    {{ form.media }}
+                                    {{ form.as_p }}
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="project">Project Title<span class="required-asterix">*</span></label>
+                                                <input type="text" name="name" class="form-control" id="project_name"
+                                                    placeholder="Enter project title" value="{{project.name}}" 
+                                                    oninput="confirmTitle.value = project_name.value" required>
+                                                    <div class="invalid-feedback">Please provide a project name</div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="choices-text-input" class="form-label">Team Members<span class="required-asterix">*</span></label>
+                                                        <select class="form-select" data-choices data-choices-search-false data-choices-removeItem
+                                                        id="choices-lead-input" name="assignment" id="assignment" multiple required >
+                                                            {% for tech in technicians %}
+                                                            <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                            {% endfor %}
+                                                            <!-- <input class="form-control" id="choices-select" name="assignment" data-choices data-choices-limit="Required Limit" placeholder="Enter Team Members" type="text"
+                                                            value="{{ user.pk }}" /> -->
+                                                        </select>
+                                                        <div class="invalid-feedback">Please select technicians</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="choices-text-input" class="form-label">Client<span class="required-asterix">*</span></label>
+                                                        <select class="form-select" data-choices data-choices-search-false
+                                                        id="choices-lead-input" name="client" id="client" required> 
+                                                            <option value="">None</option>
+                                                            {% for client in clients %}
+                                                            <option value="{{client.pk}}">{{client.name}}</option>
+                                                            {% endfor %}
+                                                            <!-- <input class="form-control" id="choices-select" name="assignment" data-choices data-choices-limit="Required Limit" placeholder="Enter Team Members" type="text"
+                                                            value="{{ user.pk }}" /> -->
+                                                        </select>
+                                                        <div class="invalid-feedback">Please select a client</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="choices-text-input" class="form-label">Tickets</label>
+                                                        <select class="form-select" data-choices data-choices-search-false data-choices-removeItem
+                                                        id="choices-lead-input" name="tickets" id="tickets" multiple>
+                                                            {% for ticket in tickets %}
+                                                            <option value="{{ticket.pk}}">{{ticket.name}}</option>
+                                                            {% endfor %}
+                                                            <!-- <input class="form-control" id="choices-select" name="assignment" data-choices data-choices-limit="Required Limit" placeholder="Enter Team Members" type="text"
+                                                            value="{{ user.pk }}" /> -->
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3 mb-lg-0">
+                                                        <label for="priority_type-field" class="form-label">Priority</label>
+                                                        <select class="form-select" id="priority-field" name="priority">
+                                                            {% if project.priority == "Medium" %}
+                                                            <option value="Medium" selected>Medium</option>
+                                                            {% else %}
+                                                            <option value="Medium">Medium</option>
+                                                            {% endif %}
+                                                            {% if project.priority == "High" %}
+                                                            <option value="High" selected>High</option>
+                                                            {% else %}
+                                                            <option value="High">High</option>
+                                                            {% endif %}
+                                                            {% if project.priority == "Low" %}
+                                                            <option value="Low" selected>Low</option>
+                                                            {% else %}
+                                                            <option value="Low">Low</option>
+                                                            {% endif %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3 mb-lg-0">
+                                                        <label for="choices-status-input" class="form-label">Status<span class="required-asterix">*</span></label>
+                                                        <select class="form-select" id="industry_type-field" name="status" required>
+                                                            {% for status_code, status_label in PROJECT_STATUS %}
+                                                            {% if project.status == status_code %}
+                                                            <option value="{{status_code}}" selected>{{status_label}}</option>
+                                                            {% else %}
+                                                            <option value="{{status_code}}">{{status_label}}</option>
+                                                            {% endif %}
+                                                            {% endfor %}
+                                                        </select>
+                                                        <div class="invalid-feedback">Please select a project status</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <div>
+                                                        <label for="datepicker-deadline-input" class="form-label">Deadline</label>
+                                                        <input type="text" name="due_date" class="form-control" id="datepicker-deadline-input" placeholder="Enter due date" value="{{ project.due_date }}" data-provider="flatpickr" data-disable-mobile="true">
+                                                    </div>
+                                                </div>
+                                                <div><br></div>
+                                                <div class="row">
+                                                    <div class="col-lg-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label" for="project-thumbnail-img">Project Image</label>
+                                                            <input class="form-control" name="logo" id="project-thumbnail-img" value="{{project.logo}}" type="file" accept="image/png, image/gif, image/jpeg">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-6">
+                                                        <div class="mb-3">
+                                                            <label for="choices-text-input" class="form-label">Tags</label>
+                                                            <input class="form-control" id="choices-text-input" data-choices-removeItem data-choices data-choices-limit="Required Limit" placeholder="Enter Tags" type="text" name="tag"
+                                                            value="{{project.tag}}" />  
+                                                        </div>  
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-lg-12">
+                                                        <div class="mb-3 mb-lg-0">
+                                                            <label class="form-label">Project Description</label>
+                                                                <textarea id="ckeditor-classic" class="form-control" name="description" id="project-thumbnail-img" value="{{project.description}}" type="text" cols="30" rows="10"></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- end card body -->
+                                    </div>
+                                    <!-- end card -->
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="card-title mb-0">Attached files</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div>
+                                                <p class="text-muted">Add Attached files here.</p>
+
+                                                <div class="area">
+                                                    <div id="create-project" class="fallback">
+                                                        <input name="file" type="file" class="area-input" multiple="multiple">
+                                                    </div>
+                                                    <div class="dz-message needsclick">
+                                                        <div class="mb-3">
+                                                            <i class="display-4 text-muted ri-upload-cloud-2-fill"></i>
+                                                        </div>
+        
+                                                        <h5>Drop files here or click to upload.</h5>
+                                                    </div>
+                                                </div>
+        
+                                                <ul class="list-unstyled mb-0" id="dropzone-preview">
+                                                    <li class="mt-2" id="dropzone-preview-list">
+                                                        <!-- This is used as the file preview template -->
+                                                        <div class="border rounded">
+                                                            <div class="d-flex p-2">
+                                                                <div class="flex-shrink-0 me-3">
+                                                                    <div class="avatar-sm bg-light rounded">
+                                                                        <img src="#" alt="Project-Image" data-dz-thumbnail class="img-fluid rounded d-block" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex-grow-1">
+                                                                    <div class="pt-1">
+                                                                        <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                                                                        <div class="dz-success-mark"><span>✔</span></div>
+                                                                        <div class="dz-error-mark"><span>✘</span></div>
+                                                                        <h5 class="fs-14 mb-1" data-dz-name>&nbsp;</h5>
+                                                                        <p class="fs-13 text-muted mb-0" data-dz-size></p>
+                                                                        <strong class="error text-danger" data-dz-errormessage></strong>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex-shrink-0 ms-3">
+                                                                    <button data-dz-remove class="btn btn-sm btn-danger">Delete</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                                <!-- end dropzon-preview -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- end card -->
+                                    <div class="text-end mb-4">
+                                        <button class="btn btn-danger w-sm" onclick="location.href = '{% url 'apps:projects.list' %}';">Cancel</button>                                    
+                                        <button class="btn btn-success w-sm" id="add-btn">Create</button>
+                                    </div>
+                                </form>
+                            </div>
+                        
+                            <!-- end col -->
+                            <div class="col-lg-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Project Quick Look</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="choices-lead-input" class="form-label">Project Title</label>
+                                            <div class="confirmation" >    
+                                                <input class="form-control" type="text" id="confirmTitle" readonly> 
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- end card body -->
+                                </div>
+                                <!-- end card -->
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+                        
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+
+{% block extra_js %}
+
+<script>
+    (function () {
+        'use strict'
+    
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.querySelectorAll('.needs-validation')
+    
+        // Loop over them and prevent submission
+        Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+    
+            form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+</script>
+
+    <!-- ckeditor -->
+    <script src="{% static 'libs/@ckeditor/ckeditor5-build-classic/build/ckeditor.js'%}"></script>
+
+    <!-- dropzone js -->
+    <script src="{% static 'libs/dropzone/dist/dropzone-min.js'%}"></script>
+
+    <script>
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    </script>
+    
+    <!-- project-create init -->
+    <script>
+        let projectListURL = "{% url 'apps:projects.list' %}";
+        let projectCreateURL = "{% url 'apps:projects.create' %}";
+    </script>
+    <script src="{% static 'js/pages/project-create.init.js'%}" type="module"></script>
+
+
+{% endblock extra_js %}

@@ -1,0 +1,125 @@
+{% extends "two_factor/_base.html" %}
+{% load i18n %}
+{% load two_factor_tags %}
+
+{% block title %}Account Security{% endblock title %}
+
+{% block content %}
+<div class="p-lg-5 p-4">
+    <div>
+        <h2 class="text-primary">{% trans "Account Security" %}</h2>
+        <p class="text-muted">Manage your two-factor authentication settings below.</p>
+    </div>
+
+    <div class="mt-4">
+        <div class="card">
+            <div class="card-body">
+                {% if default_device %}
+                    <div class="mb-4">
+                        <h5 class="card-title mb-1">{% trans "Primary Method" %}</h5>
+                        <p class="text-muted">{% blocktrans with primary=default_device|as_action %}{{ primary }}{% endblocktrans %}</p>
+                    </div>
+
+                    <hr>
+
+                    {% if available_phone_methods %}
+                        <div class="my-4">
+                            <h5 class="card-title">{% trans "Backup Phone Numbers" %}</h5>
+                            <p class="text-muted">{% blocktrans trimmed %}If your primary method is not available, we can send backup tokens to the phone numbers listed below.{% endblocktrans %}</p>
+                            
+                            {% if backup_phones %}
+                                <ul class="list-group mt-3">
+                                    {% for phone in backup_phones %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            {{ phone|as_action }}
+                                            <form method="post" action="{% url 'two_factor:phone_delete' phone.id %}" onsubmit="return confirm('{% trans 'Are you sure?' %}')">
+                                                {% csrf_token %}
+                                                <button class="btn btn-sm btn-outline-danger" type="submit">{% trans "Unregister" %}</button>
+                                            </form>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted mt-3"><i>{% trans "No backup phone numbers have been added." %}</i></p>
+                            {% endif %}
+                            <div class="mt-3">
+                                <a href="{% url 'two_factor:phone_create' %}" class="btn btn-primary">
+                                    <i class="ri-phone-add-line me-1"></i> {% trans "Add Phone Number" %}
+                                </a>
+                            </div>
+                        </div>
+                        <hr>
+                    {% endif %}
+
+                    <div class="my-4">
+                        <h5 class="card-title">{% trans "Backup Tokens" %}</h5>
+                        <p class="text-muted">
+                            {% blocktrans trimmed %}If you don't have any device with you, you can access your account using backup tokens.{% endblocktrans %}
+                            {% blocktrans trimmed count counter=backup_tokens %}
+                                You have only one backup token remaining.
+                            {% plural %}
+                                You have {{ counter }} backup tokens remaining.
+                            {% endblocktrans %}
+                        </p>
+                        <a href="{% url 'two_factor:backup_tokens' %}" class="btn btn-info">
+                            <i class="ri-file-text-line me-1"></i> {% trans "Show Codes" %}
+                        </a>
+                    </div>
+                    <hr>
+                {% else %}
+                    <div class="text-center py-4">
+                        <div class="mb-4">
+                            <i class="ri-shield-off-line display-4 text-warning"></i>
+                        </div>
+                        <h5 class="card-title">{% trans "Two-Factor Authentication is Disabled" %}</h5>
+                        <p class="card-text text-muted">{% blocktrans trimmed %}Enable two-factor authentication for enhanced account security.{% endblocktrans %}</p>
+                        <a href="{% url 'two_factor:setup' %}" class="btn btn-primary mt-2">
+                            <i class="ri-shield-keyhole-line me-1"></i> {% trans "Enable Two-Factor Authentication" %}
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5 text-center">
+        <p class="mb-0"><a href="{% url 'home' %}" class="text-muted">Return to Dashboard</a></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Display Django messages using SweetAlert2
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.extra_tags == "2fa_required" %}
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Two-Factor Authentication Required',
+                        text: '{{ message|escapejs }}',
+                        showConfirmButton: true,
+                        confirmButtonText: 'Setup 2FA',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "{% url 'two_factor:setup' %}";
+                        }
+                    });
+                {% else %}
+                    Swal.fire({
+                        icon: '{% if message.tags == "error" %}error{% elif message.tags == "success" %}success{% elif message.tags == "warning" %}warning{% else %}info{% endif %}',
+                        title: '{% if message.tags == "error" %}Error{% elif message.tags == "success" %}Success{% elif message.tags == "warning" %}Warning{% else %}Information{% endif %}',
+                        text: '{{ message|escapejs }}',
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK',
+                        timer: {% if message.tags == "error" %}0{% else %}5000{% endif %},
+                        timerProgressBar: {% if message.tags == "error" %}false{% else %}true{% endif %},
+                    });
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </script>
+{% endblock extra_js %}

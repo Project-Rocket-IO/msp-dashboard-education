@@ -1,0 +1,17 @@
+DjangoDashRequirementsList.pdf
+
+# Environment variables & Virtual Envs
+env
+newenv
+venv
+
+.env
+
+
+# Vscode settings
+.vscode/*.json
+
+# Cursor rules
+.cursor/rules
+
+".env" 

@@ -1,0 +1,847 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Projects{% endblock title %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/projects/styles.css' %}">
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid d-flex flex-column">
+
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Projects" title="Projects" %}
+                        {% endblock pagetitle %}
+
+                        <div class="row g-4 mb-3">
+                            <div class="col-sm">
+                                <div class="d-flex gap-2">
+                                    <div class="search-box">
+                                        <input type="search" id="search" class="form-control" placeholder="Search...">
+                                        <i class="ri-search-line search-icon"></i>
+                                    </div>
+    
+                                    <select class="form-control w-md" data-choices data-choices-search-false>
+                                        <option value="All">All</option>
+                                        <option value="Today">Today</option>
+                                        <option value="Yesterday" selected>Yesterday</option>
+                                        <option value="Last 7 Days">Last 7 Days</option>
+                                        <option value="Last 30 Days">Last 30 Days</option>
+                                        <option value="This Month">This Month</option>
+                                        <option value="Last Year">Last Year</option>
+                                    </select>
+                                </div>
+                            </div>
+                            {% if perms.apps.add_projectlist %}
+                            <div class="col-sm-auto">
+                                <div class="ms-md-auto">
+                                    <a href="{% url 'apps:projects.create' %}" class="btn btn-success"><i
+                                            class="ri-add-line align-bottom me-1"></i> Create New Project</a>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <ul class="nav nav-tabs-custom border-bottom-0 mx-3 mb-2" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link fw-semibold {% if active_tab == 'active_projects' %}active{% endif %}" data-bs-toggle="tab" href="#active-projects"
+                                        role="tab">
+                                        Active Projects
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link fw-semibold {% if active_tab == 'archived_projects' %}active{% endif %}" data-bs-toggle="tab" href="#archived-projects">
+                                        Archived Projects
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="row tab-content" id="projectList">
+
+                            <div class="tab-pane fade {% if active_tab == 'active_projects' %}show active{% endif %}"
+                                id="active-projects" role="tabpanel"> 
+                                <div class="d-flex gap-4 flex-wrap">
+                                    {% for project in projects %}
+                                    <div class="col-xxl-3 col-sm-5 project-card">
+                                        <div class="card card-height-100">
+                                            <div class="card-body">
+                                                <div class="d-flex flex-column">
+                                                    <div class="d-flex">
+                                                        <div class="flex-grow-1">
+                                                            <p class="text-muted mb-4">Created : {{project.create_date}}</p>
+                                                        </div>
+                                                        <div class="flex-shrink-0">
+                                                            <div class="d-flex gap-1 align-items-center">
+                                                                <div class="dropdown">
+                                                                    <button
+                                                                        class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
+                                                                        data-bs-toggle="dropdown" aria-haspopup="true"
+                                                                        aria-expanded="true">
+                                                                        <i data-feather="more-horizontal" class="icon-sm"></i>
+                                                                    </button>
+            
+                                                                    <div class="dropdown-menu dropdown-menu-end">
+                                                                        <a class="dropdown-item"
+                                                                            href="{% url 'apps:projects.overview' project.pk %}"><i
+                                                                                class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                                                                            View</a>
+                                                                        {% if perms.apps.change_projectlist %}
+                                                                        <a class="dropdown-item" href="{% url 'apps:projects.edit' project.pk %}"><i
+                                                                                class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                                                            Edit</a>
+                                                                        {% endif %}
+                                                                        {% if perms.apps.delete_projectlist %}
+                                                                        <div class="dropdown-divider"></div>
+                                                                        <form action="{% url 'apps:projects.delete_list' project.pk %}" method="post">
+                                                                            {% csrf_token %}
+                                                                            <button type="submit" class="dropdown-item delete-project">
+                                                                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                                            Remove</button>
+                                                                        </form>                    
+                                                                        {% endif %}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex mb-2">
+                                                        <div class="flex-shrink-0 me-3">
+                                                            <div class="avatar-sm">
+                                                                <span class="avatar-title bg-soft-info rounded p-2">
+                                                                    {% if project.get_photo_url %}
+                                                                    <img src="{{project.get_photo_url}}" alt=""
+                                                                        class="img-fluid p-1">
+                                                                    {% else %}
+                                                                    <a href="{% url 'apps:projects.overview' project.pk %}" class="avatar-group-item"
+                                                                    data-bs-toggle="tooltip" data-bs-trigger="hover"
+                                                                    data-bs-placement="top" title="{{ project.name }}">
+                                                                    <div class="avatar-xxs">
+                                                                        <div class="avatar-title rounded-circle bg-info">
+                                                                            {{project.name|make_list|first}}
+                                                                        </div>
+                                                                    </div>
+                                                                    </a>
+                                                                    {% endif %}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1 fs-15"><a href="{% url 'apps:projects.overview' project.pk %}"
+                                                                    class="text-dark">{{ project.name }}</a></h5>
+                                                                    <div><br></div>
+                                                                    
+                                                                    {% if project.client.name %}
+                                                                        {% if perms.apps.view_clientcompany %}
+                                                                        <button class="btn btn-light" onclick="location.href = '{% url 'apps:client.details' project.client.pk %}';">
+                                                                            <p class="text-muted text-truncate-one-lines mb-1">{{ project.client.name }}</p>
+                                                                        </button>
+                                                                        {% endif %}
+                                                                    {% else %}
+                                                                        <p class="text-muted text-truncate-two-lines mb-3">{{ project.description|safe }}</p>
+                                                                    {% endif %}
+                                                        </div>
+                                                    </div>
+            
+                                                    <div class="mt-auto">
+                                                        <div class="row gy-3">
+                                                            <div class="col-6">
+                                                                <div>
+                                                                    <p class="text-muted mb-1">Status</p>
+                                                                    
+                                                                    {% comment %} {% if project.status == "Closed" %}
+                                                                    <div class="badge badge-soft-secondary fs-12">{{ project.status }}</div>
+                                                                    {% elif project.status == "In Progress" %}
+                                                                    <div class="badge badge-soft-warning fs-12">{{ project.status }}</div>
+                                                                    {% elif project.status == "New" %}
+                                                                    <div class="badge badge-soft-success fs-12">{{ project.status }}</div>
+                                                                    {% elif project.status == "Scheduled" %}
+                                                                    <div class="badge badge-soft-info fs-12">{{ project.status }}</div>
+                                                                    {% endif %}
+                                                                     {% endcomment %}
+                                                                    
+                                                                        <div class="badge fs-12 
+                                                                        {% if projects.status in status1 %}
+                                                                         badge-soft-info
+                                                                        {% elif projects.status in status2 %}
+                                                                        badge-soft-warning
+                                                                        {% elif projects.status in status2 %}
+                                                                        badge-soft-success
+                                                                        {% else %}
+                                                                        badge-soft-secondary
+                                                                        {% endif %}">
+                                                                            {{ project.status }}
+                                                                        </div>
+                                                                    
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <div>
+                                                                    <p class="text-muted mb-1">Deadline</p>
+                                                                    <h5 class="fs-14">{{ project.due_date }}</h5>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex mb-2">
+                                                            <div class="flex-grow-1">
+                                                                <div>Tasks</div>
+                                                            </div>
+                                                            <div class="flex-shrink-0">
+                                                                <div><i class="ri-list-check align-bottom me-1 text-muted"></i>
+                                                                    {{project.completed_tickets_count}}/{{project.all_tickets_count}}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="progress progress-sm animated-progress">
+                                                            <div class="progress-bar bg-success" role="progressbar"
+                                                                aria-valuenow="{{project.percentage}}" aria-valuemin="0" aria-valuemax="100"
+                                                                style="width: {{project.percentage}}%;">
+                                                            </div><!-- /.progress-bar -->
+                                                        </div><!-- /.progress -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- end card body -->
+                                            <div class="card-footer bg-transparent border-top-dashed py-2">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-grow-1">
+                                                        <div class="avatar-group">
+                                                            {% for tech in technicians %}
+                                                            {% if tech in project.assignment.all %}
+                                                            <a href="#userProfileCanvasExample{{tech.pk}}" class="avatar-group-item" data-bs-toggle="offcanvas" data-bs-trigger="hover"
+                                                            data-bs-target="#userProfileCanvasExample{{tech.pk}}" aria-controls="userProfileCanvasExample{{tech.pk}}" 
+                                                            title={{tech.username}}>
+                                                                <div class="rounded-circle avatar-xs">
+                                                                    <div class="avatar-title rounded-circle bg-info">
+                                                                        {{tech.username|first}}
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                            {% endif %}
+                                                            {% endfor %}
+                                                            {% if perms.apps.change_projectlist %}
+                                                            <a href="{% url 'apps:projects.edit' project.pk %}" class="avatar-group-item"
+                                                                data-bs-toggle="tooltip" data-bs-trigger="hover"
+                                                                data-bs-placement="top" title="Add Members">
+                                                                <div class="rounded-circle avatar-xs">
+                                                                    <div
+                                                                        class="avatar-title fs-16 rounded-circle bg-light border-dashed border text-primary">
+                                                                        +
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-shrink-0">
+                                                        <div class="text-muted">
+                                                            <p class="text-muted mb-1">Priority  
+                                                            {% if project.priority == "High" %}
+                                                            <span class="badge bg-danger text-uppercase">High</span>
+                                                            {% elif project.priority == "Low" %}
+                                                            <span class="badge bg-success text-uppercase">Low</span>
+                                                            {% elif project.priority == "Medium" %}
+                                                            <span class="badge bg-warning text-uppercase">Medium</span>
+                                                            {% elif project.priority == "Emergency" %}
+                                                            <span class="badge bg-danger text-uppercase">Emergency</span>
+                                                            {% endif %}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+            
+                                                </div>
+            
+                                            </div>
+                                            <!-- end card footer -->
+                                        </div>
+                                        <!-- end card -->
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div>
+                                    <!-- START PROJECTS PAGINATION -->
+                                    <div class="d-flex flex-md-row-reverse justify-content-between flex-column-reverse justify-md-content-center align-items-center 
+                                            d-sm-flex mb-4" id="projects-section">
+                                        {% if projects.has_other_pages %}
+                                        <div class="d-flex justify-content-end mt-2">
+                                            <div class="pagination-wrap hstack gap-2">
+                                                {% if projects.has_previous %}
+                                                <a class="page-item pagination-next" href="?active_projects_page=1">
+                                                    First
+                                                </a>
+                                                {% endif %}
+
+                                                {% if projects.has_previous %}
+                                                    <a class="page-item pagination-prev" href="?active_projects_page={{ projects.previous_page_number }}">
+                                                        Previous
+                                                    </a>
+                                                {% else %}
+                                                    <a class="page-item pagination-prev disabled" href="#">
+                                                        Previous
+                                                    </a>
+                                                {% endif %}
+                                
+                                                <ul class="pagination listjs-pagination mb-0">
+                                                    {% for i in projects.paginator.page_range %}
+                                                        {% if projects.number == i %}
+                                                            <li class="active"><a class="page" href="#">{{ i }}</a></li>
+                                                        {% else %}
+                                                            <li><a class="page" href="?active_projects_page={{ i }}">{{ i }}</a></li>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </ul>
+                                
+                                                {% if projects.has_next %}
+                                                    <a class="page-item pagination-next" href="?active_projects_page={{ projects.next_page_number }}">
+                                                        Next
+                                                    </a>
+                                                {% else %}
+                                                    <a class="page-item pagination-next disabled" href="#">
+                                                        Next
+                                                    </a>
+                                                {% endif %}
+                                                
+                                                {% if projects.has_next %}
+                                                <a class="page-item pagination-next" href="?active_projects_page={{ projects.paginator.num_pages }}">
+                                                    Last
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                
+                                        <div class="d-flex justify-content-between mt-2">
+                                            <div>
+                                                Showing {{ projects.start_index }} to {{ projects.end_index }} of {{ projects.paginator.count }} entries
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <!-- END PAGINATION -->
+                                </div>
+                            </div>
+                            <div class="tab-pane fade {% if active_tab == 'archived_projects' %}show active{% endif %}"
+                             id="archived-projects" role="tabpanel"> 
+                                <div class="d-flex gap-4 flex-wrap">
+                                    {% for project in archived_projects %}
+                                    <div class="col-xxl-3 col-sm-6 project-card">
+                                        <div class="card card-height-100">
+                                            <div class="card-body">
+                                                <div class="d-flex flex-column h-100">
+                                                    <div class="d-flex">
+                                                        <div class="flex-grow-1">
+                                                            <p class="text-muted mb-4">Created : {{project.create_date}}</p>
+                                                        </div>
+                                                        <div class="flex-shrink-0">
+                                                            <div class="d-flex gap-1 align-items-center">
+                                                                <div class="dropdown">
+                                                                    <button
+                                                                        class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
+                                                                        data-bs-toggle="dropdown" aria-haspopup="true"
+                                                                        aria-expanded="true">
+                                                                        <i data-feather="more-horizontal" class="icon-sm"></i>
+                                                                    </button>
+            
+                                                                    <div class="dropdown-menu dropdown-menu-end">
+                                                                        <a class="dropdown-item"
+                                                                            href="{% url 'apps:projects.overview' project.pk %}"><i
+                                                                                class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                                                                            View</a>
+                                                                        <a class="dropdown-item" href="{% url 'apps:projects.edit' project.pk %}"><i
+                                                                                class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                                                            Edit</a>
+                                                                        <div class="dropdown-divider"></div>
+                                                                        <form action="{% url 'apps:projects.delete_list' project.pk %}" method="post">
+                                                                            {% csrf_token %}
+                                                                            <button type="submit" class="dropdown-item delete-project">
+                                                                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                                            Remove</button>
+                                                                        </form>                    
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex mb-2">
+                                                        <div class="flex-shrink-0 me-3">
+                                                            <div class="avatar-sm">
+                                                                <span class="avatar-title bg-soft-info rounded p-2">
+                                                                    {% if project.get_photo_url %}
+                                                                    <img src="{{project.get_photo_url}}" alt=""
+                                                                        class="img-fluid p-1">
+                                                                    {% else %}
+                                                                    <a href="{% url 'apps:projects.overview' project.pk %}" class="avatar-group-item"
+                                                                    data-bs-toggle="tooltip" data-bs-trigger="hover"
+                                                                    data-bs-placement="top" title="{{ project.name }}">
+                                                                    <div class="avatar-xxs">
+                                                                        <div class="avatar-title rounded-circle bg-info">
+                                                                            {{project.name|make_list|first}}
+                                                                        </div>
+                                                                    </div>
+                                                                    </a>
+                                                                    {% endif %}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1 fs-15"><a href="{% url 'apps:projects.overview' project.pk %}"
+                                                                class="text-dark">{{ project.name }}</a></h5>
+                                                                <div><br></div>
+                                                                {% if project.client.name %}
+                                                                    {% if perms.apps.view_clientcompany %}
+                                                                    <button class="btn btn-light" onclick="location.href = '{% url 'apps:client.details' project.client.pk %}';">
+                                                                        <p class="text-muted text-truncate-one-lines mb-1">{{ project.client.name }}</p>
+                                                                    </button>
+                                                                    {% endif %}
+                                                                {% else %}
+                                                                    <p class="text-muted text-truncate-two-lines mb-3">{{ project.description|safe }}</p>
+                                                                {% endif %}
+                                                        </div>
+                                                    </div>
+            
+                                                    <div class="mt-auto">
+                                                        <div class="row gy-3">
+                                                            <div class="col-6">
+                                                                <div>
+                                                                    <p class="text-muted mb-1">Status</p>
+                                                                    {% if project.status == "Closed" %}
+                                                                    <div class="badge badge-soft-secondary fs-12">{{ project.status }}</div>
+                                                                    {% elif project.status == "In Progress" %}
+                                                                    <div class="badge badge-soft-warning fs-12">{{ project.status }}</div>
+                                                                    {% elif project.status == "New" %}
+                                                                    <div class="badge badge-soft-success fs-12">{{ project.status }}</div>
+                                                                    {% elif project.status == "Scheduled" %}
+                                                                    <div class="badge badge-soft-info fs-12">{{ project.status }}</div>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <div>
+                                                                    <p class="text-muted mb-1">Deadline</p>
+                                                                    <h5 class="fs-14">{{ project.due_date }}</h5>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex mb-2">
+                                                            <div class="flex-grow-1">
+                                                                <div>Tasks</div>
+                                                            </div>
+                                                            <div class="flex-shrink-0">
+                                                                <div><i class="ri-list-check align-bottom me-1 text-muted"></i>
+                                                                    {{project.completed_tickets_count}}/{{project.all_tickets_count}}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="progress progress-sm animated-progress">
+                                                            <div class="progress-bar bg-success" role="progressbar"
+                                                                aria-valuenow="{{project.percentage}}" aria-valuemin="0" aria-valuemax="100"
+                                                                style="width: {{project.percentage}}%;">
+                                                            </div><!-- /.progress-bar -->
+                                                        </div><!-- /.progress -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- end card body -->
+                                            <div class="card-footer bg-transparent border-top-dashed py-2">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-grow-1">
+                                                        <div class="avatar-group">
+                                                            {% if perms.apps.view_technicians %}
+                                                                {% for tech in technicians %}
+                                                                {% if tech in project.assignment.all %}
+                                                                <a href="#userProfileCanvasExample{{tech.pk}}" class="avatar-group-item" data-bs-toggle="offcanvas" data-bs-trigger="hover"
+                                                                data-bs-target="#userProfileCanvasExample{{tech.pk}}" aria-controls="userProfileCanvasExample{{tech.pk}}" 
+                                                                title={{tech.username}}>
+                                                                    <div class="rounded-circle avatar-xs">
+                                                                        <div class="avatar-title rounded-circle bg-info">
+                                                                            {{tech.username|first}}
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                                {% endif %}
+                                                                {% endfor %}
+                                                            {% endif %}
+                                                            
+                                                            <a href="{% url 'apps:projects.edit' project.pk %}" class="avatar-group-item"
+                                                                data-bs-toggle="tooltip" data-bs-trigger="hover"
+                                                                data-bs-placement="top" title="Add Members">
+                                                                <div class="rounded-circle avatar-xs">
+                                                                    <div
+                                                                        class="avatar-title fs-16 rounded-circle bg-light border-dashed border text-primary">
+                                                                        +
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-shrink-0">
+                                                        <div class="text-muted">
+                                                            <p class="text-muted mb-1">Priority  
+                                                            {% if project.priority == "High" %}
+                                                            <span class="badge bg-danger text-uppercase">High</span>
+                                                            {% elif project.priority == "Low" %}
+                                                            <span class="badge bg-success text-uppercase">Low</span>
+                                                            {% elif project.priority == "Medium" %}
+                                                            <span class="badge bg-warning text-uppercase">Medium</span>
+                                                            {% endif %}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+            
+                                                </div>
+            
+                                            </div>
+                                            <!-- end card footer -->
+                                        </div>
+                                        <!-- end card -->
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div>
+                                    <!-- START ARCHIVED PROJECTS PAGINATION -->
+                                    <div class="d-flex flex-md-row-reverse justify-content-between flex-column-reverse justify-md-content-center align-items-center 
+                                            d-sm-flex mb-4" id="archived-projects-section">
+                                        {% if archived_projects.has_other_pages %}
+                                        <div class="d-flex justify-content-end mt-2">
+                                            <div class="pagination-wrap hstack gap-2">
+                                                
+                                                {% if archived_projects.has_previous %}
+                                                <a class="page-item pagination-next" href="?archived_projects_page=1">
+                                                    First
+                                                </a>
+                                                {% endif %}
+
+                                                {% if archived_projects.has_previous %}
+                                                    <a class="page-item pagination-prev" href="?archived_projects_page={{ archived_projects.previous_page_number }}">
+                                                        Previous
+                                                    </a>
+                                                {% else %}
+                                                    <a class="page-item pagination-prev disabled" href="#">
+                                                        Previous
+                                                    </a>
+                                                {% endif %}
+                                        
+                                                <ul class="pagination listjs-pagination mb-0">
+                                                    {% for i in archived_projects.paginator.page_range %}
+                                                        {% if archived_projects.number == i %}
+                                                            <li class="active"><a class="page" href="#">{{ i }}</a></li>
+                                                        {% else %}
+                                                            <li><a class="page" href="?archived_projects_page={{ i }}">{{ i }}</a></li>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </ul>
+                                        
+                                                {% if archived_projects.has_next %}
+                                                    <a class="page-item pagination-next" href="?archived_projects_page={{ archived_projects.next_page_number }}">
+                                                        Next
+                                                    </a>
+                                                {% else %}
+                                                    <a class="page-item pagination-next disabled" href="#">
+                                                        Next
+                                                    </a>
+                                                {% endif %}
+                                                
+                                                {% if archived_projects.has_next %}
+                                                <a class="page-item pagination-next" href="?archived_projects_page={{ archived_projects.paginator.num_pages }}">
+                                                    Last
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                
+                                        <div class="d-flex justify-content-between mt-2">
+                                            <div>
+                                                Showing {{ archived_projects.start_index }} to {{ archived_projects.end_index }} of {{ archived_projects.paginator.count }} entries
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <!-- END PAGINATION -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+            </div>
+            <!-- end main content-->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+{% endblock content %}
+
+{% block extra_content %}
+    <!-- removeProjectModal -->
+    {% for project in projects %}
+    <div id="removeProjectModal{{project.pk}}" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mt-2 text-center">
+                        <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                        <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                            <h4>Are you Sure ?</h4> 
+                            <p class="text-muted mx-4 mb-0">Are you Sure You want to Remove this Project {{project.name}} ?</p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn w-sm btn-danger" id="remove-project" onclick="location.href = '{% url 'apps:projects.delete_list' project.pk %}';">Yes, Delete It!</button>
+                    </div>
+                </div>
+
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    {% endfor %}
+
+    {% for tech in technicians %}
+    <div class="offcanvas offcanvas-end border-0" tabindex="-1" id="userProfileCanvasExample{{tech.pk}}">
+        <!--end offcanvas-header-->
+        <div class="offcanvas-body profile-offcanvas p-0">
+            <div class="team-cover">
+                <img src="{% static 'images/small/img-9.jpg'%}" alt="" class="img-fluid" />
+            </div>
+            <div class="p-1 pb-4 pt-0">
+                <div class="team-settings">
+                    <div class="row g-0">
+                        <div class="col">
+                            <div class="btn nav-btn">
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="user-chat-nav d-flex">
+                                <div class="dropdown">
+                                    <a class="btn nav-btn" href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="ri-more-2-fill"></i>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-inbox-archive-line align-bottom text-muted me-2"></i>Archive</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-mic-off-line align-bottom text-muted me-2"></i>Muted</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>Delete</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div><!--end col-->
+            </div>
+            <div class="p-3 text-center">
+                {% if tech.picture %}
+                <img src="{% static 'images/users/avatar-2.jpg'%}" alt="" class="avatar-lg img-thumbnail rounded-circle mx-auto profile-img">
+                {% else %}
+                <div class="avatar-lg img-thumbnail rounded-circle mx-auto profile-img">
+                    {{tech.username|make_list|first}}
+                </div>
+                {% endif %}
+                <div class="mt-3">
+                    <h5 class="fs-16 mb-1"><a href="javascript:void(0);" class="link-primary username">{{tech.username}}</a></h5>
+                    <p class="text-muted"><i class="ri-checkbox-blank-circle-fill me-1 align-bottom text-success"></i>Online</p>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Message">
+                        <span class="avatar-title rounded bg-light text-body">
+                            <i class="ri-question-answer-line"></i>
+                        </span>
+                    </button>
+
+                    <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Favourite">
+                        <span class="avatar-title rounded bg-light text-body">
+                            <i class="ri-star-line"></i>
+                        </span>
+                    </button>
+
+                    <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Phone">
+                        <span class="avatar-title rounded bg-light text-body">
+                            <i class="ri-phone-line"></i>
+                        </span>
+                    </button>
+
+                    <div class="dropdown">
+                        <button class="btn avatar-xs p-0" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="avatar-title bg-light text-body rounded">
+                                <i class="ri-more-fill"></i>
+                            </span>
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-inbox-archive-line align-bottom text-muted me-2"></i>Archive</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-mic-off-line align-bottom text-muted me-2"></i>Muted</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>Delete</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-top border-top-dashed p-3">
+                <h5 class="fs-15 mb-3">Personal Details</h5>
+                <div class="mb-3">
+                    <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Number</p>
+                    <h6>{{tech.mobile}}</h6>
+                </div>
+                <div class="mb-3">
+                    <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Email</p>
+                    <h6>{{tech.email}}</h6>
+                </div>
+                <div>
+                    <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Location</p>
+                    <h6 class="mb-0">{{tech.city}}, {{tech.state}}</h6>
+                </div>
+            </div>
+            
+            <div class="border-top border-top-dashed p-3">    
+                <h5 class="fs-15 mb-3">Attached Files</h5>
+                
+                <div class="vstack gap-2">
+                    <div class="border rounded border-dashed p-2">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light text-secondary rounded fs-20">
+                                        <i class="ri-folder-zip-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">App pages.zip</a></h5>
+                                <div class="text-muted">2.2MB</div>
+                            </div>
+                            <div class="flex-shrink-0 ms-2">
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded border-dashed p-2">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light text-secondary rounded fs-20">
+                                        <i class="ri-file-ppt-2-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">Project Rocket admin.ppt</a></h5>
+                                <div class="text-muted">2.4MB</div>
+                            </div>
+                            <div class="flex-shrink-0 ms-2">
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded border-dashed p-2">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light text-secondary rounded fs-20">
+                                        <i class="ri-folder-zip-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">Images.zip</a></h5>
+                                <div class="text-muted">1.2MB</div>
+                            </div>
+                            <div class="flex-shrink-0 ms-2">
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded border-dashed p-2">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light text-secondary rounded fs-20">
+                                        <i class="ri-image-2-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">bg-pattern.png</a></h5>
+                                <div class="text-muted">1.1MB</div>
+                            </div>
+                            <div class="flex-shrink-0 ms-2">
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-2">
+                        <button type="button" class="btn btn-danger">Load more <i class="ri-arrow-right-fill align-bottom ms-1"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div><!--end offcanvas-body-->
+    </div><!--end offcanvas-->
+    {% endfor %}
+{% endblock extra_content %}
+{% block extra_js %}
+    <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
+    <script src="{% static 'libs/cleave.js/dist/cleave.min.js' %}"></script>    
+
+    <!-- project list init -->
+    <script src="{% static 'js/pages/project-list.init.js'%}" type="module"></script>
+{% endblock extra_js %}

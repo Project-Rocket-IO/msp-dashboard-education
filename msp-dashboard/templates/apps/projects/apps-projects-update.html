@@ -1,0 +1,419 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Update Project{% endblock title %}
+{% block extra_css %}
+    <!-- Plugins css -->
+    <link href="{% static 'libs/dropzone/dist/dropzone.css'%}" rel="stylesheet" type="text/css" />
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+                <div class="page-content">
+                    <div class="container-fluid">
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Projects" title="Update Project" %}
+                        {% endblock pagetitle %}
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <form action="{% url 'apps:projects.edit' projects.pk %}" method="POST" enctype="multipart/form-data" class="dropzone needs-validation" id="editProjectDropzone" novalidate>
+                                    {% csrf_token %}
+                                    {{ form.media }}
+                                    {{ form.as_p }}
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="project-title-input">Project Title<span class="required-asterix">*</span></label>
+                                                <input type="text" name="name" class="form-control" id="project-title-input"
+                                                    value="{{projects.name}}" required>
+                                                <div class="invalid-feedback">Please select a project title</div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="choices-text-input" class="form-label">Technician<span class="required-asterix">*</span></label>
+                                                        <select class="form-select" data-choices data-choices-search-true data-choices-removeItem
+                                                        id="choices-lead-input" placeholder="{{tickets.assignment}}" value="{{tickets.assignment}}" 
+                                                        name="assignment" id="assignment" multiple required>
+        
+                                                            {% for technician in projects.assignment.all %}
+                                                            <option value="{{technician.id}}" selected>{{technician.auth_user.username}}</option>
+                                                            {% endfor %}
+                                                            {% for technician in technicians %}
+                                                            {% if technician not in projects.assignment.all %}
+                                                            <option value="{{technician.id}}">{{technician.auth_user.username}}</option>
+                                                            {% endif %}
+                                                            {% endfor %}
+                                                        </select>
+                                                        <div class="invalid-feedback">Please assign technicians</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3 mb-lg-0">
+                                                        <label for="choices-text-input" class="form-label">Client Name<span class="required-asterix">*</span></label>
+                                                        <select class="form-select" data-choices data-choices-search-false
+                                                            id="choices-lead-input" name="client" id="client_list" required>
+                                                                {% if projects.client %}
+                                                                <option value="{{projects.client.pk}}" selected>{{projects.client.name}}</option>
+                                                                {% endif %}
+                                                                {% for client in clients %}
+                                                                {% if client.pk != projects.client.pk %}
+                                                                <option value="{{client.pk}}">{{client.name}}</option>
+                                                                {% endif %}
+                                                                {% endfor %}
+                                                            </select>
+                                                            <div class="invalid-feedback">Please select a client</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="choices-text-input" class="form-label">Tickets</label>
+                                                        <select class="form-select" data-choices data-choices-search-true
+                                                            id="choices-lead-input" name="tickets" id="tickets" multiple>
+                                                                {% for ticket in tickets %}
+                                                                {% if ticket in projects.tickets.all %}
+                                                                <option value="{{ticket.pk}}" selected>#{{ticket.identifier|add:1000}} - {{ticket.name}}</option>
+                                                                {% else %}
+                                                                <option value="{{ticket.pk}}">#{{ticket.identifier|add:1000}} - {{ticket.name}}</option>
+                                                                {% endif %}
+                                                                {% endfor %}
+                                                            </select>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-lg-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label" for="project-thumbnail-img">Project Image</label>
+                                                            <input class="form-control" name="picture" id="project-thumbnail-img" value="{{project.picture}}" type="file" accept="image/png, image/gif, image/jpeg">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-6">
+                                                        <div class="mb-3">
+                                                            <label for="choices-text-input" class="form-label">Tags</label>
+                                                            <input class="form-control" id="choices-text-input" data-choices-removeItem data-choices data-choices-limit="Required Limit" placeholder="Enter Skills" type="text" name="tag"
+                                                            value="{{tags}}" />  
+                                                        </div>  
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3 mb-lg-0">
+                                                        <label for="priority-field" class="form-label">Priority</label>
+                                                        <select class="form-select" id="priority-field" name="priority">
+                                                            {% if projects.priority == "High" %}
+                                                            <option value="High" selected>High</option>
+                                                            {% else %}
+                                                            <option value="High" selected>High</option>
+                                                            {% endif %}
+                                                            {% if projects.priority == "Medium" %}
+                                                            <option value="Medium" selected>Medium</option>
+                                                            {% else %}
+                                                            <option value="Medium">Medium</option>
+                                                            {% endif %}
+                                                            {% if projects.priority == "Low" %}
+                                                            <option value="Low" selected>Low</option>
+                                                            {% else %}
+                                                            <option value="Low">Low</option>
+                                                            {% endif %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3 mb-lg-0">
+                                                        <label for="choices-status-input" class="form-label">Status<span class="required-asterix">*</span></label>
+                                                        <select class="form-select" id="industry_type-field" name="status" required>
+                                                                {% for status_code, status_label in PROJECT_STATUS %}
+                                                                    <option value="{{ status_code }}" {% if projects.status == status_code %}selected{% endif %}>
+                                                                        {{ status_label }}
+                                                                    </option>
+                                                                {% endfor %}
+                                                        </select>
+                                                        <div class="invalid-feedback">Please select a project status</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <div>
+                                                        <label for="datepicker-deadline-input" class="form-label">Deadline</label>
+                                                        <input type="text" name="due_date" class="form-control" id="datepicker-deadline-input" 
+                                                        {% if projects.due_date %}
+                                                        placeholder="{{ projects.due_date|date:"Y-m-d" }}"
+                                                        value="{{ projects.due_date|date:"Y-m-d" }}"
+                                                        {% else %}
+                                                        placeholder=""
+                                                        value=""
+                                                        {% endif %}
+                                                        data-provider="flatpickr" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <br>
+                                            </div>
+                                                <div class="mb-3 mb-lg-0">
+                                                    <label for="ckeditor-classic" class="form-label">Project Description </label>
+                                                    <textarea id="ckeditor-classic" class="form-control" name="description" value="{{projects.description}}"
+                                                        type="text" cols="30" rows="10">{{projects.description|safe}}</textarea>
+                                                </div>
+                                        </div>
+                                        <!-- end card body -->
+                                    </div>
+                                    <!-- end card -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Attached files</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div>
+                                            <p class="text-muted">Add Attached files here.</p>
+
+                                            <div class="dropzone">
+                                                <div class="fallback">
+                                                    <input name="file" type="file" multiple="multiple">
+                                                </div>
+                                                <div class="dz-message needsclick">
+                                                    <div class="mb-3">
+                                                        <i class="display-4 text-muted ri-upload-cloud-2-fill"></i>
+                                                    </div>
+    
+                                                    <h5>Drop files here or click to upload.</h5>
+                                                </div>
+                                            </div>
+    
+                                            <ul class="list-unstyled mb-0" id="dropzone-preview">
+                                                <li class="mt-2" id="dropzone-preview-list">
+                                                    <!-- This is used as the file preview template -->
+                                                    <div class="border rounded">
+                                                        <div class="d-flex p-2">
+                                                            <div class="flex-shrink-0 me-3">
+                                                                <div class="avatar-sm bg-light rounded">
+                                                                    <img src="#" alt="Project-Image" data-dz-thumbnail class="img-fluid rounded d-block" />
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <div class="pt-1">
+                                                                    <h5 class="fs-14 mb-1" data-dz-name>&nbsp;</h5>
+                                                                    <p class="fs-13 text-muted mb-0" data-dz-size></p>
+                                                                    <strong class="error text-danger" data-dz-errormessage></strong>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex-shrink-0 ms-3">
+                                                                <button data-dz-remove class="btn btn-sm btn-danger">Delete</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                            <!-- end dropzon-preview -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- end card -->
+                                <div class="text-end mb-4">
+                                    <button type="button" class="btn btn-light w-xs" onclick="location.href = '{% url 'apps:projects.list' %}';">Cancel</button>
+                                    <button type="submit" class="btn btn-info w-sm" id="add-btn">Update</button>
+                                </div>
+                            </div>
+                            </form>
+                            <!-- end col -->
+                            <div class="col-lg-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Client Overview</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div>
+                                            <label for="choices-privacy-status-input" class="form-label">Client Name</label>
+                                            <div class="confirmation" >    
+                                                <input class="form-control" type="text" id="confirmTitle" value="{{projects.client.name}}" readonly> 
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <div>
+                                            <label for="choices-privacy-status-input" class="form-label">Main Contact</label>
+                                            <div class="confirmation" >    
+                                                <input class="form-control" type="text" id="confirmTitle" value="Name: {{projects.client.contact_first}} {{projects.client.contact_last}}" readonly> 
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <div>
+                                            <label for="choices-privacy-status-input" class="form-label">Contact Information</label>
+                                            <div class="confirmation" >    
+                                                <input class="form-control" type="text" id="confirmTitle" value="{{projects.client.phone}}" readonly> 
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <div>
+                                            <label for="choices-privacy-status-input" class="form-label">Client Website</label>
+                                            <div class="confirmation" >    
+                                                <input class="form-control" type="text" id="confirmTitle" value="{{projects.client.website}}" readonly> 
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- end card body -->
+                                </div>
+                                <!-- end card -->
+
+                            </div>
+                            <!-- end col -->
+                        </div>
+                        <!-- end row -->
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+                
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+
+{% block extra_content %}
+    <!-- Modal -->
+    <div class="modal fade" id="inviteMembersModal" tabindex="-1" aria-labelledby="inviteMembersModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header p-3 ps-4 bg-soft-success">
+                    <h5 class="modal-title" id="inviteMembersModalLabel">Members</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="search-box mb-3">
+                        <input type="text" class="form-control bg-light border-light" placeholder="Search here...">
+                        <i class="ri-search-line search-icon"></i>
+                    </div>
+
+                    <div class="mb-4 d-flex align-items-center">
+                        <div class="me-2">
+                            <h5 class="mb-0 fs-13">Members :</h5>
+                        </div>
+                        <div class="avatar-group justify-content-center">
+                            <a href="javascript: void(0);" class="avatar-group-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Brent Gonzalez">
+                                <div class="avatar-xs">
+                                    <img src="{% static 'images/users/avatar-3.jpg'%}" alt="" class="rounded-circle img-fluid">
+                                </div>
+                            </a>
+                            <a href="javascript: void(0);" class="avatar-group-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Sylvia Wright">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title rounded-circle bg-secondary">
+                                        S
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="javascript: void(0);" class="avatar-group-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Ellen Smith">
+                                <div class="avatar-xs">
+                                    <img src="{% static 'images/users/avatar-4.jpg'%}" alt="" class="rounded-circle img-fluid">
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="mx-n4 px-4" data-simplebar style="max-height: 225px;">
+                        <div class="vstack gap-3">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs flex-shrink-0 me-3">
+                                    <img src="{% static 'images/users/avatar-2.jpg'%}" alt="" class="img-fluid rounded-circle">
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">Nancy Martino</a></h5>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" class="btn btn-light btn-sm">Add</button>
+                                </div>
+                            </div>
+                            <!-- end member item -->
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs flex-shrink-0 me-3">
+                                    <div class="avatar-title bg-soft-danger text-danger rounded-circle">
+                                        HB
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">Henry Baird</a></h5>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" class="btn btn-light btn-sm">Add</button>
+                                </div>
+                            </div>
+                            <!-- end member item -->
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs flex-shrink-0 me-3">
+                                    <img src="{% static 'images/users/avatar-3.jpg'%}" alt="" class="img-fluid rounded-circle">
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">Frank Hook</a></h5>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" class="btn btn-light btn-sm">Add</button>
+                                </div>
+                            </div>
+                            <!-- end member item -->
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs flex-shrink-0 me-3">
+                                    <img src="{% static 'images/users/avatar-4.jpg'%}" alt="" class="img-fluid rounded-circle">
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">Jennifer Carter</a></h5>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" class="btn btn-light btn-sm">Add</button>
+                                </div>
+                            </div>
+                            <!-- end member item -->
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs flex-shrink-0 me-3">
+                                    <div class="avatar-title bg-soft-success text-success rounded-circle">
+                                        AC
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">Alexis Clarke</a></h5>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" class="btn btn-light btn-sm">Add</button>
+                                </div>
+                            </div>
+                            <!-- end member item -->
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs flex-shrink-0 me-3">
+                                    <img src="{% static 'images/users/avatar-7.jpg'%}" alt="" class="img-fluid rounded-circle">
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">Joseph Parker</a></h5>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="button" class="btn btn-light btn-sm">Add</button>
+                                </div>
+                            </div>
+                            <!-- end member item -->
+                        </div>
+                        <!-- end list -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light w-xs" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success w-xs">Invite</button>
+                </div>
+            </div>
+            <!-- end modal-content -->
+        </div>
+        <!-- modal-dialog -->
+    </div>
+    <!-- end modal -->
+{% endblock extra_content %}
+{% block extra_js %}
+
+    <script>
+        let projectListURL = "{% url 'apps:projects.list' %}";
+        let projectEditURL = "{% url 'apps:projects.edit' projects.pk %}";
+    </script>
+    <!-- dropzone js -->
+    <script src="{% static 'libs/dropzone/dist/dropzone-min.js'%}"></script>
+    <!-- ckeditor -->
+    <script src="{% static 'libs/@ckeditor/ckeditor5-build-classic/build/ckeditor.js'%}"></script>
+    <!-- project-update init -->
+    <script src="{% static 'js/pages/project-update.init.js'%}" type="module"></script>
+
+{% endblock extra_js %}

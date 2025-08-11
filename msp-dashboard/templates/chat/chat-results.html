@@ -1,0 +1,150 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Search Results{% endblock title %}
+{% block extra_css %}
+    <!-- swiper css -->
+    <link href="{% static 'libs/swiper/swiper-bundle.min.css'%}" rel="stylesheet" type="text/css" />
+
+    <!-- glightbox css -->
+    <link rel="stylesheet" href="{% static 'libs/glightbox/dist/css/glightbox.min.css'%}">
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Pages" title="ChatGPT" %}
+                        {% endblock pagetitle %}
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card">
+                                    <div class="card-header border-0">
+                                        <div class="row justify-content-center mb-4">
+                                            <div class="col-lg-6">
+                                                <div class="row g-2">
+                                                    <div class="col">
+                                                        <div class="position-relative mb-3">
+                                                            <form action="{% url 'chat:chat.results'%}" method="POST">
+                                                                <!-- this secures the form from malicious attacks during submission -->
+                                                                {% csrf_token %}
+                                                                <input type="text" class="form-control form-control-lg bg-light border-light" placeholder="How can I help you today?" autofocus="autofocus" name="prompt" value="{{ prompt }}">
+                                                                <!-- <a class="btn btn-link link-success btn-lg position-absolute end-0 top-0" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample"><i class="ri-mic-fill"></i></a> -->
+                                                                <!-- <label for="temperature" class="form-label">Temperature:</label>
+                                                                <input class="form-control mb-2" type="number" step="0.01" min="0" max="2" name="temperature" value="{{ temperature }}" id="temperature"> -->
+                                                                <br>
+                                                                <div class="col-auto">
+                                                                    <button type="submit" class="btn btn-primary btn-lg waves-effect waves-light"><i class="ri-terminal-box-line me-1"></i> Get Assistance</button>
+                                                                    <div class="d-flex justify-content-end">
+                                                                        <button type="button" class="btn btn-primary mb-3" onclick="location.href='{% url 'chat:chat.new_gptchat' %}'">New Chat +</button>
+                                                                      </div>
+                                                                </div>
+                                                              </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div><!--end col-->
+                                            <div class="col-lg-12">
+                                                <h5 class="fs-16 fw-semibold text-center mb-0">Lighten the load with <span class="text-primary fw-medium fst-italic">ChatGPT</span></h5>
+                                            </div>
+                                        </div><!--end row-->
+
+                                        <div class="offcanvas offcanvas-top" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+                                            <div class="offcanvas-body">
+                                                <button type="button" class="btn-close text-reset float-end" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                                                <div class="d-flex flex-column h-100 justify-content-center align-items-center">
+                                                    <div class="search-voice">
+                                                        <i class="ri-mic-fill align-middle"></i>
+                                                        <span class="voice-wave"></span>
+                                                        <span class="voice-wave"></span>
+                                                        <span class="voice-wave"></span>
+                                                    </div>
+                                                    <h4>Talk to me, what can I do for you?</h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
+                                            <li class="nav-item">
+                                                <a class="nav-link active" data-bs-toggle="tab" href="#current" role="tab" aria-selected="false">
+                                                    <i class="ri-search-2-line text-muted align-bottom me-1"></i> Current Session
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="card-body p-4">
+                                        <div class="tab-content text-muted">
+                                            <div class="tab-pane active" id="current" role="tabpanel">
+                                                <div class="pb-3">
+                                                    <h5 class="mb-1"><a href="javascript:void(0);">Responsive, Stable, ChatGPT integration by Project Rocket</a></h5>
+                                                    <p class="text-muted mb-2">Courtesy of OpenAI and Project Rocket, our application is super flexible, powerful, clean, modern & responsive based on <span class="fw-semibold">OpenAI's ChatGPT 4</span>, we are stable with unlimited possibilities. 
+                                                        You can complete tasks effortlessly with ChatGPT integration. 
+                                                        You can start small and large tasks, continous in a session. Click a new chat to start over. 
+                                                        It is very quick and easy as it is beautiful, adroit, and delivers the ultimate user experience.</p>
+                                                    <ul class="list-inline d-flex align-items-center g-3 text-muted fs-14 mb-0">
+                                                        <li class="list-inline-item me-3"><i class="ri-terminal-line align-middle me-1"></i>0.1.0 <i>(beta)</i></li>
+                                                        <li class="list-inline-item me-3"><i class="ri-file-mark-line align-middle me-1"></i>4.0</li>
+                                                        <li class="list-inline-item">
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="flex-shrink-0">
+                                                                    <i class="ri-user-line"></i>
+                                                                </div>
+                                                                <div class="flex-grow-1 fs-13 ms-1">
+                                                                    <span class="fw-medium">Project Rocket</span>
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+
+                                                <div class="border border-dashed"></div>
+                                                <div class="py-3">
+                                                    <h5 class="fs-13 mb-3 text-muted fst-italic">Response</h5>
+                                                    <div class="row">                                                            
+                                                        <div>
+                                                            {% for message in messages %}
+                                                            <div class="card mb-2 {% if message.role == 'assistant' %}bg-success text-white{% endif %}">
+                                                                <div class="card-body p-2">
+                                                                    <strong>{{ message.role|title }}: </strong> {{ message.content|linebreaksbr }}
+                                                                </div>
+                                                            </div>
+                                                            {% endfor %}
+                                                        </div><!--end col-->
+                                                    </div><!--end row-->
+                                                </div>
+                                                <div class="border border-dashed"></div>
+                                            </div>
+                                        </div><!--end tab-content-->
+                                        
+                                    </div><!--end card-body-->
+                                </div><!--end card -->
+                            </div><!--end card -->
+                        </div><!--end row-->
+
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+{% block extra_js %}
+        <!-- glightbox js -->
+        <script src="{% static 'libs/glightbox/dist/js/glightbox.min.js'%}"></script>
+
+        <!-- swiper js -->
+        <script src="{% static 'libs/swiper/swiper-bundle.min.js'%}"></script>
+
+        <!-- search-result init js -->
+        <script src="{% static 'js/pages/search-result.init.js'%}"></script>
+{% endblock extra_js %}

@@ -1,0 +1,23 @@
+
+.nav-link.active[data-bs-toggle="tab"] {
+    background-color: #fff;
+    border-radius: 5px
+}
+
+@media (min-width: 576px) {
+    .col-sm-5 {
+        -webkit-box-flex: 0;
+        -ms-flex: 0 0 auto;
+        flex: 0 0 auto;
+        width: 47.666667%;
+    }
+}
+
+@media (min-width: 1400px) {
+    .col-xxl-3 {
+        -webkit-box-flex: 0;
+        -ms-flex: 0 0 auto;
+        flex: 0 0 auto;
+        width: 30%;
+    }
+}

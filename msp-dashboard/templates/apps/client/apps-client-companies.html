@@ -1,0 +1,746 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Clients{% endblock title %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.min.css">
+<!-- Sweet Alert css-->
+<link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+            
+                <div class="page-content">
+                    <div class="container-fluid">
+            
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="CRM" title="Clients" %}
+                        {% endblock pagetitle %}
+            
+                        <div class="row">
+                            {% if perms.apps.add_clientcompany %}
+                            <div class="col-lg-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div class="d-flex align-items-center flex-wrap gap-2">
+                                            <div class="flex-grow-1">
+                                                <button class="btn btn-info add-btn" data-bs-toggle="modal" data-bs-target="#showModal"><i class="ri-add-fill me-1 align-bottom"></i> Add Client</button>
+                                            </div>
+                                            <div class="flex-shrink-0">
+                                                <div class="hstack text-nowrap gap-2">
+                                                    <button class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()"><i class="ri-delete-bin-2-line"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <!--end col-->
+                            <div class="col-xxl-12">
+                                <div class="card" id="companyList">
+                                    <div class="card-header">
+                                        <div class="row g-2">
+                                            <div class="col-md-3">
+                                                <div class="search-box">
+                                                    <input type="text" class="form-control search" placeholder="Search for a client...">
+                                                    <i class="ri-search-line search-icon"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div>
+                                            <div class="table-responsive table-card mb-3">
+                                                <table class="table align-middle table-nowrap mb-0" id="customerTable">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th scope="col" style="width: 50px;">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="checkAll" value="option">
+                                                                </div>
+                                                            </th>
+                                                            <th class="sort" data-sort="name" scope="col">Client Name</th>
+                                                            <th class="sort" data-sort="contact" scope="col">Contact</th>
+                                                            <th class="sort" data-sort="industry_type" scope="col">Industry</th>
+                                                            <th class="sort" data-sort="star_value" scope="col">Website</th>
+                                                            <th class="sort" data-sort="location" scope="col">Location</th>
+                                                            <th scope="col">Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="list form-check-all">
+                                                        {% for company in companies %}
+                                                        <tr>
+                                                            <th scope="row">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" name="chk_child" value="option1">
+                                                                </div>
+                                                            </th>
+                                                            <td class="id" style="display:none;"><a href="javascript:void(0);" class="fw-medium link-primary">#VZ001</a>
+                                                            </td>
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="flex-shrink-0">
+                                                                        
+                                                                        <img src="{{company.get_photo_url}}" alt="ugh" class="avatar-xxs rounded-circle image_src object-cover">
+                                                                        
+                                                                    </div>
+                                                                    <div class="flex-grow-1 ms-2 name"><a href="{% url 'apps:client.details' company.pk %}">{{company.name}}</a>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td class="owner">{{company.contact_last}}, {{ company.contact_first }}</td>
+                                                            <td class="industry_type">{% if company.industry %}{{company.industry}}{% endif %}</td>
+                                                            <td><span class="star_value">{% if company.website %}{{company.website}} <i class="ri-star-fill text-warning align-bottom"></i>{% endif %}</span></td>
+                                                            <td class="location">{% if company.address_1 %}{{ company.address_1 }}{% endif %}{% if company.city %}, {{ company.city }}{% endif %}{% if company.state %}{{ company.state }}{% endif %}</td>
+                                                            <td>
+                                                                <ul class="list-inline hstack gap-2 mb-0">
+                                                                    <li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="View">
+                                                                        <a href="{% url 'apps:client.details' company.pk %}" class="view-item-btn"><i class="ri-eye-fill align-bottom text-muted"></i></a>
+                                                                    </li>
+                                                                    {% if perms.apps.change_clientcompany %}
+                                                                    <li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Edit">
+                                                                        <a class="edit-item-btn" href="#showModal-{{ forloop.counter }}" data-bs-toggle="modal"><i class="ri-pencil-fill align-bottom text-muted"></i></a>
+                                                                    </li>
+                                                                    {% endif %}
+                                                                    {% if perms.apps.delete_clientcompany %}
+                                                                    <li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Delete">
+                                                                        <a class="remove-item-btn" data-bs-toggle="modal" href="#deleteRecordModal-{{ forloop.counter }}">
+                                                                            <i class="ri-delete-bin-fill align-bottom text-muted"></i>
+                                                                        </a>
+                                                                    </li>
+                                                                    {% endif %}
+                                                                </ul>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                                <div class="noresult" style="display: none">
+                                                    <div class="text-center">
+                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px"></lord-icon>
+                                                        <h5 class="mt-2">Sorry! No Result Found</h5>
+                                                        <p class="text-muted mb-0">We've searched more than 150+ companies We did not find any companies for you search.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-end mt-3">
+                                                <div class="pagination-wrap hstack gap-2">
+                                                    <a class="page-item pagination-prev disabled" href="#">
+                                                        Previous
+                                                    </a>
+                                                    <ul class="pagination listjs-pagination mb-0"></ul>
+                                                    <a class="page-item pagination-next" href="#">
+                                                        Next
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="modal fade" id="showModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                <div class="modal-content border-0">
+                                                    <div class="modal-header bg-soft-info p-3">
+                                                        <h5 class="modal-title" id="exampleModalLabel"></h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+                                                    </div>
+                                                    <form action="{% url 'apps:client.companies' %}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                                        {% csrf_token %}
+                                                        <div class="modal-body">
+                                                            <input type="hidden" id="id-field" />
+                                                            <div class="row g-3">
+                                                                <div class="col-lg-12">
+                                                                    <div class="text-center">
+                                                                        <div class="position-relative d-inline-block">
+                                                                            <div class="position-absolute bottom-0 end-0">
+                                                                                <label for="company-logo-input-create" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                                                                    <div class="avatar-xs cursor-pointer">
+                                                                                        <div class="avatar-title bg-light border rounded-circle text-muted">
+                                                                                            <i class="ri-image-fill"></i>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </label>
+                                                                                <input class="form-control d-none" value="{% static 'images/users/multi-user.jpg' %}" name="logo" 
+                                                                                    id="company-logo-input-create" type="file" accept="image/png, image/gif, image/jpeg">
+                                                                            </div>
+                                                                            <div class="avatar-lg p-1">
+                                                                                <div class="avatar-title bg-light rounded-circle">
+                                                                                    <img src="{% static 'images/users/multi-user.jpg' %}" name="logo"
+                                                                                         id="company-logo-img-create" class="avatar-md rounded-circle object-cover" />
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <h5 class="fs-13 mt-3">Client Logo</h5>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-8">
+                                                                    <div>
+                                                                        <label for="companyname-field" class="form-label">Name<span class="required-asterix">*</span></label>
+                                                                        <input type="text" name="name" class="form-control" placeholder="Enter company name" required />
+                                                                        <div class="invalid-feedback">Please give a client name</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="website-field" class="form-label">Main Tech<span class="required-asterix">*</span></label>
+                                                                            <select class="form-select" data-choices data-choices-search-false 
+                                                                            id="choices-lead-input" name="main_tech" id="main_tech" multiple required>
+                                                                                {% for tech in technicians %}
+                                                                                <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                                                {% endfor %}
+                                                                            </select>
+                                                                            <div class="invalid-feedback">Please select a primary technician</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="owner_first-field" class="form-label">Contact First Name<span class="required-asterix">*</span></label>
+                                                                        <input type="text" name="contact_first" class="form-control" placeholder="Owner's First" required />
+                                                                        <div class="invalid-feedback">Provide first name</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="owner_first-field" class="form-label">Contact Last Name<span class="required-asterix">*</span></label>
+                                                                        <input type="text" name="contact_last" class="form-control" placeholder="Owner's Last" required />
+                                                                        <div class="invalid-feedback">Provide last name</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="email-field" class="form-label">Company Email<span class="required-asterix">*</span></label>
+                                                                        <input type="text" name="email" class="form-control" placeholder="Company Email" required />
+                                                                        <div class="invalid-feedback">Input valid company email</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="quickbooks_customer" class="form-label">Quickbooks Customer<span class="required-asterix">*</span></label>
+                                                                        <select class="form-select" id="quickbooks_customer" name="quickbooks_customer" placeholder="Select Customer" >
+                                                                            <option value="">Select Customer</option>
+                                                                            {% for customer in qb_customers %}
+                                                                            <option value="{{customer.id}}">{{customer.name}}</option>
+                                                                            {% endfor %}
+                                                                        </select>
+                                                                        <div class="invalid-feedback">Input valid Quickbooks Customer</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <label for="quickbooks_invoice" class="form-label">Quickbooks Invoice<span class="required-asterix">*</span></label>
+                                                                    <select class="form-select" id="quickbooks_invoice" name="quickbooks_invoice" placeholder="Select Invoice " >
+                                                                        <option value="">Select Invoice </option>
+                                                                    </select>
+                                                                    <div class="invalid-feedback">Input valid Quickbooks Invoice</div>
+                                                                </div>
+
+                                                                <div class="card-footer bg-transparent border-top-dashed py-2"></div>
+                                                                <div class="col-lg-8">
+                                                                    <div>
+                                                                        <label for="address_1-field" class="form-label">Address</label>
+                                                                        <input type="text" name="address_1" class="form-control" placeholder="Enter Street Address"  />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="address_2-field" class="form-label">Address 2</label>
+                                                                        <input type="text" name="address_2" class="form-control" placeholder="Enter APT / Suite" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="city-field" class="form-label">City</label>
+                                                                        <input type="text" name="city" class="form-control" placeholder="Enter City" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="state-field" class="form-label">State</label>
+                                                                        <select class="form-select" id="industry_type-field" name="state" placeholder="Select State" >
+                                                                            <option value="">Select State</option>
+                                                                            <option value="AL">Alabama</option>
+                                                                            <option value="AK">Alaska</option>
+                                                                            <option value="AZ">Arizona</option>
+                                                                            <option value="AR">Arkansas</option>
+                                                                            <option value="CA">California</option>
+                                                                            <option value="CO">Colorado</option>
+                                                                            <option value="CT">Connecticut</option>
+                                                                            <option value="DE">Delaware</option>
+                                                                            <option value="DC">District Of Columbia</option>
+                                                                            <option value="FL">Florida</option>
+                                                                            <option value="GA">Georgia</option>
+                                                                            <option value="HI">Hawaii</option>
+                                                                            <option value="ID">Idaho</option>
+                                                                            <option value="IL">Illinois</option>
+                                                                            <option value="IN">Indiana</option>
+                                                                            <option value="IA">Iowa</option>
+                                                                            <option value="KS">Kansas</option>
+                                                                            <option value="KY">Kentucky</option>
+                                                                            <option value="LA">Louisiana</option>
+                                                                            <option value="ME">Maine</option>
+                                                                            <option value="MD">Maryland</option>
+                                                                            <option value="MA">Massachusetts</option>
+                                                                            <option value="MI">Michigan</option>
+                                                                            <option value="MN">Minnesota</option>
+                                                                            <option value="MS">Mississippi</option>
+                                                                            <option value="MO">Missouri</option>
+                                                                            <option value="MT">Montana</option>
+                                                                            <option value="NE">Nebraska</option>
+                                                                            <option value="NV">Nevada</option>
+                                                                            <option value="NH">New Hampshire</option>
+                                                                            <option value="NJ">New Jersey</option>
+                                                                            <option value="NM">New Mexico</option>
+                                                                            <option value="NY">New York</option>
+                                                                            <option value="NC">North Carolina</option>
+                                                                            <option value="ND">North Dakota</option>
+                                                                            <option value="OH">Ohio</option>
+                                                                            <option value="OK">Oklahoma</option>
+                                                                            <option value="OR">Oregon</option>
+                                                                            <option value="PA">Pennsylvania</option>
+                                                                            <option value="RI">Rhode Island</option>
+                                                                            <option value="SC">South Carolina</option>
+                                                                            <option value="SD">South Dakota</option>
+                                                                            <option value="TN">Tennessee</option>
+                                                                            <option value="TX">Texas</option>
+                                                                            <option value="UT">Utah</option>
+                                                                            <option value="VT">Vermont</option>
+                                                                            <option value="VA">Virginia</option>
+                                                                            <option value="WA">Washington</option>
+                                                                            <option value="WV">West Virginia</option>
+                                                                            <option value="WI">Wisconsin</option>
+                                                                            <option value="WY">Wyoming</option>
+                                                                        </select>
+                                                                        <div class="invalid-feedback">Provide Industry</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="zip-field" class="form-label">Zip Code</label>
+                                                                        <input type="text" pattern="\d{5}" maxlength="5" name="zip" class="form-control" placeholder="Enter Zip Code"  />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="zip-field" class="form-label">Country</label>
+                                                                        <select class="form-select" id="industry_type-field" name="country" placeholder="Select Country" >
+                                                                            <option value="United States">United Sates</option>
+                                                                            <option value="Canada">Canada</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="zip-field" class="form-label">Time Zone</label>
+                                                                        <input type="text" name="timezone" class="form-control" placeholder="Enter Time Zone" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div class='d-flex flex-column'>
+                                                                        <label for="zip-field" class="form-label">Phone</label>
+                                                                        <input type="tel" id="txtPhoneNo" name="phone" placeholder="888 888 8888" maxlength="15"  class="form-control" />
+                                                                        <div class="invalid-feedback"></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div class='d-flex flex-column'>
+                                                                        <label for="zip-field" class="form-label">Fax</label>
+                                                                        <input type="tel" name="fax" class="form-control" placeholder="Enter Fax"  placeholder="888 888 8888" maxlength="15" />
+                                                                        <div class="invalid-feedback"></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="industry_type-field" class="form-label">Industry Type</label>
+                                                                        <select class="form-select" id="industry_type-field" name="industry" >
+                                                                            <option value="">Select industry type</option>
+                                                                            <option value="Agriculture">Agriculture</option>
+                                                                            <option value="Construction">Construction</option>
+                                                                            <option value="Education">Education</option>
+                                                                            <option value="Entertainment">Entertainment</option>
+                                                                            <option value="Finance & Insurance">Finance & Insurance</option>
+                                                                            <option value="Healthcare">Healthcare</option>
+                                                                            <option value="Higher Education">Higher Education</option>
+                                                                            <option value="Hospitality">Hospitality</option>
+                                                                            <option value="Information Technology">Information Technology</option>
+                                                                            <option value="Manufacturing">Manufacturing</option>
+                                                                            <option value="Nonprofit">Nonprofit</option>
+                                                                            <option value="Professional Services">Professional Services</option>
+                                                                            <option value="Real Estate">Real Estate</option>
+                                                                            <option value="Retail">Retail</option>
+                                                                            <option value="Telecommunications">Telecommunications</option>
+                                                                            <option value="Transportation">Transportation</option>
+                                                                            <option value="Utilities">Utilities</option>
+                                                                            <option value="Wholesale">Wholesale</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="website-field" class="form-label">Website</label>
+                                                                        <input type="text" name="website" class="form-control" placeholder="Company Website.com" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <div class="hstack gap-2 justify-content-end">
+                                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                                                <button type="submit" class="btn btn-success" id="add-btn">Save</button>
+                                                                <!-- <button type="button" class="btn btn-success" id="edit-btn">Update</button> -->
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--end add modal-->
+
+                                        {% for company in companies %}
+                                        <div class="modal fade" id="showModal-{{ forloop.counter }}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                <div class="modal-content border-0">
+                                                    <div class="modal-header bg-soft-primary p-3">
+                                                        <h5 class="modal-title" id="exampleModalLabel">Edit Client</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+                                                    </div>
+                                                    <form method="POST" action="{% url 'apps:client.update_companies' company.pk %}" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                                        {% csrf_token %}
+                                                        <div class="modal-body">
+                                                            <input type="hidden" id="id-field" />
+                                                            <div class="row g-3">
+                                                                <div class="col-lg-12">
+                                                                    <div class="text-center">
+                                                                        <div class="position-relative d-inline-block">
+                                                                            <div class="position-absolute bottom-0 end-0">
+                                                                                <label for="company-logo-input-edit-{{company.id}}" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                                                                    <div class="avatar-xs cursor-pointer">
+                                                                                        <div class="avatar-title bg-light border rounded-circle text-muted">
+                                                                                            <i class="ri-image-fill"></i>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </label>
+                                                                                <input class="form-control d-none" value="{{company.get_photo_url}}" 
+                                                                                name="logo" id="company-logo-input-edit-{{company.id}}" type="file" accept="image/png, image/gif, image/jpeg">
+                                                                            </div>
+                                                                            <div class="avatar-lg p-1">
+                                                                                <div class="avatar-title bg-light rounded-circle">
+                                                                                    <img src="{{ company.get_photo_url }}" name="logo" id="company-logo-img-edit-{{company.id}}" class="avatar-md rounded-circle object-cover" />
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <h5 class="fs-13 mt-3">Client Logo</h5>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-8">
+                                                                    <div>
+                                                                        <label for="companyname-field" class="form-label">Name<span class="required-asterix">*</span></label>
+                                                                        <input type="text" name="name" class="form-control" placeholder="Enter company name" value="{{company.name}}" required />
+                                                                        <div class="invalid-feedback">Please give a client name</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="website-field" class="form-label">Main Tech<span class="required-asterix">*</span></label>
+                                                                            <select class="form-select" data-choices data-choices-search-false 
+                                                                            id="choices-lead-input" name="main_tech" id="main_tech" value="{{tech.name}}" multiple required>
+                                                                                {% for tech in technicians %}
+                                                                                    {% if tech == company.main_tech %}
+                                                                                    <option selected value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                                                    {% else %}
+                                                                                    <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                                                    {% endif %}
+                                                                                {% endfor %}
+                                                                            </select>
+                                                                            <div class="invalid-feedback">Please select a primary technician</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="owner_first-field" class="form-label">Contact First Name<span class="required-asterix">*</span></label>
+                                                                        <input type="text" name="contact_first" class="form-control" placeholder="Owner's First" value="{{company.contact_first}}"  required />
+                                                                        <div class="invalid-feedback">Provide first name</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="owner_first-field" class="form-label">Contact Last Name<span class="required-asterix">*</span></label>
+                                                                        <input type="text" name="contact_last" class="form-control" placeholder="Owner's Last" value="{{company.contact_last}}" required />
+                                                                        <div class="invalid-feedback">Provide last name</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="email-field" class="form-label">Company Email<span class="required-asterix">*</span></label>
+                                                                        <input type="text" name="email" class="form-control" placeholder="Company Email" value="{{company.email}}" required />
+                                                                        <div class="invalid-feedback">Input valid company email</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="card-footer bg-transparent border-top-dashed py-2"></div>
+                                                                <div class="col-lg-8">
+                                                                    <div>
+                                                                        <label for="address_1-field" class="form-label">Address</label>
+                                                                        <input type="text" name="address_1" class="form-control" placeholder="Enter Street Address" value="{{company.address_1}}" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="address_2-field" class="form-label">Address 2</label>
+                                                                        <input type="text" name="address_2" class="form-control" placeholder="Enter APT / Suite" value="{{company.address_2}}" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="city-field" class="form-label">City</label>
+                                                                        <input type="text" name="city" class="form-control" placeholder="Enter City" value="{{company.city}}" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="state-field" class="form-label">State</label>
+                                                                        <select class="form-select" id="industry_type-field" name="state" placeholder="Select State"  >
+                                                                            <option value="{{company.state}}" selected>{{company.state}}</option>
+                                                                            <option value="">Select State</option>
+                                                                            <option value="AL">Alabama</option>
+                                                                            <option value="AK">Alaska</option>
+                                                                            <option value="AZ">Arizona</option>
+                                                                            <option value="AR">Arkansas</option>
+                                                                            <option value="CA">California</option>
+                                                                            <option value="CO">Colorado</option>
+                                                                            <option value="CT">Connecticut</option>
+                                                                            <option value="DE">Delaware</option>
+                                                                            <option value="DC">District Of Columbia</option>
+                                                                            <option value="FL">Florida</option>
+                                                                            <option value="GA">Georgia</option>
+                                                                            <option value="HI">Hawaii</option>
+                                                                            <option value="ID">Idaho</option>
+                                                                            <option value="IL">Illinois</option>
+                                                                            <option value="IN">Indiana</option>
+                                                                            <option value="IA">Iowa</option>
+                                                                            <option value="KS">Kansas</option>
+                                                                            <option value="KY">Kentucky</option>
+                                                                            <option value="LA">Louisiana</option>
+                                                                            <option value="ME">Maine</option>
+                                                                            <option value="MD">Maryland</option>
+                                                                            <option value="MA">Massachusetts</option>
+                                                                            <option value="MI">Michigan</option>
+                                                                            <option value="MN">Minnesota</option>
+                                                                            <option value="MS">Mississippi</option>
+                                                                            <option value="MO">Missouri</option>
+                                                                            <option value="MT">Montana</option>
+                                                                            <option value="NE">Nebraska</option>
+                                                                            <option value="NV">Nevada</option>
+                                                                            <option value="NH">New Hampshire</option>
+                                                                            <option value="NJ">New Jersey</option>
+                                                                            <option value="NM">New Mexico</option>
+                                                                            <option value="NY">New York</option>
+                                                                            <option value="NC">North Carolina</option>
+                                                                            <option value="ND">North Dakota</option>
+                                                                            <option value="OH">Ohio</option>
+                                                                            <option value="OK">Oklahoma</option>
+                                                                            <option value="OR">Oregon</option>
+                                                                            <option value="PA">Pennsylvania</option>
+                                                                            <option value="RI">Rhode Island</option>
+                                                                            <option value="SC">South Carolina</option>
+                                                                            <option value="SD">South Dakota</option>
+                                                                            <option value="TN">Tennessee</option>
+                                                                            <option value="TX">Texas</option>
+                                                                            <option value="UT">Utah</option>
+                                                                            <option value="VT">Vermont</option>
+                                                                            <option value="VA">Virginia</option>
+                                                                            <option value="WA">Washington</option>
+                                                                            <option value="WV">West Virginia</option>
+                                                                            <option value="WI">Wisconsin</option>
+                                                                            <option value="WY">Wyoming</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div>
+                                                                        <label for="zip-field" class="form-label">Zip Code</label>
+                                                                        <input type="text" pattern="\d{5}" maxlength="5" name="zip" class="form-control" placeholder="Enter Zip Code" 
+                                                                        {% if company.zip %}
+                                                                        value="{{company.zip}}"
+                                                                        {% endif %}
+                                                                          />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="zip-field" class="form-label">Country</label>
+                                                                        <select class="form-select" id="industry_type-field" name="country" placeholder="Select Country" value="{{company.country}}" >
+                                                                            <option value="United States">United Sates</option>
+                                                                            <option value="Canada">Canada</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="zip-field" class="form-label">Time Zone</label>
+                                                                        <input type="text" name="timezone" class="form-control" placeholder="Enter Time Zone" value="{{company.timezone|default_if_none:""}}" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div class='d-flex flex-column'>
+                                                                        <label for="zip-field" class="form-label">Phone</label>
+                                                                        <input type="tel" id="txtPhoneNo" name="phone" placeholder="888 888 8888" maxlength="15"  class="form-control" value="{{company.phone|default_if_none:""}}"/>
+                                                                        <div class="invalid-feedback"></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div class='d-flex flex-column'>
+                                                                        <label for="zip-field" class="form-label">Fax</label>
+                                                                        <input type="tel" name="fax" class="form-control" placeholder="Enter Fax" value="{{company.fax|default_if_none:""}}"  placeholder="888 888 8888" maxlength="15" />
+                                                                        <div class="invalid-feedback"></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="industry_type-field" class="form-label">Industry Type</label>
+                                                                        <select class="form-select" id="industry-field" name="industry">
+                                                                            <option {% if company.industry == "" %}selected{% endif %} value="">Select industry type</option>
+                                                                            <option {% if company.industry == "Agriculture"  %}selected{% endif %} value="Agriculture">Agriculture</option>
+                                                                            <option {% if company.industry == "Construction"  %}selected{% endif %} value="Construction">Construction</option>
+                                                                            <option {% if company.industry == "Education"  %}selected{% endif %} value="Education">Education</option>
+                                                                            <option {% if company.industry == "Entertainment"  %}selected{% endif %} value="Entertainment">Entertainment</option>
+                                                                            <option {% if company.industry == "Finance"  %}selected{% endif %} value="Finance & Insurance">Finance & Insurance</option>
+                                                                            <option {% if company.industry == "Healthcare"  %}selected{% endif %} value="Healthcare">Healthcare</option>
+                                                                            <option {% if company.industry == "Higher"  %}selected{% endif %} value="Higher Education">Higher Education</option>
+                                                                            <option {% if company.industry == "Hospitality"  %}selected{% endif %} value="Hospitality">Hospitality</option>
+                                                                            <option {% if company.industry == "Information"  %}selected{% endif %} value="Information Technology">Information Technology</option>
+                                                                            <option {% if company.industry == "Manufacturing"  %}selected{% endif %} value="Manufacturing">Manufacturing</option>
+                                                                            <option {% if company.industry == "Nonprofit"  %}selected{% endif %} value="Nonprofit">Nonprofit</option>
+                                                                            <option {% if company.industry == "Professional Services"  %}selected{% endif %} value="Professional Services">Professional Services</option>
+                                                                            <option {% if company.industry == "Real Estate"  %}selected{% endif %} value="Real Estate">Real Estate</option>
+                                                                            <option {% if company.industry == "Retail"  %}selected{% endif %} value="Retail">Retail</option>
+                                                                            <option {% if company.industry == "Telecommunications"  %}selected{% endif %} value="Telecommunications">Telecommunications</option>
+                                                                            <option {% if company.industry == "Transportation"  %}selected{% endif %} value="Transportation">Transportation</option>
+                                                                            <option {% if company.industry == "Utilities"  %}selected{% endif %} value="Utilities">Utilities</option>
+                                                                            <option {% if company.industry == "Wholesale"  %}selected{% endif %} value="Wholesale">Wholesale</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="website-field" class="form-label">Website</label>
+                                                                        <input type="text" name="website" class="form-control" placeholder="Company Website.com" value="{{company.website|default_if_none:""}}" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <div class="hstack gap-2 justify-content-end">
+                                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                                                <button type="submit" class="btn btn-success" id="add-btn">Update</button>
+                                                                <!-- <button type="button" class="btn btn-success" id="edit-btn">Update</button> -->
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--end edit modal-->
+    
+                                        <div class="modal fade zoomIn" id="deleteRecordModal-{{ forloop.counter }}" tabindex="-1" aria-labelledby="deleteRecordLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="btn-close" id="deleteRecord-close" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
+                                                    </div>
+                                                    <div class="modal-body p-5 text-center">
+                                                        <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#405189,secondary:#f06548" style="width:90px;height:90px"></lord-icon>
+                                                        <div class="mt-4 text-center">
+                                                            <h4 class="fs-semibold">You are about to delete a company ?</h4>
+                                                            <p class="text-muted fs-14 mb-4 pt-1">Deleting your company will remove all of your information from our database.</p>
+                                                            <div class="hstack gap-2 justify-content-center remove">
+                                                                <button class="btn btn-link link-success fw-medium text-decoration-none" data-bs-dismiss="modal">
+                                                                    <i class="ri-close-line me-1 align-middle"></i> Close
+                                                                </button>
+                                                                <a class="btn btn-danger" id="delete-record" href="{% url 'apps:client.delete' company.pk %}">Yes, Delete It!!</a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                        <!--end delete modal -->
+    
+                                    </div>
+                                </div>
+                                <!--end card-->
+                            </div>
+                            <!--end col-->
+                        </div>
+                        <!--end row-->
+    
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+            
+                {% block footer %}
+                {% include "partials/footer.html" %}
+                {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+{% block extra_js %}
+
+<script>
+    //load the invoices from json
+    const qb_invoices = {{ qb_invoices|safe }};
+</script>
+
+<!-- Cleave.js -->
+<script src="https://cdn.jsdelivr.net/npm/cleave.js@1/dist/cleave.min.js"></script>
+<!-- Phone number formatter for US -->
+<script src="https://cdn.jsdelivr.net/npm/cleave.js@1/dist/addons/cleave-phone.us.js"></script>
+<!-- intlTelInput -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+
+<script src="{% static 'js/pages/phoneValidation.js' %}"></script>
+
+    <!-- list.js min js -->
+    <script src="{% static 'libs/list.js/dist/list.min.js'%}"></script>
+    <script src="{% static 'libs/list.pagination.js/dist/list.pagination.min.js'%}"></script>
+    <script>
+        let companies = [];
+        {% for comp in companies %}
+            companies.push({{ comp.id|safe }});
+        {% endfor %}
+    </script>    
+    <script src="{% static 'js/pages/client-companies.init.js'%}" type="module"></script>
+    <!-- Sweet Alerts js -->
+    <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
+
+
+    <script>
+        // only show the invoices of the customer which is slected from the dropdown
+        $(document).ready(function() {
+
+            $('#quickbooks_customer').change(function() {
+                var selectedCustomer = $(this).val();
+                
+                // Clear invoice dropdown and reset to default option
+                $('#quickbooks_invoice').html('<option value="">Select Invoice</option>');
+
+                // If no customer selected, keep default option
+                if (!selectedCustomer) {
+                    return;
+                }
+
+                // Filter invoices for selected customer
+                const customerInvoices = qb_invoices.filter(invoice => invoice.customer === selectedCustomer);
+
+                // If customer has invoices, append them
+                if (customerInvoices.length > 0) {
+                    customerInvoices.forEach(invoice => {
+                        $('#quickbooks_invoice').append(`<option value="${invoice.id}">${invoice.docNumber}</option>`);
+                    });
+                }
+            });
+        });
+    </script>
+
+{% endblock extra_js %}

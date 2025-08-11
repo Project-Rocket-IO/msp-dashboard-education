@@ -1,0 +1,122 @@
+
+<div class="modal fade zoomIn" id="showModal-{{ forloop.counter }}" tabindex="-1" aria-labelledby="exampleModalLabel"
+aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0">
+        <div class="modal-header p-3 bg-soft-info">
+            <h5 class="modal-title" id="exampleModalLabel">Edit Ticket</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                id="close-modal"></button>
+        </div>
+        <form action="{% url 'apps:tickets.edit' ticket.pk %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-lg-12">
+                        <div id="modal-id">
+                            <label for="orderId" class="form-label">ID</label>
+                            <input type="text" id="orderId" name="id" class="form-control"
+                                placeholder="ID" value="{{ ticket.pk }}" readonly />
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div>
+                            <label for="tasksTitle-field" class="form-label">Title</label>
+                            <input type="text" name="title" class="form-control" value="{{ ticket.name }}"
+                                placeholder="Title" required />
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div>
+                            <label for="clientName-field" class="form-label">Client Name</label>
+                            <input type="text" name="client_name" class="form-control" value="{{ ticket.client_name }}" placeholder="Client Name"  />
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div>
+                            <label for="assignedtoName-field" class="form-label">Assigned
+                                To</label>
+                            <input type="text" name="assignment" class="form-control" value="{{ ticket.assignment }}"
+                                placeholder="Assigned to" required />
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="date-field" class="form-label">Create Date</label>
+                        <input type="text" name="create_date" class="form-control"
+                            data-provider="flatpickr" data-date-format="Y-m-d" value="{{ ticket.create_date|date:"Y-m-d" }}"
+                            placeholder="Create Date" required />
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="duedate-field" class="form-label">Due Date</label>
+                        <input type="text" name="due_date" class="form-control"
+                            data-provider="flatpickr" data-date-format="Y-m-d" value="{{ ticket.due_date|date:"Y-m-d" }}"
+                            placeholder="Due Date" required />
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="ticket-status" class="form-label">Status</label>
+                        <select class="form-control" data-plugin="choices" name="status"
+                            id="ticket-status">
+                            <option value="New" selected>Status</option>
+                            {% if ticket.status == "New" %}
+                            <option value="New" selected>New</option>
+                            {% else %}
+                            <option value="New">New</option>
+                            {% endif %}
+                            {% if ticket.status == "Inprogress" %}
+                            <option value="Inprogress" selected>In Progress</option>
+                            {% else %}
+                            <option value="Inprogress">In Progress</option>
+                            {% endif %}
+                            {% if ticket.status == "Closed" %}
+                            <option value="Closed" selected>Closed</option>
+                            {% else %}
+                            <option value="Closed">Closed</option>
+                            {% endif %}
+                            {% if ticket.status == "Open" %}
+                            <option value="Open" selected>Open</option>
+                            {% else %}
+                            <option value="Open">Open</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="priority-field" class="form-label">Priority</label>
+                        <select class="form-control" data-plugin="choices" name="priority"
+                            id="priority-field">
+                            <option value="Emergency" selected>Priority</option>
+                            {% if ticket.priority == "Emergency" %}
+                            <option value="Emergency" selected>Emergency</option>
+                            {% else %}
+                            {% endif %}
+                            <option value="High" selected>Priority</option>
+                            {% if ticket.priority == "High" %}
+                            <option value="High" selected>High</option>
+                            {% else %}
+                            <option value="High">High</option>
+                            {% endif %}
+                            {% if ticket.priority == "Medium" %}
+                            <option value="Medium" selected>Medium</option>
+                            {% else %}
+                            <option value="Medium">Medium</option>
+                            {% endif %}
+                            {% if ticket.priority == "Low" %}
+                            <option value="Low" selected>Low</option>
+                            {% else %}
+                            <option value="Low">Low</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <div class="hstack gap-2 justify-content-end">
+                    <button type="button" class="btn btn-light"
+                        data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success" id="add-btn">Update</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</div>

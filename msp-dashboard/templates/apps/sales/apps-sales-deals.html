@@ -1,0 +1,1353 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% load humanize %}
+{% block title %}Sales{% endblock title %}
+{% block extra_css %}
+<!-- Sweet Alert css-->
+<link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="CRM" title="Sales" %}
+                        {% endblock pagetitle %}
+
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="search-box">
+                                            <input type="text" class="form-control search"
+                                                placeholder="Search for sales...">
+                                            <i class="ri-search-line search-icon"></i>
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-md-auto ms-auto">
+                                        <div class="d-flex hastck gap-2 flex-wrap">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="text-muted">Sort by: </span>
+                                                <select class="form-control mb-0" data-choices data-choices-search-false
+                                                    id="choices-single-default">
+                                                    <option value="Date">Date</option>
+                                                    <option value="Owner">Owner</option>
+                                                    <option value="Company">Client A to Z</option>
+                                                    <option value="Company">Client Z to A</option>
+                                                </select>
+                                            </div>
+                                            {% if perms.apps.add_salesrequests %}
+                                            <button data-bs-toggle="modal" data-bs-target="#adddeals"
+                                            class="btn btn-success"><i class="ri-add-fill align-bottom me-1"></i> Add
+                                            Sales</button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                </div>
+                                <!--end row-->
+                            </div>
+                        </div>
+                        <!--end card-->
+    
+                        <div class="row row-cols-xxl-5 row-cols-lg-3 row-cols-md-2 row-cols-1">
+                            <div class="col">
+                                <div class="card">
+                                    <a class="card-body bg-soft-danger" data-bs-toggle="collapse" href="#newSale"
+                                        role="button" aria-expanded="false" aria-controls="leadDiscovered">
+                                        <h5 class="card-title text-uppercase fw-semibold mb-1 fs-15">New Sale</h5>
+                                        {% if new_sale_count %}
+                                        <p class="text-muted mb-0">${{new_sale_sum}} <span class="fw-medium">{{new_sale_count}} Deals</span></p>
+                                        {% else %}
+                                        <p class="text-muted mb-0"><span class="fw-medium">No Deals</span></p>
+                                        {% endif %}  
+                                    </a>
+                                </div>
+                                <!--end card-->
+                                <div class="collapse show" id="newSale">
+                                    {% if new_sale %}
+                                    {% for sale in new_sale %}
+                                    <div class="card mb-1">
+                                        <div class="card-body">
+                                            <a class="d-flex align-items-center" data-bs-toggle="collapse"
+                                                href="#newSale{{ forloop.counter }}" role="button" aria-expanded="false"
+                                                aria-controls="newSale{{ forloop.counter }}">
+                                                <div class="flex-shrink-0">
+                                                    <img src="{{sale.client.get_photo_url}}" alt=""
+                                                        class="avatar-xs rounded-circle" />
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="fs-14 mb-1">{{sale.client.name}}</h6>
+                                                    <p class="text-muted mb-0">{{sale.create_date}} - ${{sale.value}}</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="collapse border-top border-top-dashed" id="newSale{{ forloop.counter }}">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between">
+                                                    <h6 class="fs-14 mb-1">{{sale.name}} <small
+                                                            class="badge badge-soft-danger">{{sale.due_date|naturalday}}</small>
+                                                    </h6>
+                                                    {% if perms.apps.delete_salesrequests %}
+                                                    <form action="{% url 'apps:sales.deals_delete' sale.pk %}" method="post">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="delete-new-sales bg-transparent border-0">
+                                                            <i class="ri-delete-bin-line "></i>
+                                                        </button>
+                                                    </form>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="text-muted">{{sale.description}}</p>
+                                                <ul class="list-unstyled vstack gap-2 mb-0">
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                                <i class="ri-question-answer-line"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-0">{{sale.contact.first_name}} {{sale.contact.last_name}}</h6>
+                                                                <small class="text-muted">{{sale.contact.work_phone}}</small>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                                <i class="ri-earth-line"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-0">Sale Created:</h6>
+                                                                <small class="text-muted">{{sale.create_date}}</small>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="card-footer hstack gap-2">
+                                                <a href="mailto:{{sale.client.email}}?
+                                                &subject={{sale.name}} - Reaching out on your Sales Request
+                                                &body=your Sales Request {{sale.name}} valued at ${{sale.value}}" class="btn btn-info btn-sm w-100"><i
+                                                    class="ri-question-answer-line align-bottom me-1"></i>Email</a>
+                                                    {% if perms.apps.change_salesrequests %}
+                                                    <button data-bs-toggle="modal" data-bs-target="#editSalenew{{ forloop.counter }}" class="btn btn-warning btn-sm w-100"><i
+                                                        class="ri-edit-line align-bottom me-1"></i>
+                                                        Edit
+                                                    </button>
+                                                    {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% else %}
+                                    <div class="card mb-1">
+                                        <div class="card-body">
+                                            <a class="d-flex align-items-center" data-bs-toggle="collapse"
+                                                href="#newSale{{ forloop.counter }}" role="button" aria-expanded="false"
+                                                aria-controls="newSale{{ forloop.counter }}">
+                                                <div class="flex-shrink-0">
+                                                    <img src="{% static 'images/companies/img-9.png' %}" alt=""
+                                                        class="avatar-xs rounded-circle" />
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="fs-14 mb-1">No New Sale Created!</h6>
+                                                    <p class="text-muted mb-0">Add one in the top right</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <!--end col-->
+    
+                            <div class="col">
+                                <div class="card">
+                                    <a class="card-body bg-soft-success" data-bs-toggle="collapse" href="#proposalCreated"
+                                        role="button" aria-expanded="false" aria-controls="contactInitiated">
+                                        <h5 class="card-title text-uppercase fw-semibold mb-1 fs-15">Proposal Created</h5>
+                                        {% if proposal_created_count %}
+                                        <p class="text-muted mb-0">${{proposal_created_sum}} <span class="fw-medium">{{proposal_created_count}} Deals</span></p>
+                                        {% else %}
+                                        <p class="text-muted mb-0"><span class="fw-medium">No Deals</span></p>
+                                        {% endif %}  
+                                    </a>
+                                </div>
+                                <!--end card-->
+                                <div class="collapse show" id="proposalCreated">
+                                    {% if proposal_created %}
+                                    {% for sale in proposal_created %}
+                                    <div class="card mb-1">
+                                        <div class="card-body">
+                                            <a class="d-flex align-items-center" data-bs-toggle="collapse"
+                                                href="#proposalCreated{{ forloop.counter }}" role="button" aria-expanded="false"
+                                                aria-controls="proposalCreated{{ forloop.counter }}">
+                                                <div class="flex-shrink-0">
+                                                    <img src="{{sale.client.get_photo_url}}" alt=""
+                                                        class="avatar-xs rounded-circle" />
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="fs-14 mb-1">{{sale.client.name}}</h6>
+                                                    <p class="text-muted mb-0">{{sale.create_date}} - ${{sale.value}}</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="collapse border-top border-top-dashed" id="proposalCreated{{ forloop.counter }}">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between">
+                                                    <h6 class="fs-14 mb-1">{{sale.name}} <small
+                                                            class="badge badge-soft-danger">{{sale.due_date|naturalday}}</small>
+                                                    </h6>
+                                                    {% if perms.apps.delete_salesrequests %}
+                                                    <form action="{% url 'apps:sales.deals_delete' sale.pk %}" method="post">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="delete-new-sales bg-transparent border-0">
+                                                            <i class="ri-delete-bin-line "></i>
+                                                        </button>
+                                                    </form>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="text-muted">{{sale.description}}</p>
+                                                <ul class="list-unstyled vstack gap-2 mb-0">
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                                <i class="ri-question-answer-line"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-0">{{sale.contact.first_name}} {{sale.contact.last_name}}</h6>
+                                                                <small class="text-muted">{{sale.contact.work_phone}}</small>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                                <i class="ri-earth-line"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-0">Sale Created:</h6>
+                                                                <small class="text-muted">{{sale.create_date}}</small>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="card-footer hstack gap-2">
+                                                <a href="mailto:{{sale.client.email}}?
+                                                &subject={{sale.name}} - Reaching out on your Sales Request
+                                                &body=your Sales Request {{sale.name}} valued at ${{sale.value}}" class="btn btn-info btn-sm w-100"><i
+                                                    class="ri-question-answer-line align-bottom me-1"></i>Email</a>
+
+                                                    {% if perms.apps.change_salesrequests %}
+                                                    <button data-bs-toggle="modal" data-bs-target="#editSalecreated{{ forloop.counter }}" class="btn btn-warning btn-sm w-100"><i
+                                                        class="ri-edit-line align-bottom me-1"></i>
+                                                        Edit
+                                                    </button>
+                                                    {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% else %}
+                                    <div class="card mb-1">
+                                        <div class="card-body">
+                                            <a class="d-flex align-items-center" data-bs-toggle="collapse"
+                                                href="#leadDiscovered1" role="button" aria-expanded="false"
+                                                aria-controls="leadDiscovered1">
+                                                <div class="flex-shrink-0">
+                                                    <img src="{% static 'images/companies/img-9.png' %}" alt=""
+                                                        class="avatar-xs rounded-circle" />
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="fs-14 mb-1">No Proposals Created!</h6>
+                                                    <p class="text-muted mb-0">Add one in the top right</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <!--end col-->
+    
+                            <div class="col">
+                                <div class="card">
+                                    <a class="card-body bg-soft-warning" data-bs-toggle="collapse" href="#proposalSent"
+                                        role="button" aria-expanded="false" aria-controls="needsIdentified">
+                                        <h5 class="card-title text-uppercase fw-semibold mb-1 fs-15">Proposal Sent</h5>
+                                        {% if proposal_sent_count %}
+                                        <p class="text-muted mb-0">${{proposal_sent_sum}} <span class="fw-medium">{{proposal_sent_count}} Deals</span></p>
+                                        {% else %}
+                                        <p class="text-muted mb-0"><span class="fw-medium">No Deals</span></p>
+                                        {% endif %}  
+                                    </a>
+                                </div>
+                                <!--end card-->
+                                <div class="collapse show" id="proposalSent">
+                                    {% if proposal_sent %}
+                                    {% for sale in proposal_sent %}
+                                    <div class="card mb-1">
+                                        <div class="card-body">
+                                            <a class="d-flex align-items-center" data-bs-toggle="collapse"
+                                                href="#proposalSent{{ forloop.counter }}" role="button" aria-expanded="false"
+                                                aria-controls="proposalSent{{ forloop.counter }}">
+                                                <div class="flex-shrink-0">
+                                                    <img src="{{sale.client.get_photo_url}}" alt=""
+                                                        class="avatar-xs rounded-circle" />
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="fs-14 mb-1">{{sale.client.name}}</h6>
+                                                    <p class="text-muted mb-0">{{sale.create_date}} - ${{sale.value}}</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="collapse border-top border-top-dashed" id="proposalSent{{ forloop.counter }}">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between">
+                                                    <h6 class="fs-14 mb-1">{{sale.name}} <small
+                                                            class="badge badge-soft-danger">{{sale.due_date|naturalday}}</small>
+                                                    </h6>
+                                                    {% if perms.apps.delete_salesrequests %}
+                                                    <form action="{% url 'apps:sales.deals_delete' sale.pk %}" method="post">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="delete-new-sales bg-transparent border-0">
+                                                            <i class="ri-delete-bin-line "></i>
+                                                        </button>
+                                                    </form>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="text-muted">{{sale.description}}</p>
+                                                <ul class="list-unstyled vstack gap-2 mb-0">
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                                <i class="ri-question-answer-line"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-0">{{sale.contact.first_name}} {{sale.contact.last_name}}</h6>
+                                                                <small class="text-muted">{{sale.contact.work_phone}}</small>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                                <i class="ri-earth-line"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-0">Sale Created:</h6>
+                                                                <small class="text-muted">{{sale.create_date}}</small>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="card-footer hstack gap-2">
+                                                <a href="mailto:{{sale.client.email}}?
+                                                &subject={{sale.name}} - Reaching out on your Sales Request
+                                                &body=your Sales Request {{sale.name}} valued at ${{sale.value}}" class="btn btn-info btn-sm w-100"><i
+                                                    class="ri-question-answer-line align-bottom me-1"></i>Email</a>
+                                                    {% if perms.apps.change_salesrequests %}
+                                                    <button data-bs-toggle="modal" data-bs-target="#editSalesent{{ forloop.counter }}" class="btn btn-warning btn-sm w-100"><i
+                                                        class="ri-edit-line align-bottom me-1"></i>
+                                                        Edit
+                                                    </button>
+                                                    {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% else %}
+                                    <div class="card mb-1">
+                                        <div class="card-body">
+                                            <a class="d-flex align-items-center" data-bs-toggle="collapse"
+                                                href="#proposalSent" role="button" aria-expanded="false"
+                                                aria-controls="leadDiscovered1">
+                                                <div class="flex-shrink-0">
+                                                    <img src="{% static 'images/companies/img-9.png' %}" alt=""
+                                                        class="avatar-xs rounded-circle" />
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="fs-14 mb-1">No Proposals Sent!</h6>
+                                                    <p class="text-muted mb-0">Add one in the top right</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <!--end col-->
+    
+                            <div class="col">
+                                <div class="card">
+                                    <a class="card-body bg-soft-info" data-bs-toggle="collapse" href="#prosposalExecuted"
+                                        role="button" aria-expanded="false" aria-controls="meetingArranged">
+                                        <h5 class="card-title text-uppercase fw-semibold mb-1 fs-15">Proposal Executed</h5>
+                                        {% if proposal_executed_count %}
+                                        <p class="text-muted mb-0">${{proposal_executed_sum}} <span class="fw-medium">{{proposal_executed_count}} Deals</span></p>
+                                        {% else %}
+                                        <p class="text-muted mb-0"><span class="fw-medium">No Deals</span></p>
+                                        {% endif %}  
+                                    </a>
+                                </div>
+                                <!--end card-->
+                                <div class="collapse show" id="prosposalExecuted">
+                                    {% if proposal_executed %}
+                                    {% for sale in proposal_executed %}
+                                    <div class="card mb-1">
+                                        <div class="card-body">
+                                            <a class="d-flex align-items-center" data-bs-toggle="collapse"
+                                                href="#prosposalExecuted{{ forloop.counter }}" role="button" aria-expanded="false"
+                                                aria-controls="prosposalExecuted{{ forloop.counter }}">
+                                                <div class="flex-shrink-0">
+                                                    <img src="{{sale.client.get_photo_url}}" alt=""
+                                                        class="avatar-xs rounded-circle" />
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="fs-14 mb-1">{{sale.client.name}}</h6>
+                                                    <p class="text-muted mb-0">{{sale.create_date}} - ${{sale.value}}</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="collapse border-top border-top-dashed" id="prosposalExecuted{{ forloop.counter }}">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between">
+                                                    <h6 class="fs-14 mb-1">{{sale.name}} <small
+                                                            class="badge badge-soft-danger">{{sale.due_date|naturalday}}</small>
+                                                    </h6>
+                                                    {% if perms.apps.delete_salesrequests %}
+                                                    <form action="{% url 'apps:sales.deals_delete' sale.pk %}" method="post">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="delete-new-sales bg-transparent border-0">
+                                                            <i class="ri-delete-bin-line "></i>
+                                                        </button>
+                                                    </form>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="text-muted">{{sale.description}}</p>
+                                                <ul class="list-unstyled vstack gap-2 mb-0">
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                                <i class="ri-question-answer-line"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-0">{{sale.contact.first_name}} {{sale.contact.last_name}}</h6>
+                                                                <small class="text-muted">{{sale.contact.work_phone}}</small>                                                                
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                                <i class="ri-earth-line"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-0">Sale Created:</h6>
+                                                                <small class="text-muted">{{sale.create_date}}</small>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="card-footer hstack gap-2">
+                                                <a href="mailto:{{sale.contact.work_email}}?
+                                                &subject={{sale.name}} - Reaching out on your sales request
+                                                &body=Your Sales Request {{sale.name}} valued at ${{sale.value}}" class="btn btn-info btn-sm w-100"><i
+                                                    class="ri-question-answer-line align-bottom me-1"></i>Email</a>
+                                                {% if perms.apps.change_salesrequests %}
+                                                <button data-bs-toggle="modal" data-bs-target="#editSaleexecuted{{ forloop.counter }}" class="btn btn-warning btn-sm w-100"><i
+                                                    class="ri-edit-line align-bottom me-1"></i>
+                                                    Edit
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% else %}
+                                    <div class="card mb-1">
+                                        <div class="card-body">
+                                            <a class="d-flex align-items-center" data-bs-toggle="collapse"
+                                                href="#prosposalExecuted" role="button" aria-expanded="false"
+                                                aria-controls="prosposalExecuted">
+                                                <div class="flex-shrink-0">
+                                                    <img src="{% static 'images/companies/img-9.png' %}" alt=""
+                                                        class="avatar-xs rounded-circle" />
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="fs-14 mb-1">No Proposals Sent!</h6>
+                                                    <p class="text-muted mb-0">Add one in the top right</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <!--end col-->
+    
+                            <div class="col">
+                                <div class="card">
+                                    <a class="card-body bg-soft-secondary" data-bs-toggle="collapse" href="#saleClosed"
+                                        role="button" aria-expanded="false" aria-controls="offerAccepted">
+                                        <h5 class="card-title text-uppercase fw-semibold mb-1 fs-15">Sale Closed</h5>
+                                        {% if sale_closed_count %}
+                                        <p class="text-muted mb-0">${{sale_closed_sum}} <span class="fw-medium">{{sale_closed_count}} Deals</span></p>
+                                        {% else %}
+                                        <p class="text-muted mb-0"><span class="fw-medium">No Deals</span></p>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                                <!--end card-->
+                                <div class="collapse show" id="saleClosed">
+                                    {% if sale_closed %}
+                                    {% for sale in sale_closed %}
+                                    <div class="card mb-1">
+                                        <div class="card-body">
+                                            <a class="d-flex align-items-center" data-bs-toggle="collapse"
+                                                href="#saleClosed{{ forloop.counter }}" role="button" aria-expanded="false"
+                                                aria-controls="saleClosed{{ forloop.counter }}">
+                                                <div class="flex-shrink-0">
+                                                    <img src="{% static 'images/users/avatar-1.jpg' %}" alt=""
+                                                        class="avatar-xs rounded-circle" />
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="fs-14 mb-1">{{sale.client.name}}</h6>
+                                                    <p class="text-muted mb-0">{{sale.create_date}} - ${{sale.value}}</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="collapse border-top border-top-dashed" id="saleClosed{{ forloop.counter }}">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between">
+                                                    <h6 class="fs-14 mb-1">{{sale.name}} <small
+                                                            class="badge badge-soft-danger">{{sale.due_date|naturalday}}</small>
+                                                    </h6>
+                                                    {% if perms.apps.delete_salesrequests %}
+                                                    <form action="{% url 'apps:sales.deals_delete' sale.pk %}" method="post">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="delete-new-sales bg-transparent border-0">
+                                                            <i class="ri-delete-bin-line "></i>
+                                                        </button>
+                                                    </form>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="text-muted">{{sale.description}}</p>
+                                                <ul class="list-unstyled vstack gap-2 mb-0">
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                                <i class="ri-question-answer-line"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-0">{{sale.contact.first_name}} {{sale.contact.last_name}}</h6>
+                                                                <small class="text-muted">{{sale.contact.work_phone}}</small>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-xxs text-muted">
+                                                                <i class="ri-earth-line"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-0">Sale Created:</h6>
+                                                                <small class="text-muted">{{sale.create_date}}</small>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="card-footer hstack gap-2">
+                                                <a href="mailto:{{sale.client.email}}?
+                                                &subject={{sale.name}} - Reaching out on your Sales Request
+                                                &body=your Sales Request {{sale.name}} valued at ${{sale.value}}" class="btn btn-info btn-sm w-100"><i
+                                                    class="ri-question-answer-line align-bottom me-1"></i>Email</a>
+                                                    {% if perms.apps.change_salesrequests %}
+                                                    <button data-bs-toggle="modal" data-bs-target="#editSaleclosed{{ forloop.counter }}" class="btn btn-warning btn-sm w-100"><i
+                                                        class="ri-edit-line align-bottom me-1"></i>
+                                                        Edit
+                                                    </button>
+                                                    {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% else %}
+                                    <div class="card mb-1">
+                                        <div class="card-body">
+                                            <a class="d-flex align-items-center" data-bs-toggle="collapse"
+                                                href="#saleClosed" role="button" aria-expanded="false"
+                                                aria-controls="saleClosed">
+                                                <div class="flex-shrink-0">
+                                                    <img src="{% static 'images/companies/img-9.png' %}" alt=""
+                                                        class="avatar-xs rounded-circle" />
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="fs-14 mb-1">No Sales Closed!</h6>
+                                                    <p class="text-muted mb-0">Add one in the top right</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <!--end col-->
+                        </div>
+                        <!--end row-->
+    
+    
+                        <!-- Modal -->
+                        <div class="modal fade" id="adddeals" tabindex="-1" aria-labelledby="exampleModalLabel"
+                            aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-light p-3">
+                                        <h5 class="modal-title" id="exampleModalLabel">New Sale</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <form action="{% url 'apps:sales.deals'%}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="deatType" class="form-label">Sales Type<span class="required-asterix">*</span></label>
+                                                <select class="form-select" id="deatType" name="type" 
+                                                    aria-label="Default select example" required>
+                                                    <option value="" data-custom-properties="[object Object]">Select deals type</option>
+                                                    <option value="New Sale" selected>New Sale</option>
+                                                    <option value="Proposal Created">Proposal Created</option>
+                                                    <option value="Proposal Sent">Proposal Sent</option>
+                                                    <option value="Proposal Executed">Proposal Executed</option>
+                                                    <option value="Sale Closed">Sale Closed</option>
+                                                </select>
+                                                <div class="invalid-feedback">
+                                                    Please choose a valid sale type
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="dealTitle" class="form-label">Sale Title<span class="required-asterix">*</span></label>
+                                                <input type="text" class="form-control" name="name" id="dealTitle"
+                                                    placeholder="Enter title" required>
+                                                <div class="invalid-feedback">
+                                                    Please add a title
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="dealValue" class="form-label">Value (USD)<span class="required-asterix">*</span></label>
+                                                <input type="number" class="form-control" name="value" id="dealValue" step="0.01"
+                                                placeholder="Enter value" required>
+                                                <div class="invalid-feedback">
+                                                    Please add a value
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="deatType" class="form-label">Sale Owner<span class="required-asterix">*</span></label>
+                                                <select class="form-select" id="deatType" name="owner" data-choices
+                                                    aria-label="Default select example" required>
+                                                    <option value="">Select deals owner</option>
+                                                    {% for tech in technicians %}
+                                                    <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <div class="invalid-feedback">Please select the Sale owner</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="dueDate" class="form-label">Due Date</label>
+                                                <style>
+                                                    {% comment %} #dueDate { {% endcomment %}
+                                                    #dueDate .form-control:valid {
+                                                        border: 1px solid blue !important;
+                                                    }
+                                                </style>
+                                                <input type="text" class="form-control" name="due_date" id="dueDate"
+                                                    data-provider="flatpickr" placeholder="Select date" />
+                                                
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="clientSelect" class="form-label">Client<span class="required-asterix">*</span></label>
+                                                <select class="form-select" id="clientSelect" name="client" data-choices
+                                                    aria-label="Default select example" required>
+                                                    <option value="" data-custom-properties="[object Object]">Select client</option>
+                                                    {% for client in clients %}
+                                                    <option value="{{client.pk}}">{{client.name}}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <div class="invalid-feedback">
+                                                    Please select a client
+                                                </div>
+                                            </div>
+    
+                                            <div class="mb-3">
+                                                <label for="contactSelect" class="form-label">Contact</label>
+                                                <select class="form-select" id="contactSelect" name="contact"
+                                                    aria-label="Default select example">       
+                                                    <option value="">Select contact</option>
+                                                    {% for contact in contacts %}
+                                                    <option value="{{contact.id}}">{{contact.client}}</option>
+                                                    {% endfor %}                                             
+                                                </select>
+                                                <div class="invalid-feedback">
+                                                    Please select a contact
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="contactDescription" class="form-label">Description</label>
+                                                <textarea class="form-control" name="description" id="contactDescription" rows="3"
+                                                    placeholder="Enter description"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" id="close-modal"
+                                                data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-success"><i
+                                                    class="ri-save-line align-bottom me-1"></i> Save</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% for sale in new_sale %}
+                        <div class="modal fade" id="editSalenew{{ forloop.counter }}" tabindex="-1" aria-labelledby="exampleModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-light p-3">
+                                    <h5 class="modal-title" id="exampleModalLabel">New Sale Edit</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <form action="{% url 'apps:sales.deals_update' sale.pk %}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                    {% csrf_token %}
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="deatType" class="form-label">Sales Type<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="dealType" name="type" 
+                                                aria-label="Default select example" required>
+                                                <option value="{{sale.type}}" selected>{{sale.type}}</option>
+                                                <option value="New Sale" >New Sale</option>
+                                                <option value="Proposal Created">Proposal Created</option>
+                                                <option value="Proposal Sent">Proposal Sent</option>
+                                                <option value="Proposal Executed">Proposal Executed</option>
+                                                <option value="Sale Closed">Sale Closed</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please choose a valid sale type
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dealTitle" class="form-label">Sale Title<span class="required-asterix">*</span></label>
+                                            <input type="text" class="form-control" name="name" id="dealTitle" value="{{sale.name}}"
+                                                placeholder="Enter title" required>
+                                            <div class="invalid-feedback">
+                                                Please add a title
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dealValue" class="form-label">Value (USD)<span class="required-asterix">*</span></label>
+                                            <input type="number" class="form-control" name="value" id="dealValue" step="0.01" value="{{sale.value}}"
+                                            placeholder="Enter value" required>
+                                            <div class="invalid-feedback">
+                                                Please add a value
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="deatType" class="form-label">Sale Owner<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="deatType" name="owner" data-choices
+                                                aria-label="Default select example" required >
+                                                <option value="{{sale.owner.id}}" selected>{{sale.owner.auth_user.username}}</option>
+                                                {% for tech in technicians %}
+                                                <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dueDate" class="form-label">Due Date</label>
+                                            <input type="text" class="form-control" name="due_date" id="dueDate"
+                                                data-provider="flatpickr" placeholder="Select date" value="{% if sale.due_date %}{{sale.due_date|date:'Y-m-d'}}{% endif %}">
+                                        </div>
+                                        
+
+                                        <div class="mb-3">
+                                            <label for="clientSelect" class="form-label">Client<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="clientSelect" name="client" data-choices
+                                                aria-label="Default select example" required>
+                                                {% for client in clients %}
+                                                    {% if client.pk == sale.client.pk %}
+                                                    <option value="{{sale.client.pk}}" selected>{{sale.client}}</option>
+                                                    {% else %}
+                                                    <option value="{{client.pk}}">{{client}}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please select a client
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="contactSelect" class="form-label">Contact</label>
+                                            <select class="form-select" id="contactSelect" name="contact"
+                                                aria-label="Default select example">                                                    
+                                                <option value="{{sale.contact.pk}}" selected>{{sale.contact.first_name}} {{sale.contact.last_name}}</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please select a contact
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="contactDescription" class="form-label">Description</label>
+                                            <textarea class="form-control" name="description" id="contactDescription" rows="3"
+                                                placeholder="Enter description">{{sale.description}}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light" id="close-modal"
+                                            data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-success"><i
+                                                class="ri-save-line align-bottom me-1"></i> Save</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        </div>
+                        {% endfor %}
+
+                        {% for sale in proposal_created %}
+                        <div class="modal fade" id="editSalecreated{{ forloop.counter }}" tabindex="-1" aria-labelledby="exampleModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-light p-3">
+                                    <h5 class="modal-title" id="exampleModalLabel">Proposal Created Edit</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <form action="{% url 'apps:sales.deals_update' sale.pk %}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                    {% csrf_token %}
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="deatType" class="form-label">Sales Type<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="deatType" name="type" 
+                                                aria-label="Default select example" required>
+                                                <option value="{{sale.type}}" selected>{{sale.type}}</option>
+                                                <option value="New Sale" >New Sale</option>
+                                                <option value="Proposal Created">Proposal Created</option>
+                                                <option value="Proposal Sent">Proposal Sent</option>
+                                                <option value="Proposal Executed">Proposal Executed</option>
+                                                <option value="Sale Closed">Sale Closed</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please choose a valid sale type
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dealTitle" class="form-label">Sale Title<span class="required-asterix">*</span></label>
+                                            <input type="text" class="form-control" name="name" id="dealTitle" value="{{sale.name}}"
+                                                placeholder="Enter title" required>
+                                            <div class="invalid-feedback">
+                                                Please add a title
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dealValue" class="form-label">Value (USD)<span class="required-asterix">*</span></label>
+                                            <input type="number" class="form-control" name="value" id="dealValue" step="0.01" value="{{sale.value}}"
+                                            placeholder="Enter value" required>
+                                            <div class="invalid-feedback">
+                                                Please add a value
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="deatType" class="form-label">Sale Owner<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="deatType" name="owner" data-choices
+                                                aria-label="Default select example" required>
+                                                <option value="{{sale.owner.id}}" selected>{{sale.owner.auth_user.username}}</option>
+                                                {% for tech in technicians %}
+                                                <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dueDate" class="form-label">Due Date</label>
+                                            <input type="text" class="form-control" name="due_date" id="dueDate"
+                                                data-provider="flatpickr" placeholder="Select date" value="{% if sale.due_date %}{{sale.due_date|date:'Y-m-d'}}{% endif %}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="clientSelect" class="form-label">Client<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="clientSelect" name="client" data-choices
+                                                aria-label="Default select example" required>
+                                                {% for client in clients %}
+                                                    {% if client.pk == sale.client.pk %}
+                                                    <option value="{{sale.client.pk}}" selected>{{sale.client}}</option>
+                                                    {% else %}
+                                                    <option value="{{client.pk}}">{{client}}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please select a client
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="contactSelect" class="form-label">Contact</label>
+                                            <select class="form-select" id="contactSelect" name="contact"
+                                                aria-label="Default select example">                                                    
+                                                <option value="{{sale.contact.pk}}" selected>{{sale.contact.first_name}} {{sale.contact.last_name}}</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please select a contact
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="contactDescription" class="form-label">Description</label>
+                                            <textarea class="form-control" name="description" id="contactDescription" rows="3"
+                                                placeholder="Enter description">{{sale.description}}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light" id="close-modal"
+                                            data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-success"><i
+                                                class="ri-save-line align-bottom me-1"></i> Save</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        </div>
+                        {% endfor %}
+
+                        {% for sale in proposal_sent %}
+                        <div class="modal fade" id="editSalesent{{ forloop.counter }}" tabindex="-1" aria-labelledby="exampleModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-light p-3">
+                                    <h5 class="modal-title" id="exampleModalLabel">Proposal Sent Edit</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <form action="{% url 'apps:sales.deals_update' sale.pk %}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                    {% csrf_token %}
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="deatType" class="form-label">Sales Type<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="deatType" name="type" 
+                                                aria-label="Default select example" required>
+                                                <option value="{{sale.type}}" selected>{{sale.type}}</option>
+                                                <option value="New Sale" >New Sale</option>
+                                                <option value="Proposal Created">Proposal Created</option>
+                                                <option value="Proposal Sent">Proposal Sent</option>
+                                                <option value="Proposal Executed">Proposal Executed</option>
+                                                <option value="Sale Closed">Sale Closed</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please choose a valid sale type
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dealTitle" class="form-label">Sale Title<span class="required-asterix">*</span></label>
+                                            <input type="text" class="form-control" name="name" id="dealTitle" value="{{sale.name}}"
+                                                placeholder="Enter title" required>
+                                            <div class="invalid-feedback">
+                                                Please add a title
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dealValue" class="form-label">Value (USD)<span class="required-asterix">*</span></label>
+                                            <input type="number" class="form-control" name="value" id="dealValue" step="0.01" value="{{sale.value}}"
+                                            placeholder="Enter value" required>
+                                            <div class="invalid-feedback">
+                                                Please add a value
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="deatType" class="form-label">Sale Owner<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="deatType" name="owner" data-choices
+                                                aria-label="Default select example" required>
+                                                <option value="{{sale.owner.id}}" selected>{{sale.owner.auth_user.username}}</option>
+                                                {% for tech in technicians %}
+                                                <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dueDate" class="form-label">Due Date</label>
+                                            <input type="text" class="form-control" name="due_date" id="dueDate"
+                                                data-provider="flatpickr" placeholder="Select date" value="{% if sale.due_date %}{{sale.due_date|date:'Y-m-d'}}{% endif %}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="clientSelect" class="form-label">Client<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="clientSelect" name="client" data-choices
+                                                aria-label="Default select example" required>
+                                                {% for client in clients %}
+                                                    {% if client.pk == sale.client.pk %}
+                                                    <option value="{{sale.client.pk}}" selected>{{sale.client}}</option>
+                                                    {% else %}
+                                                    <option value="{{client.pk}}">{{client}}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please select a client
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="contactSelect" class="form-label">Contact</label>
+                                            <select class="form-select" id="contactSelect" name="contact"
+                                                aria-label="Default select example">                                                    
+                                                <option value="{{sale.contact.pk}}" selected>{{sale.contact.first_name}} {{sale.contact.last_name}}</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please select a contact
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="contactDescription" class="form-label">Description</label>
+                                            <textarea class="form-control" name="description" id="contactDescription" rows="3"
+                                                placeholder="Enter description">{{sale.description}}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light" id="close-modal"
+                                            data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-success"><i
+                                                class="ri-save-line align-bottom me-1"></i> Save</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        </div>
+                        {% endfor %}
+
+                        {% for sale in proposal_executed %}
+                        <div class="modal fade" id="editSaleexecuted{{ forloop.counter }}" tabindex="-1" aria-labelledby="exampleModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-light p-3">
+                                    <h5 class="modal-title" id="exampleModalLabel">Proposal Executed Edit</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <form action="{% url 'apps:sales.deals_update' sale.pk %}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                    {% csrf_token %}
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="deatType" class="form-label">Sales Type<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="deatType" name="type" 
+                                                aria-label="Default select example" required>
+                                                <option value="{{sale.type}}" selected>{{sale.type}}</option>
+                                                <option value="New Sale" >New Sale</option>
+                                                <option value="Proposal Created">Proposal Created</option>
+                                                <option value="Proposal Sent">Proposal Sent</option>
+                                                <option value="Proposal Executed">Proposal Executed</option>
+                                                <option value="Sale Closed">Sale Closed</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please choose a valid sale type
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dealTitle" class="form-label">Sale Title<span class="required-asterix">*</span></label>
+                                            <input type="text" class="form-control" name="name" id="dealTitle" value="{{sale.name}}"
+                                                placeholder="Enter title" required>
+                                            <div class="invalid-feedback">
+                                                Please add a title
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dealValue" class="form-label">Value (USD)<span class="required-asterix">*</span></label>
+                                            <input type="number" class="form-control" name="value" id="dealValue" step="0.01" value="{{sale.value}}"
+                                            placeholder="Enter value" required>
+                                            <div class="invalid-feedback">
+                                                Please add a value
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="deatType" class="form-label">Sale Owner<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="deatType" name="owner" data-choices
+                                                aria-label="Default select example" required>
+                                                <option value="{{sale.owner.id}}" selected>{{sale.owner.auth_user.username}}</option>
+                                                {% for tech in technicians %}
+                                                <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dueDate" class="form-label">Due Date</label>
+                                            <input type="text" class="form-control" name="due_date" id="dueDate"
+                                                data-provider="flatpickr" placeholder="Select date" value="{% if sale.due_date %}{{sale.due_date|date:'Y-m-d'}}{% endif %}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="clientSelect" class="form-label">Client<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="clientSelect" name="client" data-choices
+                                                aria-label="Default select example" required>
+                                                {% for client in clients %}
+                                                    {% if client.pk == sale.client.pk %}
+                                                    <option value="{{sale.client.pk}}" selected>{{sale.client}}</option>
+                                                    {% else %}
+                                                    <option value="{{client.pk}}">{{client}}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please select a client
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="contactSelect" class="form-label">Contact</label>
+                                            <select class="form-select" id="contactSelect" name="contact"
+                                                aria-label="Default select example">                                                    
+                                                <option value="{{sale.contact.pk}}" selected>{{sale.contact.first_name}} {{sale.contact.last_name}}</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please select a contact
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="contactDescription" class="form-label">Description</label>
+                                            <textarea class="form-control" name="description" id="contactDescription" rows="3"
+                                                placeholder="Enter description">{{sale.description}}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light" id="close-modal"
+                                            data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-success"><i
+                                                class="ri-save-line align-bottom me-1"></i> Save</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        </div>
+                        {% endfor %}
+
+                        {% for sale in sale_closed %}
+                        <div class="modal fade" id="editSaleclosed{{ forloop.counter }}" tabindex="-1" aria-labelledby="exampleModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-light p-3">
+                                    <h5 class="modal-title" id="exampleModalLabel">Closed Sale Edit</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <form action="{% url 'apps:sales.deals_update' sale.pk %}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                    {% csrf_token %}
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="deatType" class="form-label">Sales Type<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="deatType" name="type" 
+                                                aria-label="Default select example" required>
+                                                <option value="{{sale.type}}" selected>{{sale.type}}</option>
+                                                <option value="New Sale" >New Sale</option>
+                                                <option value="Proposal Created">Proposal Created</option>
+                                                <option value="Proposal Sent">Proposal Sent</option>
+                                                <option value="Proposal Executed">Proposal Executed</option>
+                                                <option value="Sale Closed">Sale Closed</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please choose a valid sale type
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dealTitle" class="form-label">Sale Title<span class="required-asterix">*</span></label>
+                                            <input type="text" class="form-control" name="name" id="dealTitle" value="{{sale.name}}"
+                                                placeholder="Enter title" required>
+                                            <div class="invalid-feedback">
+                                                Please add a title
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dealValue" class="form-label">Value (USD)<span class="required-asterix">*</span></label>
+                                            <input type="number" class="form-control" name="value" id="dealValue" step="0.01" value="{{sale.value}}"
+                                            placeholder="Enter value" required>
+                                            <div class="invalid-feedback">
+                                                Please add a value
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="deatType" class="form-label">Sale Owner<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="deatType" name="owner" data-choices
+                                                aria-label="Default select example" required>
+                                                <option value="{{sale.owner.id}}" selected>{{sale.owner.auth_user.username}}</option>
+                                                {% for tech in technicians %}
+                                                <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dueDate" class="form-label">Due Date</label>
+                                            <input type="text" class="form-control" name="due_date" id="dueDate"
+                                                data-provider="flatpickr" placeholder="Select date" value="{% if sale.due_date %}{{sale.due_date|date:'Y-m-d'}}{% endif %}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="clientSelect" class="form-label">Client<span class="required-asterix">*</span></label>
+                                            <select class="form-select" id="clientSelect" name="client" data-choices
+                                                aria-label="Default select example" required>
+                                                {% for client in clients %}
+                                                    {% if client.pk == sale.client.pk %}
+                                                    <option value="{{sale.client.pk}}" selected>{{sale.client}}</option>
+                                                    {% else %}
+                                                    <option value="{{client.pk}}">{{client}}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please select a client
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="contactSelect" class="form-label">Contact</label>
+                                            <select class="form-select" id="contactSelect" name="contact"
+                                                aria-label="Default select example">                                                    
+                                                <option value="{{sale.contact.pk}}" selected>{{sale.contact.first_name}} {{sale.contact.last_name}}</option>
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                Please select a contact
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="contactDescription" class="form-label">Description</label>
+                                            <textarea class="form-control" name="description" id="contactDescription" rows="3"
+                                                placeholder="Enter description">{{sale.description}}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light" id="close-modal"
+                                            data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-success"><i
+                                                class="ri-save-line align-bottom me-1"></i> Save</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        </div>
+                        {% endfor %}
+                        <!--end modal-->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+{% block extra_js %}   
+        <!-- Sweet Alerts js -->
+        <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
+        <!-- cleave.js -->
+        <script src="{% static 'libs/cleave.js/dist/cleave.min.js' %}"></script>    
+        <script src="{% static 'js/pages/sales-deals.init.js' %}" type="module"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const clientSelect = document.getElementById('clientSelect');
+                const contactSelect = document.getElementById('contactSelect');
+    
+                clientSelect.addEventListener('change', function () {
+                    const clientId = clientSelect.value;
+                    if (clientId) {
+                        fetch(`/apps/get-contacts/${clientId}/`)
+                            .then(response => {
+                                if (!response.ok) {
+                                    return response.json().then(error => { throw new Error(error.error || 'Network response was not ok'); });
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                console.log("Fetched data:", data); // Log the data to ensure it is correct
+                                // Clear existing options
+                                contactSelect.innerHTML = '<option value="">Select contact</option>';
+                                // Check if data is an array and has elements
+                                if (Array.isArray(data) && data.length) {
+                                    data.forEach(contact => {
+                                        console.log("Adding contact:", contact); // Log each contact being added
+                                        const option = document.createElement('option');
+                                        option.value = contact.pk;
+                                        option.textContent = `${contact.first_name} ${contact.last_name}`;
+                                        contactSelect.appendChild(option);
+                                    });
+                                } else {
+                                    console.log("No contacts found for this client");
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching contacts:', error.message);
+                                alert('Error fetching contacts: ' + error.message);
+                            });
+                    } else {
+                        contactSelect.innerHTML = '<option value="">Select contact</option>';
+                    }
+                });
+            });
+        </script>
+{% endblock extra_js %}

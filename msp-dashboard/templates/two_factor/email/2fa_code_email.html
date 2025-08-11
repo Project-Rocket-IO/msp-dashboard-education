@@ -1,0 +1,73 @@
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #2a4562;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+        }
+        .code {
+            color: black;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            letter-spacing: 3px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Rocket PSA</h1>
+    </div>
+    
+    <div class="content">
+        
+        <p>You are recieving this email because you have requested a verification code for your Rocket PSA account.</p>
+        
+        <div class="code">
+            {{ token }}
+        </div>
+        
+        <p><strong>Important:</strong></p>
+        <ul>
+            <li>This code will expire in 10 minutes</li>
+            <li>If you didn't request this code, please ignore this email</li>
+            <li>Never share this code with anyone</li>
+        </ul>
+        
+        <p>If you're having trouble signing in, please contact your system administrator.</p>
+        
+        <p>Thank you,<br>
+        Rocket PSA</p>
+    </div>
+    
+    <div class="footer">
+        <p>This is an automated message. Please do not reply to this email.</p>
+        <p><a href="#">Unsubscribe</a> from this email at any time.</p>
+        <p>&copy; {% now "Y" %} Rocket PSA. All rights reserved.</p>
+    </div>
+</body>
+</html> 

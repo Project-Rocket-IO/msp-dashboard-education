@@ -1,0 +1,1068 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Profile Settings{% endblock title %}
+{% block extra_css %}
+<link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+                        <div class="position-relative mx-n4 mt-n4">
+                            <div class="profile-wid-bg profile-setting-img">
+                                <img 
+                                {% if user.cover %}
+                                src="{{user.cover.url}}" 
+                                {% else %}
+                                src="{% static 'images/profile-bg.jpg' %}" 
+                                {% endif %}
+                                class="profile-wid-img" alt="">
+                                <div class="overlay-content">
+                                    <div class="text-end p-3">
+                                        <div class="p-0 ms-auto rounded-circle profile-photo-edit">
+                                            <label for="profile-foreground-img-file-input"
+                                                class="profile-photo-edit btn btn-light">
+                                                <i class="ri-image-edit-line align-bottom me-1"></i> Change Cover
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <div class="row">
+                            <div class="col-xxl-3">
+                                <div class="card mt-n5">
+                                    <div class="card-body p-4">
+                                        <div class="text-center">
+                                            <div class="profile-user position-relative d-inline-block mx-auto  mb-4">
+                                                <img src="{{user.get_profile_picture}}"
+                                                class="rounded-circle avatar-xl img-thumbnail user-profile-image"
+                                                alt="" name="picture">
+                                                <div class="avatar-xs p-0 rounded-circle profile-photo-edit">
+                                                    <label for="profile-img-file-input"
+                                                        class="profile-photo-edit avatar-xs">
+                                                        <span class="avatar-title rounded-circle bg-light text-body">
+                                                            <i class="ri-camera-fill"></i>
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <h5 class="fs-16 mb-1">
+                                                {% if user.first_name %}
+                                                {{user.first_name}}
+                                                    {% if user.last_name %}
+                                                    {{user.last_name}}
+                                                    {% endif %}
+                                                {% else %}
+                                                {{user.username}}
+                                                {% endif %}
+                                            </h5>
+                                            <p class="text-muted mb-0">
+                                                {% if user.title %}
+                                                {{user.title}}
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end card-->
+                                
+                                
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-4">
+                                            <div class="flex-grow-1">
+                                                <h5 class="card-title mb-0">Webviews</h5>
+                                            </div>
+                                            {% if perms.apps.add_webviewintegrations %}
+                                            <div class="flex-shrink-0">
+                                                <button type="button" class="btn btn-primary badge fs-12" data-bs-toggle="modal" id="create-btn" data-bs-target="#showModal">
+                                                    <i class="ri-add-fill align-bottom me-1"></i> Add Integration</button>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        {% for webview in webviews %}
+                                        <div class="mb-3 d-flex">
+                                            <div class="avatar-xs d-block flex-shrink-0 me-3">
+                                                <span class="avatar-title rounded-circle fs-16 bg-dark text-light">
+                                                    <img src="{{ webview.get_photo_url }}" alt="" class="avatar-xs rounded-circle image_src object-cover">
+                                                </span>
+                                            </div>
+                                            <input type="email" class="form-control" id="gitUsername" placeholder="Username"
+                                                value="{{webview.name}}">
+                                            <div class="dropdown d-block flex me-6">
+                                                <button class="btn btn-soft-dark btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="true" style="overflow: auto">
+                                                    <i class="ri-more-fill align-middle"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li><button class="dropdown-item" onclick="window.open('{{webview.get_url}}','popUpWindow','height=820,width=1650,left=550,top=150,resizable=yes,scrollbars=yes,toolbar=yes,menubar=no,location=no,directories=no, status=yes');">
+                                                        <i class="ri-eye-fill align-bottom me-2 text-muted"></i>View</button></li>
+                                                <div class="dropdown-divider"></div>
+                                                    <li><a class="dropdown-item" href="{% url 'apps:webview.links' %}" ><i
+                                                        class="ri-cast-fill align-bottom me-2 text-muted"></i>
+                                                    Go to Integrations</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <!--end card-->
+                                <div class="modal fade" id="showModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-light p-3">
+                                                <h5 class="modal-title" id="exampleModalLabel"></h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+                                            </div>
+                                            <form method="POST" action="{% url 'pages:pages.webview_create' %}" enctype="multipart/form-data">
+                                                {% csrf_token %}
+                                                <div class="modal-body">
+                                                    <input type="hidden" id="id-field" />
+                                                    <div class="row g-3">
+                                                        <div class="col-lg-12">
+                                                            <div class="text-center">
+                                                                <div class="position-relative d-inline-block">
+                                                                    <div class="position-absolute bottom-0 end-0">
+                                                                        <label for="webview-image-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                                                            <div class="avatar-xs cursor-pointer">
+                                                                                <div class="avatar-title bg-light border rounded-circle text-muted">
+                                                                                    <i class="ri-image-fill"></i>
+                                                                                </div>
+                                                                            </div>
+                                                                        </label>
+                                                                        <input class="form-control d-none" name="picture" value="" id="webview-image-input" type="file" accept="image/png, image/gif, image/jpeg">
+                                                                    </div>
+                                                                    <div class="avatar-lg p-1">
+                                                                        <div class="avatar-title bg-light rounded-circle">
+                                                                            <img src="{% static 'images/users/user-dummy-img.jpg' %}" name="picture" id="webview-img" class="avatar-md rounded-circle object-cover" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <h5 class="fs-13 mt-3">Integration Image</h5>
+                                                            </div>
+                                                            <div>
+                                                                <label for="webviewname-field" class="form-label">Integration Name</label>
+                                                                <input type="text" name="name" class="form-control" placeholder="Enter Name" required />
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-12">
+                                                            <div>
+                                                                <label for="webview_name-field" class="form-label">Intergation URL</label>
+                                                                <input type="text" name="url" class="form-control" placeholder="Enter desired URL" value="https://" required />
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-6">
+                                                            <div>
+                                                                <input class="form-check-input fs-15" type="checkbox"
+                                                                value="True" name="favorite">
+                                                                <label class="form-check-label ms-1" for="checkTask3">
+                                                                    Integration Favorite
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                    </div>
+                                                    <!--end row-->
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <div class="hstack gap-2 justify-content-end">
+                                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                                        <button type="submit" class="btn btn-success" id="add-btn">Add Integration</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end col-->
+                            <div class="col-xxl-9">
+                                <div class="card mt-xxl-n5">
+                                    <div class="card-header">
+                                        <ul class="nav nav-tabs-custom rounded card-header-tabs border-bottom-0"
+                                            role="tablist">
+                                            <li class="nav-item">
+                                                <a class="nav-link active" data-bs-toggle="tab" href="#personalDetails"
+                                                    role="tab">
+                                                    <i class="fas fa-home"></i>
+                                                    Personal Details
+                                                </a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" data-bs-toggle="tab" href="#changePassword" role="tab">
+                                                    <i class="far fa-user"></i>
+                                                    Change Password
+                                                </a>
+                                            </li>
+                                            {% load role_checks %}
+                                            {% if user|has_admin_or_super_user_role %}
+                                            <li class="nav-item">
+                                                <a class="nav-link" data-bs-toggle="tab" href="#new-account" role="tab">
+                                                    <i class="far fa-envelope"></i>
+                                                    New Account Creation
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                            <li class="nav-item">
+                                                <a class="nav-link" data-bs-toggle="tab" href="#privacy" role="tab">
+                                                    <i class="far fa-envelope"></i>
+                                                    Security & Settings
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="card-body p-4">
+                                        <div class="tab-content">
+                                            <!--start tab-pane-->
+                                            <div class="tab-pane active" id="personalDetails" role="tabpanel">
+                                                <form action="{% url 'pages:pages.profile_settings' %}" method="POST" enctype="multipart/form-data" id="personal-details-form">
+                                                    {% csrf_token %}
+                                                    <input id="profile-img-file-input" type="file"
+                                                        class="profile-img-file-input" name="picture" hidden>
+                                                    <input id="profile-foreground-img-file-input" type="file"
+                                                        class="profile-foreground-img-file-input" hidden
+                                                        name="cover">    
+
+                                                    <div class="row">
+                                                        
+                                                        <h5 class="mt-4 mb-4">Personal Information</h5>
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="firstnameInput" class="form-label">First Name</label>
+                                                                <input type="text" class="form-control" id="firstnameInput"
+                                                                    placeholder="Enter your firstname"
+                                                                    {% if user.first_name %}
+                                                                    value="{{user.first_name}}"
+                                                                    {% else %}
+                                                                    value=""
+                                                                    {% endif %}
+                                                                    name="first_name">
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="lastnameInput" class="form-label">Last Name</label>
+                                                                <input type="text" class="form-control" id="lastnameInput"
+                                                                    placeholder="Enter your lastname"
+                                                                    {% if user.last_name %}
+                                                                    value="{{user.last_name}}"
+                                                                    {% else %}
+                                                                    value=""
+                                                                    {% endif %}
+                                                                    name="last_name">
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="middlenameInput" class="form-label">Middle Initial</label>
+                                                                <input type="text" class="form-control" id="middlenameInput"
+                                                                    placeholder="Enter your middlename"
+                                                                    {% if user.middle_initial %}
+                                                                    value="{{user.middle_initial}}"
+                                                                    {% else %}
+                                                                    value=""
+                                                                    {% endif %}
+                                                                    name="middle_initial">
+                                                            </div>
+                                                        </div>
+                                                        <!--end col--> 
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="usernameInput" class="form-label">Username (Read Only)</label>
+                                                                <input type="text" class="form-control" id="usernameInput"
+                                                                name="username" 
+                                                                {% if user.username %}
+                                                                value="{{user.username}}"
+                                                                {% endif %} placeholder="Username123" readonly />
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+
+                                                        <div class="mt-4"></div>
+                                                        <!--Heading-->
+                                                        <h5 class="mt-4 mb-4">Contact Information</h5>
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="phonenumberInput" class="form-label">Phone
+                                                                    Number</label>
+                                                                <input type="text" class="form-control"
+                                                                    id="phonenumberInput" name="phone"
+                                                                    placeholder="Enter your phone number"
+                                                                    {% if user.phone %}
+                                                                    value="{{user.phone}}"
+                                                                    {% else %}
+                                                                    value=""
+                                                                    {% endif %} />
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="faxInput" class="form-label">Fax</label>
+                                                                <input type="text" class="form-control"
+                                                                    id="faxInput" name="fax"
+                                                                    placeholder="Enter your fax number"
+                                                                {% if user.fax %}
+                                                                value="{{user.fax}}"
+                                                                {% else %}
+                                                                value=""
+                                                                {% endif %} />
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="streetInput"
+                                                                    class="form-label">Street</label>
+                                                                <input type="text" class="form-control" id="streetInput"
+                                                                    placeholder="Street" name="address_1"
+                                                                    {% if user.address_1 %}
+                                                                    value="{{user.address_1}}" 
+                                                                    {% else %}
+                                                                    value=""
+                                                                    {% endif %}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="addressInput"
+                                                                    class="form-label">Address</label>
+                                                                <input type="text" class="form-control" id="addressInput"
+                                                                    placeholder="Address2" name="address_2"
+                                                                    {% if user.address_2 %}
+                                                                    value="{{user.address_2}}" 
+                                                                    {% else %}
+                                                                    value=""
+                                                                    {% endif %}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->                                          
+                                                        <div class="col-lg-4">
+                                                            <div class="mb-3">
+                                                                <label for="cityInput" class="form-label">City</label>
+                                                                <input type="text" class="form-control" id="cityInput"
+                                                                    placeholder="California" name="city"
+                                                                    {% if user.city %}
+                                                                    value="{{user.city}}" 
+                                                                    {% else %}
+                                                                    value=""
+                                                                    {% endif %}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->                                          
+                                                        <div class="col-lg-4">
+                                                            <div class="mb-3">
+                                                                <label for="stateInput" class="form-label">State</label>
+                                                                <input type="text" class="form-control" id="stateInput"
+                                                                    placeholder="New York" name="state"
+                                                                    {% if user.state %}
+                                                                    value="{{user.state}}" 
+                                                                    {% else %}
+                                                                    value=""
+                                                                    {% endif %}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-4">
+                                                            <div class="mb-3">
+                                                                <label for="countryInput" class="form-label">Country</label>
+                                                                <input type="text" class="form-control" id="countryInput"
+                                                                    placeholder="United States" name="country"
+                                                                    {% if user.country %}
+                                                                    value="{{user.country}}" 
+                                                                    {% else %}
+                                                                    value=""
+                                                                    {% endif %} />
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-4">
+                                                            <div class="mb-3">
+                                                                <label for="zipcodeInput" class="form-label">Zip Code</label>
+                                                                <input type="text" class="form-control" minlength="5"
+                                                                maxlength="6" id="zipcodeInput"
+                                                                placeholder="90011" name="zip"
+                                                                    {% if user.zip %}
+                                                                    value="{{user.zip}}" 
+                                                                    {% else %}
+                                                                    value=""
+                                                                    {% endif %}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-8">
+                                                            <div class="mb-3">
+                                                                <label for="emailInput" class="form-label">Email Address (Read Only)</label> 
+                                                                <input type="email" class="form-control" id="emailInput"
+                                                                    placeholder="Enter your email" name="email"
+                                                                    {% if user.email %}
+                                                                    value="{{user.email}}"
+                                                                    {% endif %} readonly
+                                                                    />
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="mt-4"></div>
+                                                        <!--Heading-->
+                                                        <h5 class="mt-4 mb-4">Professional Information</h5>
+
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="titleInput"
+                                                                    class="form-label">Title</label>
+                                                                    <input type="text" class="form-control"
+                                                                    id="titleInput" placeholder="Lead Designer/Developer"
+                                                                    name="title"
+                                                                    {% if user.title %}
+                                                                    value="{{user.title}}" 
+                                                                    {% else %}
+                                                                    value=""
+                                                                    {% endif %} />
+                                                                </div>
+                                                            </div>                                                                                                              
+                                                        <!--end col-->
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="JoiningdatInput" class="form-label">Joining Date (Read Only)</label>
+                                                                <input type="text" class="form-control"
+                                                                    data-provider="flatpickr" id="JoiningdatInput"
+                                                                    data-date-format="d M, Y"
+                                                                    value="{{user.date_joined|date:'d M, Y'}}"
+                                                                    placeholder="Select date" 
+                                                                    readonly />
+                                                            </div>
+                                                        </div>  
+                                                        <!--end col-->
+                                                        {% if user.technician %}
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="roleInput"
+                                                                    class="form-label">Designation (Read Only)</label>
+                                                                <input type="text" class="form-control"
+                                                                    id="roleInput" placeholder="Technician"
+                                                                    name="role"
+                                                                    value="{{ user.technician.get_role_display }}" 
+                                                                    readonly />
+                                                            </div>
+                                                        </div>
+                                                        {% endif %}
+                                                        <div class="col-lg-12">
+                                                            <div class="hstack gap-2 justify-content-end">
+                                                                <button type="submit" id="update-personal-details"
+                                                                    class="btn btn-primary">Updates</button>
+                                                                <button type="button"
+                                                                    class="btn btn-soft-success">Cancel</button>
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                    </div>
+                                                    <!--end row-->
+                                                </form>                                                
+                                            </div>
+                                            <!--end tab-pane-->
+                                            
+                                            <!--start tab-pane-->
+                                            <div class="tab-pane" id="changePassword" role="tabpanel">
+                                                {% if user.has_usable_password %}
+                                                <form action="{% url 'pages:pages.profile.password.change' %}" method="POST" enctype="multipart/form-data">
+                                                {% else %}
+                                                <form action="{% url 'pages:pages.profile.password.set' %}" method="POST" enctype="multipart/form-data">
+                                                {% endif %}
+                                                    {% csrf_token %}
+                                                    <div class="row g-2">
+                                                        {% if user.has_usable_password %}
+                                                        <!-- If user was not logged in using their socials -->
+                                                        <div class="col-lg-4">
+                                                            <div>
+                                                                <label for="oldpasswordInput" class="form-label">Old
+                                                                    Password*</label>
+                                                                <input type="password" class="form-control"
+                                                                    id="oldpasswordInput" name="oldpassword"
+                                                                    placeholder="Enter current password">
+                                                            </div>
+                                                        </div>
+                                                        {% endif %}
+                                                        <!--end col-->
+                                                        <div class="col-lg-4">
+                                                            <div>
+                                                                <label for="newpasswordInput" class="form-label">New
+                                                                    Password*</label>
+                                                                <input type="password" class="form-control"
+                                                                    id="newpasswordInput" placeholder="Enter new password"
+                                                                    name="password1">
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-4">
+                                                            <div>
+                                                                <label for="confirmpasswordInput" class="form-label">Confirm
+                                                                    Password*</label>
+                                                                <input type="password" class="form-control"
+                                                                    id="confirmpasswordInput" name="password2"
+                                                                    placeholder="Confirm password">
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-12">
+                                                            <div class="mb-3">
+                                                                <a href="javascript:void(0);"
+                                                                    class="link-primary text-decoration-underline">Forgot
+                                                                    Password ?</a>
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-12">
+                                                            <div class="text-end">
+                                                                <button type="submit" class="btn btn-success">Change
+                                                                    Password</button>
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                    </div>
+                                                    <!--end row-->
+                                                </form>
+                                                <div class="mt-4 mb-3 border-bottom pb-2">
+                                                    <div class="float-end">
+                                                        <a href="javascript:void(0);" class="link-primary">All Logout</a>
+                                                    </div>
+                                                    <h5 class="card-title">Login History</h5>
+                                                </div>
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="flex-shrink-0 avatar-sm">
+                                                        <div class="avatar-title bg-light text-primary rounded-3 fs-18">
+                                                            <i class="ri-smartphone-line"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <h6>iPhone 12 Pro</h6>
+                                                        <p class="text-muted mb-0">Los Angeles, United States - March 16 at
+                                                            2:47PM</p>
+                                                    </div>
+                                                    <div>
+                                                        <a href="javascript:void(0);">Logout</a>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="flex-shrink-0 avatar-sm">
+                                                        <div class="avatar-title bg-light text-primary rounded-3 fs-18">
+                                                            <i class="ri-tablet-line"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <h6>Apple iPad Pro</h6>
+                                                        <p class="text-muted mb-0">Washington, United States - November 06
+                                                            at 10:43AM</p>
+                                                    </div>
+                                                    <div>
+                                                        <a href="javascript:void(0);">Logout</a>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="flex-shrink-0 avatar-sm">
+                                                        <div class="avatar-title bg-light text-primary rounded-3 fs-18">
+                                                            <i class="ri-smartphone-line"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <h6>Galaxy S21 Ultra 5G</h6>
+                                                        <p class="text-muted mb-0">Conneticut, United States - June 12 at
+                                                            3:24PM</p>
+                                                    </div>
+                                                    <div>
+                                                        <a href="javascript:void(0);">Logout</a>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0 avatar-sm">
+                                                        <div class="avatar-title bg-light text-primary rounded-3 fs-18">
+                                                            <i class="ri-macbook-line"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <h6>Dell Inspiron 14</h6>
+                                                        <p class="text-muted mb-0">Phoenix, United States - July 26 at
+                                                            8:10AM</p>
+                                                    </div>
+                                                    <div>
+                                                        <a href="javascript:void(0);">Logout</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--end tab-pane-->
+
+                                            {% if user|has_admin_or_super_user_role %}
+                                            <!--start tab-pane-->
+                                            <div class="tab-pane" id="new-account" role="tabpanel">
+                                                <form action="{% url 'pages:pages.profile_create_account' %}" method="POST" enctype="multipart/form-data" id="user-creation-form">
+                                                    {% csrf_token %}
+                                                    <div id="newlink">
+                                                        <div id="1">
+                                                            <div class="row">
+                                                                <!--end col-->
+                                                                <div class="col-lg-3">
+                                                                    <div class="mb-3">
+                                                                        <label for="firstName" class="form-label">First Name</label>
+                                                                        <input type="text" class="form-control" id="firstName"
+                                                                            placeholder="Enter your firstname" name="first_name"
+                                                                            required />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-3">
+                                                                    <div class="mb-3">
+                                                                        <label for="lastName" class="form-label">Last Name</label>
+                                                                        <input type="text" class="form-control"
+                                                                            placeholder="Enter your lastname" 
+                                                                            id="lastName" name="last_name"
+                                                                            required />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-3">
+                                                                    <div class="mb-3">
+                                                                        <label for="email" class="form-label">Email Address</label>
+                                                                        <input type="text" class="form-control"
+                                                                            id="email" placeholder="Input Email"
+                                                                            name="email"
+                                                                            value="" required
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <!--end col-->
+                                                                <div class="col-lg-3">
+                                                                    <div class="mb-3">
+                                                                        <label for="phoneNumber" class="form-label">Phone Number</label>
+                                                                        <input type="text" class="form-control" id="phoneNumber"
+                                                                            placeholder="Enter your phone number" name="phone"/>
+                                                                    </div>
+                                                                </div>
+                                                                <!--end col-->
+                                                                <div class="col-lg-3">
+                                                                    <div class="mb-3">
+                                                                        <label for="title" class="form-label">Title</label>
+                                                                        <input type="text" class="form-control" id="title"
+                                                                            placeholder="Enter your title" name="title" />
+                                                                    </div>
+                                                                </div>
+                                                                <!--end col-->
+                                                                <div class="col-lg-3">
+                                                                    <div class="mb-3">
+                                                                        <label for="password" class="form-label">Password</label>
+                                                                        <input type="text" class="form-control" id="password"
+                                                                            placeholder="Enter Password" name="password" />
+                                                                    </div>
+                                                                </div>
+                                                                <!--end col-->
+                                                                <div class="col-lg-3">
+                                                                    <div class="mb-3">
+                                                                        <label for="role"
+                                                                            class="form-label">Role</label>
+                                                                        <div class="row">
+                                                                            <div class="col-lg-12">
+                                                                                <select class="form-control" data-choices
+                                                                                    data-choices-search-false
+                                                                                    name="role"
+                                                                                    id="user-role-choice">
+                                                                                    <option value="1">Administrator</option>
+                                                                                    <option value="2">Bookkeeper</option>
+                                                                                    <option value="3">Lead Technician</option>
+                                                                                    <option value="4">Technician</option>
+                                                                                    <option value="5">Sub Contractor</option>
+                                                                                    <option value="6">Sales</option>
+                                                                                    <option value="7">Project Manager</option>
+                                                                                    <option value="8">Scheduler</option>
+                                                                                    <option value="10">Client</option>
+                                                                                </select>
+                                                                            </div>
+                                                                            <!--end col-->
+                                                                        </div>
+                                                                        <!--end row-->
+                                                                    </div>
+                                                                </div>
+                                                                <div id="client-choice-dropdown-div" class="col-lg-3">
+                                                                    <div class="mb-3">
+                                                                        <label for="client-choice"
+                                                                            class="form-label">Client Choice</label>
+                                                                        <div class="row">
+                                                                            <div class="col-lg-12">
+                                                                                <select class="form-control" data-choices
+                                                                                    data-choices-search-true 
+                                                                                    name="choices">
+                                                                                    {% for client in clients %}
+                                                                                    <option value="{{client.id}}">{{client.name}}</option>
+                                                                                    {% endfor %}
+                                                                                </select>
+                                                                            </div>
+                                                                            <!--end col-->
+                                                                        </div>
+                                                                        <!--end row-->
+                                                                    </div>
+                                                                </div>
+                                                                <div class="hstack gap-2 justify-content-end">
+                                                                    <a class="btn btn-danger mb-4"
+                                                                        href="javascript:deleteEl(1)">Remove</a>
+                                                                </div>
+                                                                <!--end col-->
+                                                            </div>
+                                                            <!--end row-->
+                                                        </div>
+                                                    </div>
+                                                    <div id="newForm" style="display: none;">
+    
+                                                    </div>
+                                                    <div class="col-lg-12">
+                                                        <div class="hstack gap-2">
+                                                            <button type="submit" class="btn btn-success">Create User</button>
+                                                            <a href="javascript:create_new_link()" class="btn btn-primary">Add Another User</a>
+                                                        </div>
+                                                    </div>
+                                                    <!--end col-->
+                                                </form>
+                                                
+                                                <!-- User Tables Section -->
+                                                <div class="row mt-4">
+                                                    <!-- Non-Client Users Table -->
+                                                    <div class="col-lg-6">
+                                                        <div class="card">
+                                                            <div class="card-header">
+                                                                <h4 class="card-title mb-0">Current Users (Non-Client)</h4>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-bordered table-striped">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th>First Name</th>
+                                                                                <th>Last Name</th>
+                                                                                <th>Username</th>
+                                                                                <th>Role</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {% for user in non_client_users %}
+                                                                            <tr>
+                                                                                <td>{{ user.first_name|default:"-" }}</td>
+                                                                                <td>{{ user.last_name|default:"-" }}</td>
+                                                                                <td>{{ user.username }}</td>
+                                                                                <td>
+                                                                                    {% if user.groups.all %}
+                                                                                        {{ user.groups.first.name }}
+                                                                                    {% else %}
+                                                                                        -
+                                                                                    {% endif %}
+                                                                                </td>
+                                                                            </tr>
+                                                                            {% empty %}
+                                                                            <tr>
+                                                                                <td colspan="4" class="text-center text-muted">No non-client users found</td>
+                                                                            </tr>
+                                                                            {% endfor %}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Client Users Table -->
+                                                    <div class="col-lg-6">
+                                                        <div class="card">
+                                                            <div class="card-header">
+                                                                <h4 class="card-title mb-0">Client Users</h4>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-bordered table-striped">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th>First Name</th>
+                                                                                <th>Last Name</th>
+                                                                                <th>Username</th>
+                                                                                <th>Role</th>
+                                                                                <th>Company Name</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {% for user in client_users %}
+                                                                            <tr>
+                                                                                <td>{{ user.first_name|default:"-" }}</td>
+                                                                                <td>{{ user.last_name|default:"-" }}</td>
+                                                                                <td>{{ user.username }}</td>
+                                                                                <td>
+                                                                                    {% if user.groups.all %}
+                                                                                        {{ user.groups.first.name }}
+                                                                                    {% else %}
+                                                                                        -
+                                                                                    {% endif %}
+                                                                                </td>
+                                                                                <td>{{ user.client.company.name|default:"-" }}</td>
+                                                                            </tr>
+                                                                            {% empty %}
+                                                                            <tr>
+                                                                                <td colspan="5" class="text-center text-muted">No client users found</td>
+                                                                            </tr>
+                                                                            {% endfor %}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--end tab-pane-->
+                                            {% endif %}
+
+                                            <!--start tab-pane-->
+                                            <div class="tab-pane" id="privacy" role="tabpanel">
+                                                <div class="mb-4 pb-2">
+                                                    <h5 class="card-title text-decoration-underline mb-3">Security:</h5>
+                                                    <div class="d-flex flex-column flex-sm-row mb-4 mb-sm-0">
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="fs-14 mb-1">Two-factor Authentication</h6>
+                                                            <p class="text-muted">Two-factor authentication is an enhanced
+                                                                security meansur. Once enabled, you'll be required to give
+                                                                two types of identification when you log into Google
+                                                                Authentication and SMS are Supported.</p>
+                                                        </div>
+                                                        <div class="flex-shrink-0 ms-sm-3">
+                                                            <a href="{% url 'two_factor:profile' %}"
+                                                                class="btn btn-sm btn-primary">Two-factor
+                                                                Authentication</a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex flex-column flex-sm-row mb-4 mb-sm-0 mt-2">
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="fs-14 mb-1">Secondary Verification</h6>
+                                                            <p class="text-muted">The first factor is a password and the
+                                                                second commonly includes a text with a code sent to your
+                                                                smartphone, or biometrics using your fingerprint, face, or
+                                                                retina.</p>
+                                                        </div>
+                                                        <div class="flex-shrink-0 ms-sm-3">
+                                                            <a href="javascript:void(0);" class="btn btn-sm btn-primary">Set
+                                                                up secondary method</a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex flex-column flex-sm-row mb-4 mb-sm-0 mt-2">
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="fs-14 mb-1">Backup Codes</h6>
+                                                            <p class="text-muted mb-sm-0">A backup code is automatically
+                                                                generated for you when you turn on two-factor authentication
+                                                                through your iOS or Android Twitter app. You can also
+                                                                generate a backup code on twitter.com.</p>
+                                                        </div>
+                                                        <div class="flex-shrink-0 ms-sm-3">
+                                                            <a href="javascript:void(0);"
+                                                                class="btn btn-sm btn-primary">Generate backup codes</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <h5 class="card-title text-decoration-underline mb-3">Application
+                                                        Notifications:</h5>
+                                                    <ul class="list-unstyled mb-0">
+                                                        <li class="d-flex">
+                                                            <div class="flex-grow-1">
+                                                                <label for="directMessage"
+                                                                    class="form-check-label fs-14">Direct messages</label>
+                                                                <p class="text-muted">Messages from people you follow</p>
+                                                            </div>
+                                                            <div class="flex-shrink-0">
+                                                                <div class="form-check form-switch">
+                                                                    <input class="form-check-input" type="checkbox"
+                                                                        role="switch" id="directMessage" checked />
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                        <li class="d-flex mt-2">
+                                                            <div class="flex-grow-1">
+                                                                <label class="form-check-label fs-14"
+                                                                    for="desktopNotification">
+                                                                    Show desktop notifications
+                                                                </label>
+                                                                <p class="text-muted">Choose the option you want as your
+                                                                    default setting. Block a site: Next to "Not allowed to
+                                                                    send notifications," click Add.</p>
+                                                            </div>
+                                                            <div class="flex-shrink-0">
+                                                                <div class="form-check form-switch">
+                                                                    <input class="form-check-input" type="checkbox"
+                                                                        role="switch" id="desktopNotification" checked />
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                        <li class="d-flex mt-2">
+                                                            <div class="flex-grow-1">
+                                                                <label class="form-check-label fs-14"
+                                                                    for="emailNotification">
+                                                                    Show email notifications
+                                                                </label>
+                                                                <p class="text-muted"> Under Settings, choose Notifications.
+                                                                    Under Select an account, choose the account to enable
+                                                                    notifications for. </p>
+                                                            </div>
+                                                            <div class="flex-shrink-0">
+                                                                <div class="form-check form-switch">
+                                                                    <input class="form-check-input" type="checkbox"
+                                                                        role="switch" id="emailNotification" />
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                        <li class="d-flex mt-2">
+                                                            <div class="flex-grow-1">
+                                                                <label class="form-check-label fs-14"
+                                                                    for="chatNotification">
+                                                                    Show chat notifications
+                                                                </label>
+                                                                <p class="text-muted">To prevent duplicate mobile
+                                                                    notifications from the Gmail and Chat apps, in settings,
+                                                                    turn off Chat notifications.</p>
+                                                            </div>
+                                                            <div class="flex-shrink-0">
+                                                                <div class="form-check form-switch">
+                                                                    <input class="form-check-input" type="checkbox"
+                                                                        role="switch" id="chatNotification" />
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                        <li class="d-flex mt-2">
+                                                            <div class="flex-grow-1">
+                                                                <label class="form-check-label fs-14"
+                                                                    for="purchaesNotification">
+                                                                    Show purchase notifications
+                                                                </label>
+                                                                <p class="text-muted">Get real-time purchase alerts to
+                                                                    protect yourself from fraudulent charges.</p>
+                                                            </div>
+                                                            <div class="flex-shrink-0">
+                                                                <div class="form-check form-switch">
+                                                                    <input class="form-check-input" type="checkbox"
+                                                                        role="switch" id="purchaesNotification" />
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                                {% if user.is_superuser %}
+                                                <div>
+                                                    <h5 class="card-title text-decoration-underline mb-3">Delete This
+                                                        Account:</h5>
+                                                    <p class="text-muted">Go to the Data & Privacy section of your profile
+                                                        Account. Scroll to "Your data & privacy options." Delete your
+                                                        Profile Account. Follow the instructions to delete your account :
+                                                    </p>
+                                                    <div>
+                                                        <input type="password" class="form-control" id="passwordInput"
+                                                            placeholder="Enter your password" value="make@321654987"
+                                                            style="max-width: 265px;">
+                                                    </div>
+                                                    <div class="hstack gap-2 mt-3">
+                                                        <a href="javascript:void(0);" class="btn btn-soft-danger">Close &
+                                                            Delete This Account</a>
+                                                        <a href="javascript:void(0);" class="btn btn-light">Cancel</a>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <!--end tab-pane-->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end col-->
+                        </div>
+                        <!--end row-->
+    
+                    </div>
+                    <!-- container-fluid -->
+                </div><!-- End Page-content -->
+            
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+{% block extra_js %}
+
+<script>
+    var clients = [
+        {% for client in clients %}
+            {"name": "{{ client.name }}", "id": "{{ client.id }}"}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+</script>
+
+    <!-- profile-setting init js -->
+    <script src="{% static 'js/pages/profile-setting-profile-create-account.js'%}"></script>
+    <script src="{% static 'js/pages/profile-setting.init.js'%}"></script>
+
+    <!-- User Creation Billing Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('user-creation-form');
+            const roleSelect = document.getElementById('user-role-choice');
+            
+            if (form && roleSelect) {
+                form.addEventListener('submit', function(e) {
+                    const selectedRole = parseInt(roleSelect.value);
+                    
+                    // If it's not a client (role 10), show billing info
+                    if (selectedRole !== 10) {
+                        const roleNames = {
+                            1: 'Administrator',
+                            2: 'Bookkeeper', 
+                            3: 'Lead Technician',
+                            4: 'Technician',
+                            5: 'Sub Contractor',
+                            6: 'Sales',
+                            7: 'Project Manager',
+                            8: 'Scheduler',
+                            9: 'Super User'
+                        };
+                        
+                        const roleName = roleNames[selectedRole] || 'User';
+                        
+                        // Subscription tier pricing (this should match backend)
+                        const subscriptionTiers = {
+                            'starter': { name: 'Starter Tier', price: 35 },
+                            'growth': { name: 'Growth Tier', price: 55 },
+                            'innovator': { name: 'Innovator Tier', price: 75 }
+                        };
+                        
+                        // Get company's subscription tier from backend context
+                        const currentTier = '{{ company_subscription_tier|default:"starter" }}';
+                        const tierInfo = subscriptionTiers[currentTier];
+                        
+                        if (confirm(`Creating a ${roleName} will cost $${tierInfo.price} (${tierInfo.name} rate - Company Subscription). Do you want to proceed with payment?`)) {
+                            // Let the form submit normally - the backend will handle billing
+                            return true;
+                        } else {
+                            e.preventDefault();
+                            return false;
+                        }
+                    }
+                    // For clients, proceed normally without billing
+                });
+            }
+        });
+    </script>
+
+{% endblock extra_js %}

@@ -1,0 +1,729 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Leads{% endblock title %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.min.css">
+<!-- Sweet Alert css-->
+<link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Leads" title="Leads" %}
+                        {% endblock pagetitle %}
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card" id="leadsList">
+                                    <div class="card-header border-0">
+    
+                                        <div class="row g-4 align-items-center">
+                                            <div class="col-sm-3">
+                                                <div class="search-box">
+                                                    <input type="text" class="form-control search" placeholder="Search a lead...">
+                                                    <i class="ri-search-line search-icon"></i>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-auto ms-auto">
+                                                <div class="hstack gap-2">
+                                                    <button class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()"><i class="ri-delete-bin-2-line"></i></button>
+                                                    {% if perms.apps.add_leadcompany %}
+                                                    <button type="button" class="btn btn-success add-btn" data-bs-toggle="modal" id="create-btn" data-bs-target="#showModal"><i class="ri-add-line align-bottom me-1"></i> Add Leads</button>
+                                                    {% endif %}"
+                                                    <button type="button" class="btn btn-info" data-bs-toggle="offcanvas" href="#offcanvasExample"><i class="ri-filter-3-line align-bottom me-1"></i> Filters</button>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div>
+                                            <div class="table-responsive table-card">
+                                                <table class="table align-middle" id="customerTable">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th scope="col" style="width: 50px;">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="checkAll" value="option">
+                                                                </div>
+                                                            </th>
+                                                            <th class="sort" data-sort="name">Name</th>
+                                                            <th class="sort" data-sort="company_name">Company Name</th>
+                                                            <th class="sort" data-sort="leads_score">Leads Score</th>
+                                                            <th class="sort" data-sort="phone">Phone</th>
+                                                            <th class="sort" data-sort="location">Location</th>
+                                                            <th class="sort" data-sort="tags">Tags</th>
+                                                            <th class="sort" data-sort="date">Create Date</th>
+                                                            <th class="sort" data-sort="action">Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="list form-check-all">
+                                                        {% for lead in leads %}
+                                                        <tr>
+                                                            <th scope="row">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" name="chk_child" value="option1">
+                                                                </div>
+                                                            </th>
+                                                            <td class="id" style="display:none;"><a href="{% url 'apps:leads.detail' lead.pk%}" class="fw-medium link-primary">{{ lead.id }}</a></td>
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="flex-shrink-0">
+                                                                        <img src="{{ lead.get_photo_url }}" alt="" class="avatar-xxs rounded-circle image_src object-cover">
+                                                                    </div>
+                                                                    <div class="flex-grow-1 ms-2 name"><a href="{% url 'apps:leads.detail' lead.pk %}">{{ lead.name }}</div>
+                                                                </div>
+                                                            </td>
+                                                            <td class="company_name">{{ lead.name }}</td>
+                                                            <td class="leads_score">{{ lead.score }}</td>
+                                                            <td class="phone">{{ lead.phone }}</td>
+                                                            <td class="location">{{ lead.city }}</td>
+                                                            <td class="tags">
+                                                                {% for tags in lead.tags %}
+                                                                <span class="badge badge-soft-primary">{{ tags }}</span>
+                                                                {% endfor %}
+                                                            </td>
+                                                            <td class="date">{{ lead.date_added|date:"d M, Y" }}</td>
+                                                            <td>
+                                                                <ul class="list-inline hstack gap-2 mb-0">
+                                                                    <li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="View">
+                                                                        <a href="{% url 'apps:leads.detail' lead.pk %}"><i class="ri-eye-fill align-bottom text-muted"></i></a>
+                                                                    </li>
+                                                                    {% if perms.apps.change_leadcompany %}
+                                                                    <li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Edit">
+                                                                        <a class="edit-item-btn" href="#showModal-{{ forloop.counter }}" data-bs-toggle="modal"><i class="ri-pencil-fill align-bottom text-muted"></i></a>
+                                                                    </li>
+                                                                    {% endif %}
+                                                                    {% if perms.apps.delete_leadcompany %}
+                                                                    <li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Delete">
+                                                                        <a class="remove-item-btn" data-bs-toggle="modal" href="#deleteRecordModal-{{ forloop.counter }}">
+                                                                            <i class="ri-delete-bin-fill align-bottom text-muted"></i>
+                                                                        </a>
+                                                                    </li>
+                                                                    {% endif %}
+                                                                </ul>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                                <div class="noresult" style="display: none">
+                                                    <div class="text-center">
+                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px"></lord-icon>
+                                                        <h5 class="mt-2">Sorry! No Result Found</h5>
+                                                        <p class="text-muted mb-0">We've searched more than 150+ leads We did not find any leads for you search.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-end mt-3">
+                                                <div class="pagination-wrap hstack gap-2">
+                                                    <a class="page-item pagination-prev disabled" href="#">
+                                                        Previous
+                                                    </a>
+                                                    <ul class="pagination listjs-pagination mb-0"></ul>
+                                                    <a class="page-item pagination-next" href="#">
+                                                        Next
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Add Lead Modal -->
+                                        {% if perms.apps.add_leadcompany %}
+                                        <div class="modal fade" id="showModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-light p-3">
+                                                        <h5 class="modal-title" id="exampleModalLabel"></h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+                                                    </div>
+                                                    <form method="POST" action="{% url 'apps:leads' %}" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                                        {% csrf_token %}
+                                                        <div class="modal-body">
+                                                            <input type="hidden" id="id-field" />
+                                                            <div class="row g-3">
+                                                                <div class="col-lg-12">
+                                                                    <div class="text-center">
+                                                                        <div class="position-relative d-inline-block">
+                                                                            <div class="position-absolute bottom-0 end-0">
+                                                                                <label for="lead-image-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                                                                    <div class="avatar-xs cursor-pointer">
+                                                                                        <div class="avatar-title bg-light border rounded-circle text-muted">
+                                                                                            <i class="ri-image-fill"></i>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </label>
+                                                                                <input class="form-control d-none" name="logo" value="" id="lead-image-input" type="file" accept="image/png, image/gif, image/jpeg">
+                                                                            </div>
+                                                                            <div class="avatar-lg p-1">
+                                                                                <div class="avatar-title bg-light rounded-circle">
+                                                                                    <img src="{% static 'images/users/user-dummy-img.jpg' %}" name="logo" id="lead-img" class="avatar-md rounded-circle object-cover" />
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <h5 class="fs-13 mt-3">Lead Image</h5>
+                                                                    </div>
+                                                                </div>
+                                                                <!--end col-->
+                                                                <div class="col-lg-12">
+                                                                    <div>
+                                                                        <label for="company_name-field" class="form-label">Lead Name<span class="required-asterix">*</span></label>
+                                                                        <input type="text" name="name" class="form-control" placeholder="Enter company name" required />
+                                                                        <div class="invalid-feedback">Please give a lead name</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="leads_score-field" class="form-label">Contact First Name<span class="required-asterix">*</span></label>
+                                                                        <input type="text" name="contact_first" class="form-control" placeholder="First Name" required />
+                                                                        <div class="invalid-feedback">Please give a first name</div>
+                                                                    </div>
+                                                                </div>
+                                                                <!--end col-->
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="phone-field" class="form-label">Contact Last Name<span class="required-asterix">*</span></label>
+                                                                        <input type="text" name="contact_last" class="form-control" placeholder="Last Name" required />
+                                                                        <div class="invalid-feedback">Please give a last name</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="date-field" class="form-label">Contact Email<span class="required-asterix">*</span></label>
+                                                                        <input type="email" name="email" class="form-control" placeholder="Contact's Email" required />
+                                                                        <div class="invalid-feedback">Please give a valid contact email</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="leads_score-field" class="form-label">Leads Score</label>
+                                                                        <input type="text" name="score" class="form-control" placeholder="Enter Value" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="card-footer bg-transparent border-top-dashed py-2"></div>
+                                                                <!--end col-->
+                                                                <div class="col-lg-12">
+                                                                    <div>
+                                                                        <label for="location-field" class="form-label">Address</label>
+                                                                        <input type="text" name="address_1" class="form-control" placeholder="Enter location" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="location-field" class="form-label">Address 2</label>
+                                                                        <input type="text" name="address_2" class="form-control" placeholder="Enter location"  />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="zip-field" class="form-label">Zip Code</label>
+                                                                        <input type="text" pattern="\d{5}" maxlength="5" name="zip" class="form-control" placeholder="Enter Zip Code" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="location-field" class="form-label">City</label>
+                                                                        <input type="text" name="city" class="form-control" placeholder="Enter location"  />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="location-field" class="form-label">State</label>
+                                                                        <input type="text" name="state" class="form-control" placeholder="Enter location"  />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="zip-field" class="form-label">Country</label>
+                                                                        <select class="form-select" id="industry_type-field" name="country" placeholder="Select Country"  >
+                                                                            <option value="United States">United Sates</option>
+                                                                            <option value="Canada">Canada</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="location-field" class="form-label">Time Zone</label>
+                                                                        <input type="text" name="timezone" class="form-control" placeholder="MTC"  />
+                                                                    </div>
+                                                                </div>
+                                                                <!--end col-->
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="phone-field" class="form-label">Website</label>
+                                                                        <input type="text" name="website" class="form-control" placeholder="www.company.com"  />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="leads_score-field" class="form-label">Phone Number</label>
+                                                                    <input type="tel" name="phone" class="form-control" placeholder="Enter Phone Number" maxlength="15" />
+                                                                    </div>
+                                                                </div>
+                                                                <!--end col-->
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="industry_type-field" class="form-label">Industry Type</label>
+                                                                        <select class="form-select" id="industry_type-field" name="industry">
+                                                                            <option value="">Select industry type</option>
+                                                                            <option value="Agriculture">Agriculture</option>
+                                                                            <option value="Construction">Construction</option>
+                                                                            <option value="Education">Education</option>
+                                                                            <option value="Entertainment">Entertainment</option>
+                                                                            <option value="Finance & Insurance">Finance & Insurance</option>
+                                                                            <option value="Healthcare">Healthcare</option>
+                                                                            <option value="Higher Education">Higher Education</option>
+                                                                            <option value="Hospitality">Hospitality</option>
+                                                                            <option value="Information Technology">Information Technology</option>
+                                                                            <option value="Manufacturing">Manufacturing</option>
+                                                                            <option value="Nonprofit">Nonprofit</option>
+                                                                            <option value="Professional Services">Professional Services</option>
+                                                                            <option value="Real Estate">Real Estate</option>
+                                                                            <option value="Retail">Retail</option>
+                                                                            <option value="Telecommunications">Telecommunications</option>
+                                                                            <option value="Transportation">Transportation</option>
+                                                                            <option value="Utilities">Utilities</option>
+                                                                            <option value="Wholesale">Wholesale</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <div>
+                                                                        <label for="phone-field" class="form-label">Fax</label>
+                                                                        <input type="tel" name="fax" class="form-control" placeholder="Enter Fax Number" maxlength="15" />
+                                                                    </div>
+                                                                </div>
+                                                                <!--end col-->
+                                                            </div>
+                                                            <!--end row-->
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <div class="hstack gap-2 justify-content-end">
+                                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                                                <button type="submit" class="btn btn-success" id="add-btn">Add leads</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        <!--end add modal-->
+
+                                        {% for lead in leads %}
+                                        <!-- Edit Lead Modal -->
+                                        {% if perms.apps.change_leadcompany %}
+                                            <div class="modal fade" id="showModal-{{ forloop.counter }}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-light p-3">
+                                                            <h5 class="modal-title" id="exampleModalLabel">Edit Lead</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+                                                        </div>
+                                                        <form method="POST" action="{% url 'apps:leads.update' lead.pk %}" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                                            {% csrf_token %}
+                                                            <div class="modal-body">
+                                                                <input type="hidden" id="id-field" />
+                                                                <div class="row g-3">
+                                                                    <div class="col-lg-12">
+                                                                        <div class="text-center">
+                                                                            <div class="position-relative d-inline-block">
+                                                                                <div class="position-absolute bottom-0 end-0">
+                                                                                    <label for="lead-image-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                                                                        <div class="avatar-xs cursor-pointer">
+                                                                                            <div class="avatar-title bg-light border rounded-circle text-muted">
+                                                                                                <i class="ri-image-fill"></i>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </label>
+                                                                                    <input class="form-control d-none" name="logo" value="" id="lead-image-input" type="file" accept="image/png, image/gif, image/jpeg">
+                                                                                </div>
+                                                                                <div class="avatar-lg p-1">
+                                                                                    <div class="avatar-title bg-light rounded-circle">
+                                                                                        <img src="{% static 'images/users/user-dummy-img.jpg' %}" name="logo" id="lead-img" class="avatar-md rounded-circle object-cover" />
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <h5 class="fs-13 mt-3">Lead Image</h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <!--end col-->
+                                                                    <div class="col-lg-12">
+                                                                        <div>
+                                                                            <label for="company_name-field" class="form-label">Lead Name<span class="required-asterix">*</span></label>
+                                                                            <input type="text" name="name" class="form-control" placeholder="Enter company name" value="{{lead.name}}" required />
+                                                                            <div class="invalid-feedback">Please give a lead name</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="leads_score-field" class="form-label">Contact First Name<span class="required-asterix">*</span></label>
+                                                                            <input type="text" name="contact_first" class="form-control" placeholder="First Name" value="{{lead.contact_first}}" required />
+                                                                            <div class="invalid-feedback">Please give a first name</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <!--end col-->
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="phone-field" class="form-label">Contact Last Name<span class="required-asterix">*</span></label>
+                                                                            <input type="text" name="contact_last" class="form-control" placeholder="Last Name" value="{{lead.contact_last}}" required />
+                                                                            <div class="invalid-feedback">Please give a last name</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="date-field" class="form-label">Contact Email<span class="required-asterix">*</span></label>
+                                                                            <input type="email" name="email" class="form-control" placeholder="Contact's Email" value="{{lead.email}}" required />
+                                                                            <div class="invalid-feedback">Please give a valid contact email</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="leads_score-field" class="form-label">Leads Score</label>
+                                                                            <input type="text" name="score" class="form-control" placeholder="Enter Value" value="{{lead.score|default_if_none:""}}" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="card-footer bg-transparent border-top-dashed py-2"></div>
+                                                                    <!--end col-->
+                                                                    <div class="col-lg-12">
+                                                                        <div>
+                                                                            <label for="location-field" class="form-label">Address</label>
+                                                                            <input type="text" name="address_1" class="form-control" placeholder="Enter location" value="{{lead.address_1}}" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="location-field" class="form-label">Address 2</label>
+                                                                            <input type="text" name="address_2" class="form-control" placeholder="Enter location" value="{{lead.address_2|default_if_none:""}}" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="zip-field" class="form-label">Zip Code</label>
+                                                                            <input type="text" pattern="\d{5}" maxlength="5" name="zip" class="form-control" placeholder="Enter Zip Code" value="{{lead.zip|default_if_none:""}}" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="location-field" class="form-label">City</label>
+                                                                            <input type="text" name="city" class="form-control" placeholder="Enter location" value="{{lead.city|default_if_none:""}}" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="location-field" class="form-label">State</label>
+                                                                            <input type="text" name="state" class="form-control" placeholder="Enter location" value="{{lead.state|default_if_none:""}}" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="zip-field" class="form-label">Country</label>
+                                                                            <select class="form-select" id="industry_type-field" name="country" placeholder="Select Country"  >
+                                                                                <option value="United States">United Sates</option>
+                                                                                <option value="Canada">Canada</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="location-field" class="form-label">Time Zone</label>
+                                                                            <input type="text" name="timezone" class="form-control" placeholder="MTC" value="{{lead.timezone|default_if_none:""}}" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <!--end col-->
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="phone-field" class="form-label">Website</label>
+                                                                            <input type="text" name="website" class="form-control" placeholder="www.company.com" value="{{lead.website|default_if_none:""}}" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="leads_score-field" class="form-label">Phone Number</label>
+                                                                            <input type="tel" name="phone" class="form-control" placeholder="Enter Phone Number" value="{{lead.phone|default_if_none:""}}" maxlength="15" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <!--end col-->
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="industry_type-field" class="form-label">Industry Type</label>
+                                                                            <select class="form-select" id="industry-field" name="industry">
+                                                                                <option {% if lead.industry == "" %}selected{% endif %} value="">Select industry type</option>
+                                                                                <option {% if lead.industry == "Agriculture"  %}selected{% endif %} value="Agriculture">Agriculture</option>
+                                                                                <option {% if lead.industry == "Construction"  %}selected{% endif %} value="Construction">Construction</option>
+                                                                                <option {% if lead.industry == "Education"  %}selected{% endif %} value="Education">Education</option>
+                                                                                <option {% if lead.industry == "Entertainment"  %}selected{% endif %} value="Entertainment">Entertainment</option>
+                                                                                <option {% if lead.industry == "Finance"  %}selected{% endif %} value="Finance & Insurance">Finance & Insurance</option>
+                                                                                <option {% if lead.industry == "Healthcare"  %}selected{% endif %} value="Healthcare">Healthcare</option>
+                                                                                <option {% if lead.industry == "Higher"  %}selected{% endif %} value="Higher Education">Higher Education</option>
+                                                                                <option {% if lead.industry == "Hospitality"  %}selected{% endif %} value="Hospitality">Hospitality</option>
+                                                                                <option {% if lead.industry == "Information"  %}selected{% endif %} value="Information Technology">Information Technology</option>
+                                                                                <option {% if lead.industry == "Manufacturing"  %}selected{% endif %} value="Manufacturing">Manufacturing</option>
+                                                                                <option {% if lead.industry == "Nonprofit"  %}selected{% endif %} value="Nonprofit">Nonprofit</option>
+                                                                                <option {% if lead.industry == "Professional Services"  %}selected{% endif %} value="Professional Services">Professional Services</option>
+                                                                                <option {% if lead.industry == "Real"  %}selected{% endif %} value="Real Estate">Real Estate</option>
+                                                                                <option {% if lead.industry == "Retail"  %}selected{% endif %} value="Retail">Retail</option>
+                                                                                <option {% if lead.industry == "Telecommunications"  %}selected{% endif %} value="Telecommunications">Telecommunications</option>
+                                                                                <option {% if lead.industry == "Transportation"  %}selected{% endif %} value="Transportation">Transportation</option>
+                                                                                <option {% if lead.industry == "Utilities"  %}selected{% endif %} value="Utilities">Utilities</option>
+                                                                                <option {% if lead.industry == "Wholesale"  %}selected{% endif %} value="Wholesale">Wholesale</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-6">
+                                                                        <div>
+                                                                            <label for="phone-field" class="form-label">Fax</label>
+                                                                            <input type="tel" name="fax" class="form-control" placeholder="Enter Fax Number" value="{{lead.fax|default_if_none:""}}" maxlength="15" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <!--end col-->
+                                                                </div>
+                                                                <!--end row-->
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <div class="hstack gap-2 justify-content-end">
+                                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                                                    <button type="submit" class="btn btn-success" id="add-btn">Update</button>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- End edit modal-->
+                                        {% endif %}
+
+                                        {% if perms.apps.delete_leadcompany %}
+                                            <!-- Delete Lead Modal -->
+                                            <div class="modal fade zoomIn" id="deleteRecordModal-{{ forloop.counter }}" tabindex="-1" aria-labelledby="deleteRecordLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
+                                                        </div>
+                                                        <div class="modal-body p-5 text-center">
+                                                            <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#405189,secondary:#f06548" style="width:90px;height:90px"></lord-icon>
+                                                            <div class="mt-4 text-center">
+                                                                <h4 class="fs-semibold">You are about to delete a lead ?</h4>
+                                                                <p class="text-muted fs-14 mb-4 pt-1">Deleting your lead will remove all of your information from your database.</p>
+                                                                <div class="hstack gap-2 justify-content-center remove">
+                                                                    <button class="btn btn-link link-success fw-medium text-decoration-none" id="deleteRecord-close" data-bs-dismiss="modal"><i class="ri-close-line me-1 align-middle"></i> Close</button>
+                                                                    <a class="btn btn-danger" id="delete-record" href="{% url 'apps:leads.delete_leads' lead.pk %}">Yes, Delete It!!</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--end modal -->
+                                        {% endif %}
+                                        {% endfor %}
+    
+    
+                                        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+                                            <div class="offcanvas-header bg-light">
+                                                <h5 class="offcanvas-title" id="offcanvasExampleLabel">Leads Fliters</h5>
+                                                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                                            </div>
+                                            <!--end offcanvas-header-->
+                                            <form action="" class="d-flex flex-column justify-content-end h-100">
+                                                <div class="offcanvas-body">
+                                                    <div class="mb-4">
+                                                        <label for="datepicker-range" class="form-label text-muted text-uppercase fw-semibold mb-3">Date</label>
+                                                        <input type="date" class="form-control" id="datepicker-range" data-provider="flatpickr" data-range="true" placeholder="Select date">
+                                                    </div>
+                                                    <div class="mb-4">
+                                                        <label for="country-select" class="form-label text-muted text-uppercase fw-semibold mb-3">Country</label>
+                                                        <select class="form-control" data-choices data-choices-multiple-remove="true" name="country-select" id="country-select" multiple>
+                                                            <option value="">Select country</option>
+                                                            <option value="Argentina">Argentina</option>
+                                                            <option value="Belgium">Belgium</option>
+                                                            <option value="Brazil" selected>Brazil</option>
+                                                            <option value="Colombia">Colombia</option>
+                                                            <option value="Denmark">Denmark</option>
+                                                            <option value="France">France</option>
+                                                            <option value="Germany">Germany</option>
+                                                            <option value="Mexico">Mexico</option>
+                                                            <option value="Russia">Russia</option>
+                                                            <option value="Spain">Spain</option>
+                                                            <option value="Syria">Syria</option>
+                                                            <option value="United Kingdom" selected>United Kingdom</option>
+                                                            <option value="United States of America">United States of America</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-4">
+                                                        <label for="status-select" class="form-label text-muted text-uppercase fw-semibold mb-3">Status</label>
+                                                        <div class="row g-2">
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
+                                                                    <label class="form-check-label" for="inlineCheckbox1">New Leads</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
+                                                                    <label class="form-check-label" for="inlineCheckbox2">Old Leads</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="option3">
+                                                                    <label class="form-check-label" for="inlineCheckbox3">Loss Leads</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="inlineCheckbox4" value="option4">
+                                                                    <label class="form-check-label" for="inlineCheckbox4">Follow Up</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-4">
+                                                        <label for="leadscore" class="form-label text-muted text-uppercase fw-semibold mb-3">Lead Score</label>
+                                                        <div class="row g-2 align-items-center">
+                                                            <div class="col-lg">
+                                                                <input type="number" class="form-control" id="leadscore" placeholder="0">
+                                                            </div>
+                                                            <div class="col-lg-auto">
+                                                                To
+                                                            </div>
+                                                            <div class="col-lg">
+                                                                <input type="number" class="form-control" id="leadscore" placeholder="0">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label for="leads-tags" class="form-label text-muted text-uppercase fw-semibold mb-3">Tags</label>
+                                                        <div class="row g-3">
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="marketing" value="marketing">
+                                                                    <label class="form-check-label" for="marketing">Marketing</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="management" value="management">
+                                                                    <label class="form-check-label" for="management">Management</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="business" value="business">
+                                                                    <label class="form-check-label" for="business">Business</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="investing" value="investing">
+                                                                    <label class="form-check-label" for="investing">Investing</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="partner" value="partner">
+                                                                    <label class="form-check-label" for="partner">Partner</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="lead" value="lead">
+                                                                    <label class="form-check-label" for="lead">Leads</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="sale" value="sale">
+                                                                    <label class="form-check-label" for="sale">Sale</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="owner" value="owner">
+                                                                    <label class="form-check-label" for="owner">Owner</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="banking" value="banking">
+                                                                    <label class="form-check-label" for="banking">Banking</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="banking" value="banking">
+                                                                    <label class="form-check-label" for="banking">Exiting</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="banking" value="banking">
+                                                                    <label class="form-check-label" for="banking">Finance</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="banking" value="banking">
+                                                                    <label class="form-check-label" for="banking">Fashion</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!--end offcanvas-body-->
+                                                <div class="offcanvas-footer border-top p-3 text-center hstack gap-2">
+                                                    <button class="btn btn-light w-100">Clear Filter</button>
+                                                    <button type="submit" class="btn btn-success w-100">Filters</button>
+                                                </div>
+                                                <!--end offcanvas-footer-->
+                                            </form>
+                                        </div>
+                                        <!--end offcanvas-->
+    
+                                    </div>
+                                </div>
+    
+                            </div>
+                            <!--end col-->
+                        </div>
+                        <!--end row-->
+                        
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+{% block extra_js %}
+    <!-- Cleave.js -->
+    <script src="https://cdn.jsdelivr.net/npm/cleave.js@1/dist/cleave.min.js"></script>
+    <!-- Phone number formatter for US -->
+    <script src="https://cdn.jsdelivr.net/npm/cleave.js@1/dist/addons/cleave-phone.us.js"></script>
+    <!-- intlTelInput -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+
+    <!-- list.js min js -->
+    <script src="https://cdn.jsdelivr.net/npm/list-js@0.1.0/list.min.js"></script>
+    <script src="{% static 'libs/list.pagination.js/dist/list.pagination.min.js'%}"></script>
+
+    <script src="{% static 'js/pages/phoneValidation.js' %}"></script>
+    <script src="{% static 'js/pages/lead-companies.init.js'%}"></script>
+    <!-- Sweet Alerts js -->
+    <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
+
+    
+{% endblock extra_js %}

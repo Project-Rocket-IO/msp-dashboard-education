@@ -1,0 +1,152 @@
+version: '3.8'
+
+services:
+  valkey:
+    image: valkey/valkey:latest
+    container_name: msp-dashboard-valkey
+    restart: unless-stopped
+    networks:
+      - app_network
+
+  # Database is external (DigitalOcean managed database)
+  # No local db service needed
+
+  app:
+    build:
+      context: .
+    container_name: msp-dashboard-app
+    restart: unless-stopped
+    environment:
+      - DJANGO_SETTINGS_MODULE=projectRocket.settings.production
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DEBUG=False
+      # Use these Redis URLs only once (remove duplicates)
+      - CELERY_BROKER_URL=redis://valkey:6379/0
+      - REDIS_URL=redis://valkey:6379/1
+    volumes:
+      # Bind mount your local code - this overrides /app inside container
+      - .:/app:cached
+      # Mount named volumes for media and static files separately
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    networks:
+      - app_network
+    depends_on:
+      - valkey
+
+  collectstatic:
+    build: .
+    command: python manage.py collectstatic --noinput
+    env_file:
+      - .env
+    volumes:
+      # Mount static source so collectstatic can find assets
+      - ./msp-dashboard/msp-dashboard/static:/app/static:ro
+      # Output collected static files here
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    container_name: msp-dashboard-celery
+    restart: unless-stopped
+    command: bash build-celery.sh
+    environment:
+      - CELERY_BROKER_URL=redis://valkey:6379/0
+      - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - .:/app:cached
+    networks:
+      - app_network
+    depends_on:
+      - valkey
+      - app
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    container_name: msp-dashboard-celery-beat
+    restart: unless-stopped
+    command: bash build-celery-beat.sh
+    environment:
+      - CELERY_BROKER_URL=redis://valkey:6379/0
+      - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - .:/app:cached
+    networks:
+      - app_network
+    depends_on:
+      - valkey
+      - celery
+      - app
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  nginx:
+    image: nginx:alpine
+    container_name: msp-dashboard-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+      - ssl_certs:/etc/letsencrypt:ro
+    networks:
+      - app_network
+    depends_on:
+      - app
+
+  certbot:
+    image: certbot/dns-cloudflare
+    container_name: msp-dashboard-certbot
+    volumes:
+      - ./cloudflare.ini:/cloudflare.ini:ro
+      - ssl_certs:/etc/letsencrypt
+    command: >
+      certonly
+      --dns-cloudflare
+      --dns-cloudflare-credentials /cloudflare.ini
+      --email ${CERTBOT_EMAIL}
+      --agree-tos
+      --no-eff-email
+      -d rocket-command.com
+      -d '*.rocket-command.com'
+
+  certbot-renew:
+    image: certbot/dns-cloudflare
+    container_name: msp-dashboard-certbot-renew
+    restart: unless-stopped
+    volumes:
+      - ./cloudflare.ini:/cloudflare.ini:ro
+      - ssl_certs:/etc/letsencrypt
+    entrypoint: sh
+    command: -c "while true; do certbot renew --dns-cloudflare --dns-cloudflare-credentials /cloudflare.ini && nginx -s reload; sleep 12h; done"
+    depends_on:
+      - nginx
+
+volumes:
+  static_volume:
+  media_volume:
+  ssl_certs:
+
+networks:
+  app_network:
+    driver: bridge

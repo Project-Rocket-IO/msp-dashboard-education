@@ -1,0 +1,732 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% load mathfilters %}
+{% block title %}Task Details{% endblock title %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+
+                <div class="page-content">
+                    <div class="container-fluid">
+
+                        {% block pagetitle %}
+                        {% include "partials/page-title-edit-ticket.html" with pagetitle="Edit Ticket" title="Return to Ticket" ticket=tickets.pk %}
+                        {% endblock pagetitle %}
+
+                        <div class="row">
+                            <div class="col-xxl-9">
+                                <div class="card">
+                                    <form action="{% url 'apps:tickets.edit' tickets.pk %}" method="POST" enctype="multipart/form-data" class="dropzone needs-validation" id="editTicketDropzone" novalidate>
+                                        {% csrf_token %}
+                                        {{ form.as_p }}
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-lg-8">
+                                                        <div class="mb-3">
+                                                        <label class="form-label" for="project-title-input">Ticket Title<span class="required-asterix">*</span></label>
+                                                        <input type="text" name="name" class="form-control" id="project-title-input"
+                                                            placeholder="{{tickets.name}}" value="{{tickets.name}}" required>
+                                                        <div class="invalid-feedback">Please set Ticket Title</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label for="choices-text-input" class="form-label">Tags</label>
+                                                            <input class="form-control" id="choices-text-input" data-choices-removeItem data-choices data-choices-limit="Required Limit" 
+                                                            type="text" name="tag" multiple
+                                                            value="{{tags}}"   />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-lg-4">
+                                                            <div class="mb-3">
+                                                                <label for="choices-text-input" class="form-label">Technician<span class="required-asterix">*</span></label>
+                                                                <select class="form-select" data-choices data-choices-search-true data-choices-removeItem
+                                                                id="choices-lead-input" placeholder="{{tickets.assignment}}" value="{{tickets.assignment}}" 
+                                                                name="assignment" id="assignment" multiple required>
+                                                                {% for technician in tickets.assignment.all %}
+                                                                    <option value="{{ technician.id }}" selected>{{ technician.auth_user.username }}</option>
+                                                                {% endfor %}
+                                                                
+                                                                {% if perms.apps.assign_other_ticket %}
+                                                                    {% for technician in technicians %}
+                                                                    {% if technician not in tickets.assignment.all and technician.auth_user != user %}
+                                                                            <option value="{{ technician.id }}">{{ technician.auth_user.username }}</option>
+                                                                        {% endif %}
+                                                                    {% endfor %}
+                                                                {% endif %}
+                                                                
+                                                                {% if perms.apps.assign_own_ticketlist %}
+                                                                    {% if user.technician not in tickets.assignment.all %}
+                                                                        <option value="{{ user.technician.id }}">{{ user.username }}</option>
+                                                                    {% endif %}
+                                                                {% endif %}
+                                                            
+                                                                </select>
+                                                                <div class="invalid-feedback">Please add technicians</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label for="choices-text-input" class="form-label">Project</label>
+                                                            <select class="form-select" data-choices data-choices-search-true
+                                                                id="choices-lead-input" name="project" id="project" value="{{project.name}}">
+                                                                    <option value="">No Project</option>
+                                                                    {% for project in projects %}
+                                                                        {% if project.name == tickets.project.name %}
+                                                                        <option selected value="{{project.pk}}">{{project.name}}</option>
+                                                                        {% else %}
+                                                                        <option value="{{project.pk}}">{{project.name}}</option>
+                                                                        {% endif %}
+                                                                    {% endfor %}
+                                                                </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3 mb-lg-0">
+                                                            <label for="choices-text-input" class="form-label">Client Name<span class="required-asterix">*</span></label>
+                                                            <select class="form-select" data-choices data-choices-search-true
+                                                                id="client" name="client" id="client_list" value="{{client.name}}" required>
+                                                                    {% for client in clients %}
+                                                                    {% if client.name == tickets.client.name %}
+                                                                    <option value="{{client.pk}}" selected>{{client.name}}</option>
+                                                                    {% else %}
+                                                                    <option value="{{client.pk}}">{{client.name}}</option>
+                                                                    {% endif %}
+                                                                    {% endfor %}
+                                                                    <option value="">None</option>
+                                                                </select>
+                                                            <div class="invalid-feedback">Please set Client Name</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label for="choices-status-input" class="form-label">Status<span class="required-asterix">*</span></label>
+                                                            <select class="form-select" id="status-field" name="status" required>
+                                                                {% if tickets.status == "New" %}
+                                                                <option value="New" selected>New</option>
+                                                                {% else %}
+                                                                <option value="New" selected>New</option>
+                                                                {% endif %}
+                                                                {% if tickets.status == "In Progress" %}
+                                                                <option value="In Progress" selected>In Progress</option>
+                                                                {% else %}
+                                                                <option value="In Progress">In Progress</option>
+                                                                {% endif %}
+                                                                {% if tickets.status == "Scheduled" %}
+                                                                <option value="Scheduled" selected>Scheduled</option>
+                                                                {% else %}
+                                                                <option value="Scheduled">Scheduled</option>
+                                                                {% endif %}
+                                                                {% if tickets.status == "Postponed" %}
+                                                                <option value="Postponed" selected>Postponed</option>
+                                                                {% else %}
+                                                                <option value="Postponed">Postponed</option>
+                                                                {% endif %}
+                                                                {% if tickets.status == "Waiting on Client" %}
+                                                                <option value="Waiting on Client" selected>Waiting on Client</option>
+                                                                {% else %}
+                                                                <option value="Waiting on Client">Waiting on Client</option>
+                                                                {% endif %}
+                                                                {% if tickets.status == "Waiting on Vendor" %}
+                                                                <option value="Waiting on Vendor" selected>Waiting on Vendor</option>
+                                                                {% else %}
+                                                                <option value="Waiting on Vendor">Waiting on Vendor</option>
+                                                                {% endif %}
+                                                                {% if tickets.status == "Follow-Up" %}
+                                                                <option value="Follow-Up" selected>Follow-Up</option>
+                                                                {% else %}
+                                                                <option value="Follow-Up">Follow-Up</option>
+                                                                {% endif %}
+                                                                {% if tickets.status == "Need to Post" %}
+                                                                <option value="Need to Post" selected>Need to Post</option>
+                                                                {% else %}
+                                                                <option value="Need to Post">Need to Post</option>
+                                                                {% endif %}
+                                                                {% if tickets.status == "Completed" %}
+                                                                <option value="Completed" selected>Completed</option>
+                                                                {% else %}
+                                                                <option value="Completed">Completed</option>
+                                                                {% endif %}
+                                                                {% if tickets.status == "Closed" %}
+                                                                <option value="Closed" selected>Closed</option>
+                                                                {% else %}
+                                                                <option value="Closed">Closed</option>
+                                                                {% endif %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label for="priority-field" class="form-label">Priority</label>
+                                                            <select class="form-select" id="priority-field" name="priority">
+                                                                {% if tickets.priority == "Emergency" %}
+                                                                <option value="Emergency" selected>Emergency</option>
+                                                                {% else %}
+                                                                <option value="Emergency" selected>Emergency</option>
+                                                                {% endif %}
+                                                                {% if tickets.priority == "High" %}
+                                                                <option value="High" selected>High</option>
+                                                                {% else %}
+                                                                <option value="High" selected>High</option>
+                                                                {% endif %}
+                                                                {% if tickets.priority == "Medium" %}
+                                                                <option value="Medium" selected>Medium</option>
+                                                                {% else %}
+                                                                <option value="Medium">Medium</option>
+                                                                {% endif %}
+                                                                {% if tickets.priority == "Low" %}
+                                                                <option value="Low" selected>Low</option>
+                                                                {% else %}
+                                                                <option value="Low">Low</option>
+                                                                {% endif %}
+                                                            </select>
+                                                        </div>
+                                                    </div>                                                    
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label for="datepicker-deadline-input" class="form-label" >Due Date</label>
+                                                            <input type="text" name="due_date" class="form-control" id="datepicker-deadline-input" placeholder="{{tickets.due_date|date:'%Y-%m-%d'}}" value="{{ tickets.due_date|date:'Y-m-d' }}" data-provider="flatpickr">
+                                                        </div>
+                                                    </div>
+                                                </div>
+    
+                                                <div class="row">
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-lg-0">
+                                                            <label for="work-type-field" class="form-label">Work Type<span class="required-asterix">*</span></label>
+                                                            <select required class="form-select" id="work-type-field" name="work_type">
+                                                                <option value="">Select Work Type</option>
+                                                                {% for work_type in work_types %}
+                                                                    {% if work_type.id == tickets.work_type.id %}
+                                                                        <option value="{{ work_type.id }}" selected>{{ work_type.name }} - ${{ work_type.rate }}/hr</option>
+                                                                    {% else %}
+                                                                        <option value="{{ work_type.id }}">{{ work_type.name }} - ${{ work_type.rate }}/hr</option>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            </select>
+                                                            <div class="invalid-feedback">Please select a work type</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <script>
+                                                    // Parse the JSON data from the server
+                                                    const workTypesByClient = JSON.parse('{{ work_types_by_client|safe }}');
+                                                    const clientSelect = document.getElementById('client');
+                                                    const workTypeSelect = document.getElementById('work-type-field');
+
+                                                    
+                                                    document.addEventListener('DOMContentLoaded', function() {
+                                                        
+                                                        clientSelect.addEventListener('change', function() {
+                                                            const clientId = this.value;
+                                                            // Clear current work types
+                                                            workTypeSelect.innerHTML = '<option value="">Select Work Type</option>';
+                                                            
+                                                            if (clientId && workTypesByClient[clientId]) {
+                                                                // Add work types for selected client
+                                                                workTypesByClient[clientId].forEach(workType => {
+                                                                    const option = document.createElement('option');
+                                                                    option.value = workType.id;
+                                                                    option.textContent = `${workType.name} ($${workType.rate}/hr)`;
+                                                                    workTypeSelect.appendChild(option);
+                                                                });
+                                                            }
+                                                        });
+                                                    });
+                                                </script>
+                            
+
+                                                <br />
+                                                <br />
+                                                <div class="row">
+                                                    <div class="col-lg-12">
+                                                        <div class="mb-3 mb-lg-0">
+                                                            <label class="form-label">Ticket Description</label>
+                                                                <textarea id="ckeditor-classic" class="form-control" name="description" id="ticket-thumbnail-img" value="{{tickets.description}}" type="text" cols="30" rows="10">{{tickets.description|safe}}</textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h5 class="card-title mb-0">Attached files</h5>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div>
+                                                            <p class="text-muted">Add Attached files here.</p>
+                            
+                                                            <div class="area">
+                                                                <div id="create-ticket" class="fallback">
+                                                                    <input name="file" type="file" class="area-input" multiple="multiple">
+                                                                </div>
+                                                                <div class="dz-message needsclick text-center">
+                                                                    <div class="mb-3">
+                                                                        <i class="display-4 text-muted ri-upload-cloud-2-fill"></i>
+                                                                    </div>
+                            
+                                                                    <h5>Drop files here or click to upload.</h5>
+                                                                </div>
+                                                            </div>
+                            
+                                                            <ul class="list-unstyled mb-0" id="dropzone-preview">
+                                                                <li class="mt-2" id="dropzone-preview-list">
+                                                                    <!-- This is used as the file preview template -->
+                                                                    <div class="border rounded">
+                                                                        <div class="d-flex p-2">
+                                                                            <div class="flex-shrink-0 me-3">
+                                                                                <div class="avatar-sm bg-light rounded">
+                                                                                    <img src="#" alt="Ticket-Image" data-dz-thumbnail class="img-fluid rounded d-block" />
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="flex-grow-1">
+                                                                                <div class="pt-1">
+                                                                                    <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                                                                                    <div class="dz-success-mark"><span>✔</span></div>
+                                                                                    <div class="dz-error-mark"><span>✘</span></div>
+                                                                                    <h5 class="fs-14 mb-1" data-dz-name>&nbsp;</h5>
+                                                                                    <p class="fs-13 text-muted mb-0" data-dz-size></p>
+                                                                                    <strong class="error text-danger" data-dz-errormessage></strong>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="flex-shrink-0 ms-3">
+                                                                                <button data-dz-remove class="btn btn-sm btn-danger">Delete</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </li>
+                                                            </ul>
+                                                            <!-- end dropzon-preview -->
+                                                        </div>
+                                                    </div>
+                                                </div>
+                            
+
+                                                <br>
+                                                <div class="text-end mb-4">                                        
+                                                    <button type="submit" class="btn btn-warning w-sm" id="add-btn">Save Ticket</button>
+                                                </div>
+                                            </div>
+                                            <!-- end card body -->
+                                        </div>
+                                        <!-- end card -->
+                                    </form>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-3 fw-semibold text-uppercase">Ticket Log</h6>
+                                        <div>
+                                            <ul class="nav nav-tabs-custom rounded card-header-tabs border-bottom-0" role="tablist">
+                                                <li class="nav-item">
+                                                    <a class="nav-link active" data-bs-toggle="tab" href="#home-1" role="tab">
+                                                        Comments ({{comments_count}})
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link" data-bs-toggle="tab" href="#messages-1" role="tab">
+                                                        Attachments File ({{files_count}})  
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link" data-bs-toggle="tab" href="#profile-1" role="tab">
+                                                        Time Entries ({{labors_count}})
+                                                    </a>
+                                                </li>
+                                            </ul><!--end nav-->
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="tab-content">
+                                            <div class="tab-pane active" id="home-1" role="tabpanel">
+                                                {% if comments_count == 0 %}
+                                                <h5 class="card-title mb-4">No Comments Yet! </h5>
+                                                <div data-simplebar style="height: 20px;" class="px-3 mx-n3 mb-2">
+                                                {% else %}
+                                                <h5 class="card-title mb-4">Comments </h5>
+                                                <div data-simplebar style="height: 508px;" class="px-3 mx-n3 mb-2">
+                                                    {% for comment in comments %}
+                                                    <div class="d-flex mb-4">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="rounded-circle avatar-xs">
+                                                                <div class="avatar-title rounded-circle bg-info">
+                                                                    {{comment.technician.username|first}}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1 ms-3">
+                                                            <h5 class="fs-13"><a href="{% url 'pages:pages.profile' %}">{{comment.technician.username}}</a> <small class="text-muted">{{comment.date_added}}</small></h5>
+                                                            <p class="text-muted">{{comment.body}}</p>
+                                                            <a href="javascript: void(0);" class="badge text-muted bg-light"><i class="mdi mdi-reply"></i> Reply</a>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                </div>
+                                                <div class="row g-3">
+                                                    <div class="col-lg-12">
+                                                        <form method="POST" action="{% url 'apps:tickets.comments' tickets.pk %}" enctype="multipart/form-data" class="mt-3">
+                                                            {% csrf_token %}
+                                                            {{ form.as_p }}
+                                                            <div class="row g-3">
+                                                                <div class="col-lg-12">
+                                                                    <label for="bodyTextarea1" class="form-label">Leave a Comment</label>
+                                                                    <textarea class="form-control bg-light border-light" id="bodyTextarea1" rows="3" placeholder="Enter comment" name="body"></textarea>
+                                                                    <input name="technician" type="hidden" value="{{user.pk}}"> 
+                                                                    <input name="ticket" type="hidden" value="{{tickets.pk}}"> 
+                                                                </div>
+                                                                <div class="col-lg-12 text-end">
+                                                                    <button type="submit" class="btn btn-success" id="add-btn">Post Comment</button>
+                                                                </div>
+                                                            </div>
+                                                        </form>   
+                                                    </div>
+                                                </div>
+                                            </div><!--end tab-pane-->
+                                            <div class="tab-pane" id="messages-1" role="tabpanel">
+                                                {% if ticket_files %}
+                                                <div class="table-responsive table-card">
+                                                    <table class="table table-borderless align-middle mb-0">
+                                                        <thead class="table-light text-muted">
+                                                            <tr>
+                                                                <th scope="col">File Name</th>
+                                                                <th scope="col">Type</th>
+                                                                <th scope="col">Size</th>
+                                                                <th scope="col">Upload Date</th>
+                                                                <th scope="col">Action</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for file in ticket_files %}
+                                                            <tr>
+                                                                <td>
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="avatar-sm">
+                                                                            <div class="avatar-title bg-light text-secondary rounded fs-24">
+                                                                                {% if file.extension == 'Zip File' %}
+                                                                                <i class="ri-folder-zip-line"></i>
+                                                                                {% elif file.extension == 'Power Point' %}
+                                                                                <i class="ri-file-ppt-2-line"></i>
+                                                                                {% elif file.extension == 'Image' %}
+                                                                                <i class="ri-image-2-line"></i>
+                                                                                {% elif file.extension == 'CSV' %}
+                                                                                <i class="ri-excel-2-line"></i>
+                                                                                {% endif %}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="ms-3 flex-grow-1">
+                                                                            <h6 class="fs-15 mb-0"><a href="javascript:void(0)">{{file.file_name}}</a></h6>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                                <td>{{file.extension}}</td>
+                                                                <td>{{file.file_size}}</td>
+                                                                <td>{{file.upload_date}}</td>
+                                                                <td>
+                                                                    <div class="dropdown">
+                                                                        <a href="javascript:void(0);" class="btn btn-light btn-icon" id="dropdownMenuLink1" data-bs-toggle="dropdown" aria-expanded="true">
+                                                                            <i class="ri-equalizer-fill"></i>
+                                                                        </a>
+                                                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink1" data-popper-placement="bottom-end" style="position: absolute; inset: 0px 0px auto auto; margin: 0px; transform: translate(0px, 23px);">
+                                                                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill me-2 align-middle text-muted"></i>View</a></li>
+                                                                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-download-2-fill me-2 align-middle text-muted"></i>Download</a></li>
+                                                                            <li class="dropdown-divider"></li>
+                                                                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line me-2 align-middle text-muted"></i>Delete</a></li>
+                                                                        </ul>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table><!--end table-->
+                                                </div>
+                                                {% else %}
+                                                <h5 class="card-title mb-4">No Attachments Yet! </h5>
+                                                {% endif %}
+                                            </div><!--end tab-pane-->
+                                            <div class="tab-pane" id="profile-1" role="tabpanel">
+                                                {% if labors %}
+                                                <h5 class="card-title mb-4 pb-2">Time Entries</h5>
+                                                <div class="table-responsive table-card">
+                                                    <table class="table align-middle mb-0">
+                                                        <thead class="table-light text-muted">
+                                                            <tr>
+                                                                <th scope="col">Member</th>
+                                                                <th scope="col">Date</th>
+                                                                <th scope="col">Duration</th>
+                                                                <th scope="col">Timer Idle</th>
+                                                                <th scope="col">Tasks Title</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for labor in labors %}
+                                                            <tr>
+                                                                <th scope="row">
+                                                                    <div class="d-flex align-items-center">
+                                                                        {% if labor.created_by.auth_user.picture %}
+                                                                            <img src="{{ labor.created_by.auth_user.picture.url }}" alt="{{ labor.created_by.auth_user.get_full_name }}" class="rounded-circle avatar-xxs">
+                                                                        {% else %}
+                                                                            <img src="{{ labor.created_by.auth_user.get_profile_picture }}" alt="{{ labor.created_by.auth_user.get_full_name }}" class="rounded-circle avatar-xxs">
+                                                                        {% endif %}
+                                                                        <div class="flex-grow-1 ms-2">
+                                                                            <a href="{% url 'pages:pages.profile' %}" class="fw-medium">
+                                                                                {% if labor.created_by.auth_user.first_name and labor.created_by.auth_user.last_name %}
+                                                                                    {{ labor.created_by.auth_user.first_name }} {{ labor.created_by.auth_user.last_name }}
+                                                                                {% elif labor.created_by.auth_user.first_name %}
+                                                                                    {{ labor.created_by.auth_user.first_name }}
+                                                                                {% else %}
+                                                                                    {{ labor.created_by.auth_user.username }}
+                                                                                {% endif %}
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                </th>
+                                                                
+                                                                <td>{{labor.created_at|date:"Y-m-d"}}</td>
+                                                                <td>{{labor.minutes}} mins</td>
+                                                                <td>05 min</td>
+                                                                <td>{{labor.comment}}</td>
+                                                            {% endfor %}   
+                                                            </tr>
+                                                        </tbody>
+                                                    </table><!--end table-->
+                                                </div>
+                                                {% else %}
+                                                <h5 class="card-title mb-4">No Labor Yet! </h5>
+                                                {% endif %}
+                                            </div><!--edn tab-pane-->
+                                            
+                                        </div><!--end tab-content-->
+                                    </div>
+                                </div><!--end card-->
+                            </div><!--end col-->
+                            <div class="col-xxl-3">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h1 class="mb-1">{{tickets.name}}</h>
+                                        <div class="mb-2">
+                                            <lord-icon src="https://cdn.lordicon.com/kbtmbyzy.json" trigger="loop"
+                                                colors="primary:#405189,secondary:#02a8b5" style="width:90px;height:90px">
+                                            </lord-icon>
+                                        </div>
+                                        {% if labors %}
+                                        <h3 class="mb-1">{{labor_hours}} hrs {{labor_minutes}} min</h3>
+                                        <h5 class="fs-14 mb-4"></h5>
+                                        {% else %}
+                                        <h3 class="mb-1">No Tracked Time Yet!</h3>
+                                        <h5 class="fs-14 mb-4"></h5>
+                                        {% endif %}
+                                    </div>
+                                </div><!--end card-->
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="mb-4">
+                                            <h6 class="card-title mb-0 flex-grow-1">Current Ticket</h6>
+                                        </div>
+                                        <div class="table-card">
+                                            <table class="table mb-0">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-medium">Ticket #</td>
+                                                        <td>{{tickets.pk|add:1000}}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Tasks Name</td>
+                                                        <td>{{tickets.name}}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Client</td>
+                                                        {% if tickets.client.name %}
+                                                        <td>{{tickets.client.name}}</td>
+                                                        {% else %}
+                                                        <td>None</td>
+                                                        {% endif %}
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Project</td>
+                                                        <td>{{tickets.project}}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Priority</td>
+                                                        <td>
+                                                            {% if tickets.priority == "Emergency" %}
+                                                            <span class="badge badge-pill bg-danger text-uppercase">Emergency</span>
+                                                            {% elif tickets.priority == "High" %}
+                                                            <span class="badge bg-danger text-uppercase">High</span>
+                                                            {% elif tickets.priority == "Low" %}
+                                                            <span class="badge bg-info text-uppercase">Low</span>
+                                                            {% elif tickets.priority == "Medium" %}
+                                                            <span class="badge bg-warning text-uppercase">Medium</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Status</td>
+                                                        <td>
+                                                            {% if tickets.status == "Closed" %}
+                                                            <span class="badge badge-soft-danger text-uppercase">Closed</span>
+                                                            {% elif tickets.status == "In Progress" %}
+                                                            <span class="badge badge-soft-info text-uppercase">In Progress</span>
+                                                            {% elif tickets.status == "New" %}
+                                                            <span class="badge badge-soft-primary text-uppercase">New</span>
+                                                            {% elif tickets.status == "Postponed" %}
+                                                            <span class="badge badge-soft-dark text-uppercase">Postponed</span>
+                                                            {% elif tickets.status == "Waiting on Client" %}
+                                                            <span class="badge badge-soft-light text-uppercase">Waiting on Client</span>
+                                                            {% elif tickets.status == "Waiting on Vendor" %}
+                                                            <span class="badge badge-soft-light text-uppercase">Waiting on Vendor</span>
+                                                            {% elif tickets.status == "Follow-Up" %}
+                                                            <span class="badge badge-soft-secondary text-uppercase">Follow-Up</span>
+                                                            {% elif tickets.status == "Need to Post" %}
+                                                            <span class="badge badge-soft-secondary text-uppercase">Need to Post</span>
+                                                            {% elif tickets.status == "Scheduled" %}
+                                                            <span class="badge badge-soft-success text-uppercase">Scheduled</span>
+                                                            {% elif tickets.status == "Completed" %}
+                                                            <span class="badge badge-soft-success text-uppercase">Completed</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Due Date</td>
+                                                        <td>{{tickets.due_date}}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-medium">Tags</td>
+                                                        <td class="hstack text-wrap gap-1">
+                                                            {% if tags %}
+                                                            {% for tag in tags %}
+                                                            <span class="badge badge-soft-primary">{{tag.name}}</span>
+                                                            {% endfor %}
+                                                            {% else %}
+                                                            <span class="badge badge-soft-primary">No Tags</span>
+                                                            {% endif %}
+                                                    </tr>
+                                                </tbody>
+                                            </table><!--end table-->
+                                        </div>
+                                    </div>
+                                </div><!--end card-->
+                                <div class="card mb-3">
+                                    <div class="card-body"> 
+                                        <div class="d-flex mb-3">
+                                            <h6 class="card-title mb-0 flex-grow-1">Assigned To</h6>
+                                        </div>
+                                        <ul class="list-unstyled vstack gap-3 mb-0">
+                                        {% for user in tickets.assignment.all %}
+                                            <li>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        {% if user.picture %}
+                                                        <img src="{% static 'images/users/avatar-10.jpg'%}" alt="" class="avatar-xs rounded-circle">
+                                                        {% else %}
+                                                        <div class="rounded-circle avatar-xs">
+                                                            <div class="avatar-title rounded-circle bg-info">
+                                                                {{user.username|first}}
+                                                            </div>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-2">
+                                                        <h6 class="mb-1"><a href="#">{{user.username}}</a></h6>
+                                                        <p class="text-muted mb-0">{{user.title}}</p>
+                                                    </div>
+                                                    <div class="flex-shrink-0">
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-icon btn-sm fs-16 text-muted dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                <i class="ri-more-fill"></i>
+                                                            </button>
+                                                            <ul class="dropdown-menu">
+                                                                <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
+                                                                <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-star-fill text-muted me-2 align-bottom"></i>Favourite</a></li>
+                                                                <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Delete</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div><!--end card-->
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title mb-3">Attachments</h5>
+                                        <div class="vstack gap-2">
+                                            {% if ticket_files %}
+                                            {% for file in ticket_files %}
+                                            <div class="border rounded border-dashed p-2">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0 me-3">
+                                                        <div class="avatar-sm">
+                                                            <div class="avatar-title bg-light text-secondary rounded fs-24">
+                                                                {% if file.extension == 'Zip File' %}
+                                                                <i class="ri-folder-zip-line"></i>
+                                                                {% elif file.extension == 'Power Point' %}
+                                                                <i class="ri-file-ppt-2-line"></i>
+                                                                {% elif file.extension == 'Image' %}
+                                                                <i class="ri-image-2-line"></i>
+                                                                {% elif file.extension == 'CSV' %}
+                                                                <i class="ri-excel-2-line"></i>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 overflow-hidden">
+                                                        <h5 class="fs-13 mb-1"><a href="javascript:void(0);" class="text-body text-truncate d-block">{{file.file_name}}</a></h5>
+                                                        <div>{{file.file_size}}</div>
+                                                    </div>
+                                                    <div class="flex-shrink-0 ms-2">
+                                                        <div class="d-flex gap-1">
+                                                            <a class="btn btn-icon text-muted fs-18" href="{% url 'apps:tickets.download_file' file.id%}"><i class="ri-download-2-line"></i></a>
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                    <i class="ri-more-fill"></i>
+                                                                </button>
+                                                                <ul class="dropdown-menu">
+                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Rename</a></li>
+                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete</a></li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div><!--end card-->
+                            </div><!---end col-->
+                        </div><!--end row-->
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+{% block extra_js %}
+
+<script>
+    let ticketEditURL = "{% url 'apps:tickets.edit' tickets.pk %}";
+</script>
+<!-- ckeditor -->
+<script src="{% static 'libs/@ckeditor/ckeditor5-build-classic/build/ckeditor.js'%}"></script>
+<!-- dropzone js -->
+<script src="{% static 'libs/dropzone/dist/dropzone-min.js'%}"></script>
+<!-- project-create init -->
+<script src="{% static 'js/pages/tickets-update.init.js'%}" type="module"></script>
+
+
+
+{% endblock extra_js %}

@@ -1,0 +1,15 @@
+/*
+Project Rocket - Admin & Dashboard Template
+Author: John Lang
+Version: 2.0.0
+Website: https://projectrocket-psa.com/
+Contact: projectRocket@gmail.com
+File: Main Js File
+*/
+
+// move next
+function moveToNext(elem, count) {
+    if (elem.value.length > 0) {
+        document.getElementById("digit" + count + "-input").focus();
+    }
+}

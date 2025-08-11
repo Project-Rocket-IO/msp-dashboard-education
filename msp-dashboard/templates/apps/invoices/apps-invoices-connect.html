@@ -1,0 +1,93 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}OAuth2 Sample App - Intuit{% endblock title %}
+
+{% block extra_css %}
+<!-- Sweet Alert css-->
+<link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+
+<style>
+    .main-container {
+        display: flex;
+        position: relative;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #f1f1f1;
+        height: 100%;
+        padding: 2rem;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .white-panel {
+        background-color: white;
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .white-panel h3 {
+        margin-bottom: 1rem;
+    }
+
+    .imgLink img {
+        height: 40px;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .imgLink:hover img {
+        transform: scale(1.05);
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+
+
+<div class="main-content">
+    <div class="page-content">
+        <div style="height: 80vh;" class="container-fluid">
+            {% block pagetitle %}
+            {% include "partials/page-title.html" with pagetitle="Invoices" title="Connect Quickbooks" %}
+            {% endblock pagetitle %}
+            <div class="main-container">                
+                <div class="white-panel">
+                    <h3>Welcome to Intuit Invoicing!</h3>
+                    <p><strong>OAuth2 flow</strong></p>
+                    <a class="imgLink" href="#" onclick="launchNewTab('/apps/invoices/oauth')">
+                        <img src="{% static 'images/invoices/C2QB.png' %}" alt="Connect to QuickBooks" />
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block footer %}
+{% include "partials/footer.html" %}
+{% endblock footer %}
+
+{% endblock %}
+
+
+{% block extra_js %}
+    <script>
+        if (window.opener) {
+            window.opener.location.href = '/app/'
+            window.close()
+        }
+                        
+        function launchNewTab(path) {
+            window.open(path, '_blank');
+        }
+        
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    
+{% endblock extra_js %}
+    

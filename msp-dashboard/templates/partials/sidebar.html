@@ -1,0 +1,165 @@
+{% load static %}
+{% block sidebar %}
+<style>
+    .disabled-link {
+        pointer-events: none; /* Disable click */
+        color: gray; /* Change color to indicate it's disabled */
+        opacity: 0.6; /* Reduce opacity */
+        cursor: not-allowed; /* Show a 'not allowed' cursor */
+    }    
+</style>
+        <!-- ========== App Menu ========== -->
+        <div class="app-menu navbar-menu">
+            <!-- LOGO -->
+            <div class="navbar-brand-box">
+                <!-- Dark Logo-->
+                <a href="{% url 'home' %}" class="logo logo-dark">
+                    <span class="logo-sm">
+                        <img src="{% static 'images/logo-sm.png'%}" alt="" height="22">
+                    </span>
+                    <span class="logo-lg">
+                        <img src="{% static 'images/logodark1.png'%}" alt="" height="17">
+                    </span>
+                </a>
+                <!-- Light Logo-->
+                <a href="{% url 'home' %}" class="logo logo-light">
+                    <span class="logo-sm">
+                        <img src="{% static 'images/rocket-favicon.ico'%}" alt="" height="30">
+                    </span>
+                    <span class="logo-lg">
+                        <img src="{% static 'images/rocket-logo.png'%}" alt="" height="30">
+                    </span>
+                </a>
+                <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
+                    <i class="ri-record-circle-line"></i>
+                </button>
+            </div>
+
+            <div id="scrollbar">
+                <div class="container-fluid">
+                    
+                    <div id="two-column-menu">
+                    </div>
+
+                    <ul class="navbar-nav" id="navbar-nav">
+                        <li class="menu-title"><span data-key="t-home">Home</span></li>
+                        
+                        <!-- Dashboard - Available in all tiers -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link {% if user.client %}disabled-link{% endif %}" href="{% url 'home'  %}">
+                                <i class="ri-line-chart-line"></i> <span data-key="t-dashboard">Dashboard</span>
+                            </a>
+                        </li>
+
+                        <!-- Tickets - Available in all tiers -->
+                        {% if perms.apps.view_ticketlist or perms.apps.view_own_ticketlist %}
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'apps:tickets.list' %}">
+                                <i class="ri-ticket-2-line"></i> <span data-key="t-tickets">Tickets</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <!-- Projects - Available in all tiers -->
+                        {% if perms.apps.view_ticketlist or perms.apps.view_own_ticketlist %}
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'apps:projects.list' %}">
+                                <i class="ri-stack-fill"></i> <span data-key="t-projects">Projects</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <!-- Calendar - Available in all tiers -->
+                        {% if perms.calendar_event.view_calendarevents %}
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'calendar_event:calendar-events' %}">
+                                <i class="ri-calendar-event-line"></i> <span data-key="t-calendar">Calendar</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <!-- Clients - Available in all tiers -->
+                        {% if perms.apps.view_clientcompany %}
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'apps:client.companies' %}">
+                                <i class=" ri-user-line"></i> <span data-key="t-customers">Clients</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <!-- Invoicing - Available in all tiers -->
+                        {% if perms.apps.view_invoice %}
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'apps:invoices.connect' %}">
+                                <i class="ri-file-text-line"></i> <span data-key="t-leads">Invoices</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <!-- Leads - Growth and Innovator tiers only -->
+                        {% if perms.apps.view_leadcompany and has_leads_access %}
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'apps:leads' %}">
+                                <i class="ri-guide-fill"></i> <span data-key="t-leads">Leads</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <!-- Sales - Growth and Innovator tiers only -->
+                        {% if perms.apps.view_salesrequests and has_sales_access %}
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'apps:sales.deals' %}">
+                                <i class="ri-money-dollar-circle-line"></i> <span data-key="t-leads">Sales</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <li class="menu-title"><span data-key="t-home">Settings</span></li>
+
+                        <!-- File System - Available in all tiers -->
+                        {% if perms.apps.view_fileinfo and has_file_system_access %}
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'apps:filemanager.overview' %}">
+                                <i class="ri-folders-line"></i> <span data-key="t-chatsessions">File System</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <!-- Help Center - Available in all tiers -->
+                        {% if has_help_center_access %}
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'pages:pages.help_center' %}">
+                                <i class="ri-customer-service-2-line"></i> <span data-key="t-helpcenter">Help Center</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <!-- Billing - Available in all tiers -->
+                        {% if perms.djstripe.view_subscription and has_billing_access %}
+                        <li class="nav-item">
+                            <a class="nav-link menu-link " href="{% url 'payments:payments.payments' %}">
+                                <i class="lab la-stripe"></i> <span data-key="t-billing">Billing</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <!-- Profile Settings - Available in all tiers -->
+                        {% if has_profile_settings_access %}
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'pages:pages.profile_settings' %}">
+                                <i class="ri-settings-4-line"></i> <span data-key="t-settings">Settings</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                    </ul>
+                </div>
+                <!-- Sidebar -->
+            </div>
+            <div class="sidebar-background"></div>
+        </div>
+        <!-- Left Sidebar End -->
+        <!-- Vertical Overlay-->
+        <div class="vertical-overlay"></div>
+{% endblock sidebar %}
+    
