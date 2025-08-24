@@ -245,7 +245,7 @@ def lead_files_directory_path(instance, filename):
 
 
 def filesystem_user_directory_path(instance, filename):
-    return "filesystem/user_{0}/{1}".format(instance.user.id, filename)
+    return "filesystem/user_{0}/{1}".format(instance.user.user_id, filename)
 
 
 #################
@@ -406,14 +406,10 @@ class TicketList(models.Model):
     status = models.CharField(max_length=50, choices=TICKET_STATUS)
     priority = models.CharField(max_length=10, choices=PRIORITY, null=True, blank=True)
     project = models.ForeignKey(
-        "ProjectList", on_delete=models.CASCADE, blank=True, null=True
+        "ProjectList", on_delete=models.SET_NULL, blank=True, null=True
     )
     tag = TaggableManager(blank=True)
     files = models.FileField(upload_to=ticket_directory_path, blank=True, null=True)
-    work_type = models.ForeignKey(
-        "ClientWorkTypeRate",
-        on_delete=models.CASCADE,
-    )
     # slug = models.SlugField(max_length=50)
     # labor = models.ForeignKey(TechnicianLabor,
     #     on_delete=models.CASCADE,
@@ -1069,13 +1065,9 @@ class Invoice(models.Model):
             # Convert to hours
             hours = total_minutes / 60
 
-            # Get the work type rate for this ticket
-            # work_type_rates
-            if ticket.work_type:
-                rate = ticket.work_type.rate
-                # Calculate amount for this ticket
-                ticket_amount = int(hours) * rate
-                total_amount += ticket_amount
+            # work_type field has been removed - no rate calculation
+            # ticket_amount = 0
+            # total_amount += ticket_amount
 
         return total_amount
 

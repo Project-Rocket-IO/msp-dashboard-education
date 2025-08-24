@@ -37,14 +37,13 @@ urlpatterns = [
         name="account_set_password",
     ),
     # All Auth
+    path("", include(tf_urls)),
     path("account/", include("allauth.urls")),
     path("social-auth/", include("social_django.urls", namespace="social")),
-    path("", include(tf_urls)),
 ]
 
-# print(settings.DEBUG)
-# if settings.DEBUG:
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 # from debug_toolbar.toolbar import debug_toolbar_urls

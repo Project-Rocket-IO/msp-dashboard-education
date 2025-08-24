@@ -8,6 +8,9 @@
                     <div class="flex-shrink-0">
                         <div class="d-flex flex-wrap gap-2">
                             {% if perms.apps.add_ticketlist %}
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#showModal" data-load-ticket="true">
+                                <i class="ri-upload-line align-bottom me-1"></i> Load Ticket
+                            </button>
                             <button class="btn btn-danger add-btn" data-bs-toggle="modal" data-bs-target="#showModal"><i class="ri-add-line align-bottom me-1"></i> Create Ticket</button>
                             {% endif %}
                             <button class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()"><i class="ri-delete-bin-2-line"></i></button>

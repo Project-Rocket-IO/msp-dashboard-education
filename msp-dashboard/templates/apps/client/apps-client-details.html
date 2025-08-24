@@ -1074,113 +1074,7 @@
                                             <div class="flex-grow-1">
                                                 <h3 class="mb-0">Contracts</h3><br><br>
                                             </div>  
-                                            <div class="col-lg-12">
-
-                                                {% if work_type_rates %}
-                                                <div class="card" id="contracts">
-                                                    <div class="card-header border-0">
-                                                        <div class="d-flex align-items-center mb-4">
-                                                            <h6 class="card-title flex-grow-1">Work Types</h6>
-                                                        </div>
-                                                        <div class="row g-4 align-items-center">
-                                                            <div class="col-sm-3 mt-0">
-                                                                <div class="search-box">
-                                                                    <input type="text" class="form-control search" placeholder="Search a Work Type...">
-                                                                    <i class="ri-search-line search-icon"></i>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-sm-auto ms-auto mt-0">
-                                                                <div class="hstack gap-2">
-                                                                    <button class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()"><i class="ri-delete-bin-2-line"></i></button>
-                                                                    {% if perms.apps.add_clientworktyperate %}
-                                                                    <button type="button" class="btn btn-success add-btn" data-bs-toggle="modal" id="create-btn" data-bs-target="#newWorkTypeRateModal"><i class="ri-add-line align-bottom me-1"></i> Add New Work Type</button>
-                                                                    {% endif %}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <div>
-                                                            <div class="table-responsive table-card">
-                                                                <table class="table align-middle" id="workTypeRatesTable">
-                                                                    <thead class="table-light">
-                                                                        <tr>
-                                                                            <th scope="col" style="width: 50px;">
-                                                                                <div class="form-check">
-                                                                                    <input class="form-check-input" type="checkbox" id="checkAll" value="option">
-                                                                                </div>
-                                                                            </th>
-                                                                            <th class="sort" data-sort="name">
-                                                                                Work Type
-                                                                            </th>
-                                                                            <th class="sort" data-sort="rate">
-                                                                                Rate
-                                                                            </th>
-                                                                            <th>Action</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody class="list form-check-all">
-                                                                        {% for work_type_rate in work_type_rates %}
-                                                                        <tr>
-                                                                            <td scope="row">
-                                                                                <div class="form-check">
-                                                                                    <input class="form-check-input" type="checkbox" name="checkAll" value="option1">
-                                                                                </div>
-                                                                            </td>
-                                                                            <td class="work_type_name">
-                                                                                {{ work_type_rate.name }}
-                                                                            </td>
-                                                                            <td class="work_type_rate">
-                                                                                ${{ work_type_rate.rate }}
-                                                                            </td>
-                                                                            <td>
-                                                                                <ul class="list-inline hstack gap-2 mb-0">
-                                                                                    {% if perms.apps.change_clientworktyperate %}
-                                                                                    <li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Edit">
-                                                                                        <a class="edit-item-btn" href="#editWorkTypeRateModal-{{ forloop.counter }}" data-bs-toggle="modal"><i class="ri-pencil-fill align-bottom text-muted"></i></a>
-                                                                                    </li>
-                                                                                    {% endif %}
-                                                                                    {% if perms.apps.delete_clientworktyperate %}
-                                                                                    <li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Delete">
-                                                                                        <a class="remove-item-btn" data-bs-toggle="modal" href="#deleteWorkTypeRateModal-{{ forloop.counter }}">
-                                                                                            <i class="ri-delete-bin-fill align-bottom text-muted"></i>
-                                                                                        </a>
-                                                                                    </li>
-                                                                                    {% endif %}
-                                                                                </ul>
-                                                                            </td>
-                                                                        </tr>
-                                                                        {% endfor %}
-                                                                    </tbody>
-                                                                </table>
-                                                                <div class="noresult" style="display: none">
-                                                                    <div class="text-center">
-                                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px"></lord-icon>
-                                                                        <h5 class="mt-2">Sorry! No Result Found</h5>
-                                                                        <p class="text-muted mb-0">We've searched more than 150+ leads We did not find any leads for you search.</p>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <!--end add modal-->       
-                                                    </div>
-                                                </div>
-                                                {% else %}
-                                                <div class="col-xl-4">
-                                                    <div class="card">
-                                                        <div class="card-body">
-                                                            <a href="{% url 'apps:tickets.list' %}">
-                                                                <h5>No Work Type Rates for {{company.name}}</h5>
-                                                            </a>
-                
-                                                            <div class="mt-4 hstack gap-2">
-                                                                <button type="button" class="btn btn-success add-btn w-80" data-bs-toggle="modal" id="create-btn" data-bs-target="#newWorkTypeRateModal"><i class="ri-add-line align-bottom me-1"></i> Add Work Type</button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                {% endif %}
-                                            </div> 
+ 
 
                                             <div class="col-lg-12">
                                                 <!-- Left Column: Threshold Form -->
@@ -1976,56 +1870,7 @@
                 </div>
             </div>
 
-            <div class="modal fade zoomIn" id="newWorkTypeRateModal" tabindex="-1" aria-labelledby="newWorkTypeRateModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content border-0">
-                        <div class="modal-header p-3 bg-soft-info">
-                            <h5 class="modal-title" id="newWorkTypeRateModalLabel">Add a Work Type Rate for {{company.name}}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
-                        </div>
-                            <form action="{% url 'apps:client.work_type_rates.create' company.pk %}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
-                                {% csrf_token %}
-                                {{ form.media }}
-                                {{ form.as_p }}
-                                <div class="modal-body">
-                                    <div class="row g-3">
-                                        <div class="col-lg-8">
-                                            <div id="modal-id"></div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="work_type" class="form-label">Work Type<span class="required-asterix">*</span></label>
-                                                    <input type="text" class="form-control"
-                                                        id="work_type" name="name" placeholder="Work Type" required>
-                                                </div>
-                                                <div class="invalid-feedback">Please provide a work type name</div>
-                                            </div>
-                                            <div class="col-lg-6">
-                                                <div>
-                                                    <input type="hidden" class="form-control"
-                                                                                id="jobTitle" name="client"
-                                                                                value="{{company.pk}}">
-                                                <label for="rate" class="form-label">Rate<span class="required-asterix">*</span></label>
-                                                <input type="number" class="form-control"
-                                                    min="0" max="1000" id="rate" name="rate"
-                                                    placeholder="Rate" required>
-                                                </div>
-                                                <div class="invalid-feedback">Please provide a rate</div>
-                                            </div>
-                                        </div>
-                                    </div> 
-                                    <div class="modal-footer">
-                                        <div class="hstack gap-2 justify-content-end">
-                                            <button type="button" class="btn btn-light" name="work_type_rate_close" data-bs-dismiss="modal">Close</button>
-                                            <button type="submit" class="btn btn-success" name="work_type_rate_submission" id="add-btn">Add Work Type Rate</button>
-                                        </div>
-                                    </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
             <div class="modal fade zoomIn" id="newTeamMemberModal" tabindex="-1" aria-labelledby="exampleTicketModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -2138,7 +1983,7 @@
                             <h5 class="modal-title" id="exampleTicketModalLabel">Edit Location for {{location.name}}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
                         </div>
-                            <form action="{% url 'apps:client.work_type_rates.update' company.pk location.pk%}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                            <form action="{% url 'apps:client.locations_update' company.pk location.pk%}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
                                 {% csrf_token %}
                                 {{ form.media }}
                                 {{ form.as_p }}
@@ -2251,85 +2096,7 @@
             </div>
             {% endfor %}
 
-            {% for work_type_rate in work_type_rates %}
 
-            <div class="modal fade zoomIn" id="editWorkTypeRateModal-{{ forloop.counter }}" tabindex="-1" aria-labelledby="editWorkTypeRateModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content border-0">
-                        <div class="modal-header p-3 bg-soft-info">
-                            <h5 class="modal-title" id="editWorkTypeRateModalLabel">Edit Work Type Rate for {{work_type_rate.name}}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
-                        </div>
-                            <form action="{% url 'apps:client.work_type_rates.update' company.pk work_type_rate.pk%}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
-                                {% csrf_token %}
-                                {{ form.media }}
-                                {{ form.as_p }}
-                                <div class="modal-body">
-                                    <div class="row g-3">
-                                        <div class="col-lg-8">
-                                            <div id="modal-id">
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="work_type_name" class="form-label">Work Type<span class="required-asterix">*</span></label>
-                                                    <input type="text" class="form-control" 
-                                                        id="work_type_name" name="name" value="{{work_type_rate.name}}" required>
-                                                </div>
-                                                <div class="invalid-feedback">Please provide a work type name</div>
-                                            </div>
-                                            <div class="col-lg-6">
-                                                <div>
-                                                    <input type="hidden" class="form-control"
-                                                                                id="jobTitle" name="client"
-                                                                                value="{{company.pk}}">
-                                                <label for="work_type_rate" class="form-label">Rate<span class="required-asterix">*</span></label>
-                                                <input type="number" class="form-control"
-                                                                                    id="work_type_rate" name="rate"
-                                                                                    value="{{work_type_rate.rate}}" required>
-                                                </div>
-                                                <div class="invalid-feedback">Please provide a rate</div>
-                                            </div>
-                                        </div>
-                                       
-                                    </div> 
-                                    <div class="modal-footer">
-                                        <div class="hstack gap-2 justify-content-end">
-                                            <button type="button" class="btn btn-light" name="work_type_rate_close" data-bs-dismiss="modal">Close</button>
-                                            <button type="submit" class="btn btn-success" name="work_type_rate_submission" id="add-btn">Update Work Type Rate</button>
-                                        </div>
-                                    </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="modal fade zoomIn" id="deleteWorkTypeRateModal-{{ forloop.counter }}" tabindex="-1" aria-labelledby="deleteWorkTypeRateModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="btn-close" id="deleteRecord-close" data-bs-dismiss="modal" aria-label="Close" id="btn-close"></button>
-                        </div>
-                        <div class="modal-body p-5 text-center">
-                            <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#405189,secondary:#f06548" style="width:90px;height:90px"></lord-icon>
-                            <div class="mt-4 text-center">
-                                <h4 class="fs-semibold">You are about to delete a work type rate!</h4>
-                                <p class="text-muted fs-14 mb-4 pt-1">Deleting a work type rate will remove all of your information from your database.</p>
-                                <div class="hstack gap-2 justify-content-center remove">
-                                    <button class="btn btn-link link-success fw-medium text-decoration-none" data-bs-dismiss="modal">
-                                        <i class="ri-close-line me-1 align-middle"></i> Close
-                                    </button>
-                                    <a class="btn btn-danger" id="delete-record" href="{% url 'apps:client.work_type_rates.delete' company.pk work_type_rate.id %}">Yes, Delete It!!</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
 
             {% for teammate in client_members %}
             <div class="modal fade zoomIn" id="editMember-{{ forloop.counter }}" tabindex="-1" aria-labelledby="exampleTicketModalLabel" aria-hidden="true">

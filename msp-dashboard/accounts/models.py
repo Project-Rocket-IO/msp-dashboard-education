@@ -91,19 +91,29 @@ class MSPAuthUserManager(BaseUserManager):
         if not other_fields.get('is_superuser'):
             raise ValueError("SuperUser must have assigned is_superuser=True")
 
-        # Superuser will always be in the public tenant 
-        # Because they create tenants, i.e. John, Henry, Celine etc.
-        mspcompany, _ = MspCompany.objects.get_or_create(schema_name="public")
-        mspcompany.company_name = "Public"
-        mspcompany.email = "public@public.com"
-        mspcompany.save()
-        self.create_user(email, password, mspcompany=mspcompany, **other_fields)
+        # Create user without specifying mspcompany - let it be set by the context
+        self.create_user(email, password, **other_fields)
     
 
     def create_user(self, email, password=None, mspcompany=None, **other_fields):
         """Create a plain MSPAuthUser with TechnicianUser profile.
          Important for Social Authentication, Google Auth"""
         with transaction.atomic():
+            # If mspcompany is not provided, try to get it from the current context
+            if mspcompany is None:
+                try:
+                    from django_tenants.utils import get_tenant
+                    mspcompany = get_tenant()
+                except:
+                    # If we can't get the current tenant, try to get it from the database connection
+                    from django.db import connection
+                    schema_name = connection.schema_name
+                    if schema_name and schema_name != 'public':
+                        mspcompany = MspCompany.objects.get(schema_name=schema_name)
+                    else:
+                        # Default to public tenant
+                        mspcompany, _ = MspCompany.objects.get_or_create(schema_name="public")
+            
             user = self.model(
                 email=self.normalize_email(email),
                 mspcompany=mspcompany,
@@ -324,3 +334,5 @@ class UserManager:
         from apps.models import ClientUser
         client_user = ClientUser.objects.create(auth_user=auth_user, **kwargs)
         return client_user
+
+

@@ -6,6 +6,7 @@ newenv
 venv
 
 .env
+.env-dev
 
 
 # Vscode settings

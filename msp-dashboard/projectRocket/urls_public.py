@@ -44,8 +44,16 @@ urlpatterns = [
     path("social-auth/", include("social_django.urls", namespace="social")),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Always serve static files in development, even when DEBUG=False
+from django.contrib.staticfiles.views import serve
+from django.views.static import serve as static_serve
+import os
+
+# Serve static files from STATICFILES_DIRS and STATIC_ROOT
+urlpatterns += [
+    path('static/<path:path>', serve, {'document_root': os.path.join(settings.BASE_DIR, 'static')}),
+]
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 from debug_toolbar.toolbar import debug_toolbar_urls

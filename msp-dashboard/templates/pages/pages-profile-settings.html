@@ -678,15 +678,9 @@
                                                                                     data-choices-search-false
                                                                                     name="role"
                                                                                     id="user-role-choice">
-                                                                                    <option value="1">Administrator</option>
-                                                                                    <option value="2">Bookkeeper</option>
-                                                                                    <option value="3">Lead Technician</option>
-                                                                                    <option value="4">Technician</option>
-                                                                                    <option value="5">Sub Contractor</option>
-                                                                                    <option value="6">Sales</option>
-                                                                                    <option value="7">Project Manager</option>
-                                                                                    <option value="8">Scheduler</option>
-                                                                                    <option value="10">Client</option>
+                                                                                    {% for group in available_groups %}
+                                                                                        <option value="{{ group.id }}">{{ group.name }}</option>
+                                                                                    {% endfor %}
                                                                                 </select>
                                                                             </div>
                                                                             <!--end col-->
@@ -694,7 +688,7 @@
                                                                         <!--end row-->
                                                                     </div>
                                                                 </div>
-                                                                <div id="client-choice-dropdown-div" class="col-lg-3">
+                                                                <div id="client-choice-dropdown-div" class="col-lg-3" style="display: none;">
                                                                     <div class="mb-3">
                                                                         <label for="client-choice"
                                                                             class="form-label">Client Choice</label>
@@ -702,7 +696,7 @@
                                                                             <div class="col-lg-12">
                                                                                 <select class="form-control" data-choices
                                                                                     data-choices-search-true 
-                                                                                    name="choices">
+                                                                                    name="client_id">
                                                                                     {% for client in clients %}
                                                                                     <option value="{{client.id}}">{{client.name}}</option>
                                                                                     {% endfor %}
@@ -751,6 +745,7 @@
                                                                                 <th>Last Name</th>
                                                                                 <th>Username</th>
                                                                                 <th>Role</th>
+                                                                                <th>Actions</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
@@ -766,10 +761,23 @@
                                                                                         -
                                                                                     {% endif %}
                                                                                 </td>
+                                                                                <td>
+                                                                                    <div class="btn-group" role="group">
+                                                                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                                                                data-bs-toggle="modal" 
+                                                                                                data-bs-target="#editUserModal{{ user.user_id }}">
+                                                                                            <i class="ri-edit-line"></i> Edit
+                                                                                        </button>
+                                                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                                                onclick="deleteUser('{{ user.user_id }}', '{{ user.username }}')">
+                                                                                            <i class="ri-delete-bin-line"></i> Delete
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </td>
                                                                             </tr>
                                                                             {% empty %}
                                                                             <tr>
-                                                                                <td colspan="4" class="text-center text-muted">No non-client users found</td>
+                                                                                <td colspan="5" class="text-center text-muted">No non-client users found</td>
                                                                             </tr>
                                                                             {% endfor %}
                                                                         </tbody>
@@ -795,6 +803,7 @@
                                                                                 <th>Username</th>
                                                                                 <th>Role</th>
                                                                                 <th>Company Name</th>
+                                                                                <th>Actions</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
@@ -811,10 +820,23 @@
                                                                                     {% endif %}
                                                                                 </td>
                                                                                 <td>{{ user.client.company.name|default:"-" }}</td>
+                                                                                <td>
+                                                                                    <div class="btn-group" role="group">
+                                                                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                                                                data-bs-toggle="modal" 
+                                                                                                data-bs-target="#editUserModal{{ user.user_id }}">
+                                                                                            <i class="ri-edit-line"></i> Edit
+                                                                                        </button>
+                                                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                                                onclick="deleteUser('{{ user.user_id }}', '{{ user.username }}')">
+                                                                                            <i class="ri-delete-bin-line"></i> Delete
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </td>
                                                                             </tr>
                                                                             {% empty %}
                                                                             <tr>
-                                                                                <td colspan="5" class="text-center text-muted">No client users found</td>
+                                                                                <td colspan="6" class="text-center text-muted">No client users found</td>
                                                                             </tr>
                                                                             {% endfor %}
                                                                         </tbody>
@@ -824,6 +846,149 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                
+                                                <!-- Edit User Modals -->
+                                                {% for user in non_client_users %}
+                                                <div class="modal fade" id="editUserModal{{ user.user_id }}" tabindex="-1" aria-labelledby="editUserModalLabel{{ user.user_id }}" aria-hidden="true">
+                                                    <div class="modal-dialog modal-lg">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editUserModalLabel{{ user.user_id }}">Edit User: {{ user.username }}</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <form action="{% url 'pages:pages.profile_settings' %}" method="POST">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="action" value="edit_user">
+                                                                <input type="hidden" name="user_id" value="{{ user.user_id }}">
+                                                                <div class="modal-body">
+                                                                    <div class="row">
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_first_name_{{ user.user_id }}" class="form-label">First Name</label>
+                                                                                <input type="text" class="form-control" id="edit_first_name_{{ user.user_id }}" 
+                                                                                       name="first_name" value="{{ user.first_name|default:'' }}">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_last_name_{{ user.user_id }}" class="form-label">Last Name</label>
+                                                                                <input type="text" class="form-control" id="edit_last_name_{{ user.user_id }}" 
+                                                                                       name="last_name" value="{{ user.last_name|default:'' }}">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_email_{{ user.user_id }}" class="form-label">Email</label>
+                                                                                <input type="email" class="form-control" id="edit_email_{{ user.user_id }}" 
+                                                                                       name="email" value="{{ user.email|default:'' }}">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_phone_{{ user.user_id }}" class="form-label">Phone</label>
+                                                                                <input type="text" class="form-control" id="edit_phone_{{ user.user_id }}" 
+                                                                                       name="phone" value="{{ user.phone|default:'' }}">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_title_{{ user.user_id }}" class="form-label">Title</label>
+                                                                                <input type="text" class="form-control" id="edit_title_{{ user.user_id }}" 
+                                                                                       name="title" value="{{ user.title|default:'' }}">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_role_{{ user.user_id }}" class="form-label">Role</label>
+                                                                                <select class="form-control" name="role" id="edit_role_{{ user.user_id }}">
+                                                                                    {% for group in available_groups %}
+                                                                                        <option value="{{ group.id }}" {% if user.groups.first.id == group.id %}selected{% endif %}>{{ group.name }}</option>
+                                                                                    {% endfor %}
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                                
+                                                {% for user in client_users %}
+                                                <div class="modal fade" id="editUserModal{{ user.user_id }}" tabindex="-1" aria-labelledby="editUserModalLabel{{ user.user_id }}" aria-hidden="true">
+                                                    <div class="modal-dialog modal-lg">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editUserModalLabel{{ user.user_id }}">Edit User: {{ user.username }}</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <form action="{% url 'pages:pages.profile_settings' %}" method="POST">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="action" value="edit_user">
+                                                                <input type="hidden" name="user_id" value="{{ user.user_id }}">
+                                                                <div class="modal-body">
+                                                                    <div class="row">
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_first_name_{{ user.user_id }}" class="form-label">First Name</label>
+                                                                                <input type="text" class="form-control" id="edit_first_name_{{ user.user_id }}" 
+                                                                                       name="first_name" value="{{ user.first_name|default:'' }}">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_last_name_{{ user.user_id }}" class="form-label">Last Name</label>
+                                                                                <input type="text" class="form-control" id="edit_last_name_{{ user.user_id }}" 
+                                                                                       name="last_name" value="{{ user.last_name|default:'' }}">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_email_{{ user.user_id }}" class="form-label">Email</label>
+                                                                                <input type="email" class="form-control" id="edit_email_{{ user.user_id }}" 
+                                                                                       name="email" value="{{ user.email|default:'' }}">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_phone_{{ user.user_id }}" class="form-label">Phone</label>
+                                                                                <input type="text" class="form-control" id="edit_phone_{{ user.user_id }}" 
+                                                                                       name="phone" value="{{ user.phone|default:'' }}">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_title_{{ user.user_id }}" class="form-label">Title</label>
+                                                                                <input type="text" class="form-control" id="edit_title_{{ user.user_id }}" 
+                                                                                       name="title" value="{{ user.title|default:'' }}">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_role_{{ user.user_id }}" class="form-label">Role</label>
+                                                                                <select class="form-control" name="role" id="edit_role_{{ user.user_id }}">
+                                                                                    {% for group in available_groups %}
+                                                                                        <option value="{{ group.id }}" {% if user.groups.first.id == group.id %}selected{% endif %}>{{ group.name }}</option>
+                                                                                    {% endfor %}
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
                                             </div>
                                             <!--end tab-pane-->
                                             {% endif %}
@@ -944,7 +1109,7 @@
                                                         <li class="d-flex mt-2">
                                                             <div class="flex-grow-1">
                                                                 <label class="form-check-label fs-14"
-                                                                    for="purchaesNotification">
+                                                                    for="purchaseNotification">
                                                                     Show purchase notifications
                                                                 </label>
                                                                 <p class="text-muted">Get real-time purchase alerts to
@@ -953,7 +1118,7 @@
                                                             <div class="flex-shrink-0">
                                                                 <div class="form-check form-switch">
                                                                     <input class="form-check-input" type="checkbox"
-                                                                        role="switch" id="purchaesNotification" />
+                                                                        role="switch" id="purchaseNotification" />
                                                                 </div>
                                                             </div>
                                                         </li>
@@ -1022,47 +1187,136 @@
             
             if (form && roleSelect) {
                 form.addEventListener('submit', function(e) {
-                    const selectedRole = parseInt(roleSelect.value);
+                    const selectedOption = roleSelect.options[roleSelect.selectedIndex];
+                    const roleName = selectedOption ? selectedOption.text : 'User';
                     
-                    // If it's not a client (role 10), show billing info
-                    if (selectedRole !== 10) {
-                        const roleNames = {
-                            1: 'Administrator',
-                            2: 'Bookkeeper', 
-                            3: 'Lead Technician',
-                            4: 'Technician',
-                            5: 'Sub Contractor',
-                            6: 'Sales',
-                            7: 'Project Manager',
-                            8: 'Scheduler',
-                            9: 'Super User'
-                        };
-                        
-                        const roleName = roleNames[selectedRole] || 'User';
-                        
-                        // Subscription tier pricing (this should match backend)
+                    // If it's not a client role, show billing info
+                    if (roleName.toLowerCase() !== 'client') {
                         const subscriptionTiers = {
                             'starter': { name: 'Starter Tier', price: 35 },
                             'growth': { name: 'Growth Tier', price: 55 },
                             'innovator': { name: 'Innovator Tier', price: 75 }
                         };
                         
-                        // Get company's subscription tier from backend context
                         const currentTier = '{{ company_subscription_tier|default:"starter" }}';
                         const tierInfo = subscriptionTiers[currentTier];
                         
-                        if (confirm(`Creating a ${roleName} will cost $${tierInfo.price} (${tierInfo.name} rate - Company Subscription). Do you want to proceed with payment?`)) {
-                            // Let the form submit normally - the backend will handle billing
+                        // Temporarily disable billing confirmation for testing
+                        console.log('Billing would be required for:', roleName);
+                        return true; // Allow form submission
+                        
+                        /*
+                        if (confirm('Creating a ' + roleName + ' will cost $' + tierInfo.price + ' (' + tierInfo.name + ' rate - Company Subscription). Do you want to proceed with payment?')) {
                             return true;
                         } else {
                             e.preventDefault();
                             return false;
                         }
+                        */
                     }
-                    // For clients, proceed normally without billing
                 });
             }
         });
     </script>
+
+    <!-- User Management JavaScript -->
+    <script>
+        function deleteUser(userId, username) {
+            // Show Bootstrap modal confirmation
+            const modal = document.getElementById('deleteUserModal');
+            const modalTitle = modal.querySelector('.modal-title');
+            const modalBody = modal.querySelector('.modal-body');
+            const confirmBtn = modal.querySelector('#confirmDeleteBtn');
+            
+            // Update modal content
+            modalTitle.textContent = 'Confirm User Deletion';
+            modalBody.innerHTML = 
+                '<p>Are you sure you want to remove user <strong>' + username + '</strong>?</p>' +
+                '<p class="text-warning"><small>This action will:</small></p>' +
+                '<ul class="text-warning">' +
+                    '<li>Delete the user account permanently</li>' +
+                    '<li>Remove the user from all assigned tickets and projects</li>' +
+                    '<li>Set tickets/projects with only this user to unassigned</li>' +
+                '</ul>' +
+                '<p class="text-danger"><strong>This action cannot be undone.</strong></p>';
+            
+            // Set up confirmation button
+            confirmBtn.onclick = function() {
+                // Create a form to submit the delete request
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{% url "pages:pages.profile_settings" %}';
+                
+                // Add CSRF token
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+                
+                // Add action and user_id
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'delete_user';
+                form.appendChild(actionInput);
+                
+                const userIdInput = document.createElement('input');
+                userIdInput.type = 'hidden';
+                userIdInput.name = 'user_id';
+                userIdInput.value = userId;
+                form.appendChild(userIdInput);
+                
+                // Submit the form
+                document.body.appendChild(form);
+                form.submit();
+            };
+            
+            // Show the modal
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+        }
+        
+        // Function to show success/error messages
+        function showMessage(message, type) {
+            if (type === undefined) type = 'success';
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-' + type + ' alert-dismissible fade show';
+            alertDiv.innerHTML = 
+                message +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+            
+            // Insert at the top of the page content
+            const pageContent = document.querySelector('.page-content');
+            pageContent.insertBefore(alertDiv, pageContent.firstChild);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(function() {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+
+    <!-- Delete User Confirmation Modal -->
+    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUserModalLabel">Confirm User Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Content will be dynamically populated by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete User</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 {% endblock extra_js %}

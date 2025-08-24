@@ -108,8 +108,7 @@ class TicketListAddForm(forms.ModelForm):
             "ticket_type",
             "status",
             "priority",
-            "tag",
-            "work_type"
+            "tag"
         ]
 
 

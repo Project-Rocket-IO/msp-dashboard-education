@@ -197,51 +197,7 @@
                                                     </div>
                                                 </div>
     
-                                                <div class="row">
-                                                    <div class="col-lg-4">
-                                                        <div class="mb-lg-0">
-                                                            <label for="work-type-field" class="form-label">Work Type<span class="required-asterix">*</span></label>
-                                                            <select required class="form-select" id="work-type-field" name="work_type">
-                                                                <option value="">Select Work Type</option>
-                                                                {% for work_type in work_types %}
-                                                                    {% if work_type.id == tickets.work_type.id %}
-                                                                        <option value="{{ work_type.id }}" selected>{{ work_type.name }} - ${{ work_type.rate }}/hr</option>
-                                                                    {% else %}
-                                                                        <option value="{{ work_type.id }}">{{ work_type.name }} - ${{ work_type.rate }}/hr</option>
-                                                                    {% endif %}
-                                                                {% endfor %}
-                                                            </select>
-                                                            <div class="invalid-feedback">Please select a work type</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
 
-                                                <script>
-                                                    // Parse the JSON data from the server
-                                                    const workTypesByClient = JSON.parse('{{ work_types_by_client|safe }}');
-                                                    const clientSelect = document.getElementById('client');
-                                                    const workTypeSelect = document.getElementById('work-type-field');
-
-                                                    
-                                                    document.addEventListener('DOMContentLoaded', function() {
-                                                        
-                                                        clientSelect.addEventListener('change', function() {
-                                                            const clientId = this.value;
-                                                            // Clear current work types
-                                                            workTypeSelect.innerHTML = '<option value="">Select Work Type</option>';
-                                                            
-                                                            if (clientId && workTypesByClient[clientId]) {
-                                                                // Add work types for selected client
-                                                                workTypesByClient[clientId].forEach(workType => {
-                                                                    const option = document.createElement('option');
-                                                                    option.value = workType.id;
-                                                                    option.textContent = `${workType.name} ($${workType.rate}/hr)`;
-                                                                    workTypeSelect.appendChild(option);
-                                                                });
-                                                            }
-                                                        });
-                                                    });
-                                                </script>
                             
 
                                                 <br />

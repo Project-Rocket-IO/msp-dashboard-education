@@ -2,10 +2,13 @@ from django.conf.urls import include
 from django.urls import path, re_path
 from apps.api import api_start_timer, api_discard_timer, api_stop_timer
 from apps.views import *
+from apps.two_factor_views import TenantAwareTwoFactorSetupView
 
 app_name = "apps"
 
 urlpatterns = [
+    # 2FA Setup
+    path("two-factor/setup/", TenantAwareTwoFactorSetupView.as_view(), name="two_factor_setup"),
     # API
     path("api/start_timer/<int:pk>", view=api_start_timer, name="api_start_timer"),
     path("api/discard_timer/", view=api_discard_timer, name="api_discard_timer"),
@@ -71,6 +74,8 @@ urlpatterns = [
     path("support-tickets/list/", view=apps_tickets_list_view, name="tickets.list"),
     path(
         "support-tickets/create/", view=apps_tickets_create_view, name="tickets.create"
+    ),
+    path("support-tickets/bulk-upload/", view=apps_tickets_bulk_upload_view, name="tickets.bulk_upload"
     ),
     path(
         "support-tickets/edit/<int:pk>",
@@ -301,21 +306,7 @@ urlpatterns = [
         view=apps_client_threshold_view,
         name="client.threshold",
     ),
-    path(
-        "client/work_type_rates/<int:client_company_pk>",
-        view=apps_client_work_type_rates_create_view,
-        name="client.work_type_rates.create",
-    ),
-    path(
-        "client/work_type_rates/<int:client_company_pk>/<int:id>",
-        view=apps_client_work_type_rates_update_view,
-        name="client.work_type_rates.update",
-    ),
-    path(
-        "client/work_type_rates/<int:client_company_pk>/<int:id>/delete",
-        view=apps_client_work_type_rates_delete_view,
-        name="client.work_type_rates.delete",
-    ),
+
     # Payment Pages
     path("todo/", view=apps_todo_view, name="todo"),
     path("api-key/", view=apps_api_key_view, name="api_key"),

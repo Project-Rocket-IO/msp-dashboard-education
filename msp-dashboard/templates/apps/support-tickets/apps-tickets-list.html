@@ -71,265 +71,288 @@
     {% endfor %}
 
     {% comment %} {% for ticket in all_tickets %}
-        {% for tech in ticket.assignment.all %}
-        <div class="offcanvas offcanvas-end border-0" tabindex="-1" id="userProfileCanvasExample{{tech.pk}}">
-            <!--end offcanvas-header-->
-            <div class="offcanvas-body profile-offcanvas p-0">
-                <div class="team-cover">
-                    <img src="{% static 'images/small/img-9.jpg'%}" alt="" class="img-fluid" />
-                </div>
-                <div class="p-1 pb-4 pt-0">
-                    <div class="team-settings">
-                        <div class="row g-0">
-                            <div class="col">
-                                <div class="btn nav-btn">
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <div class="user-chat-nav d-flex">
-                                    <div class="dropdown">
-                                        <a class="btn nav-btn" href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="ri-more-2-fill"></i>
-                                        </a>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-inbox-archive-line align-bottom text-muted me-2"></i>Archive</a></li>
-                                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-mic-off-line align-bottom text-muted me-2"></i>Muted</a></li>
-                                            <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>Delete</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                
-                            </div>
-                        </div>
-                    </div><!--end col-->
-                </div>
-                <div class="p-3 text-center">
-                    {% if tech.picture %}
-                    <img src="{% static 'images/users/avatar-2.jpg'%}" alt="" class="avatar-lg img-thumbnail rounded-circle mx-auto profile-img">
-                    {% else %}
-                        <div style="justify-content: center; align-items: center" class="d-flex avatar-lg img-thumbnail rounded-circle mx-auto profile-img bg-info">
-                            {{tech.auth_user.username|make_list|first}}
-                        </div>
-                    {% endif %}
-                    <div class="mt-3">
-                        <h5 class="fs-16 mb-1"><a href="javascript:void(0);" class="link-primary username">{{tech.auth_user.username}}</a></h5>
-                        <p class="text-muted"><i class="ri-checkbox-blank-circle-fill me-1 align-bottom text-success"></i>Online</p>
-                    </div>
-
-                    <div class="d-flex gap-2 justify-content-center">
-                        <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Message">
-                            <span class="avatar-title rounded bg-light text-body">
-                                <i class="ri-question-answer-line"></i>
-                            </span>
-                        </button>
-
-                        <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Favourite">
-                            <span class="avatar-title rounded bg-light text-body">
-                                <i class="ri-star-line"></i>
-                            </span>
-                        </button>
-
-                        <button type="button" class="btn avatar-xs p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Phone">
-                            <span class="avatar-title rounded bg-light text-body">
-                                <i class="ri-phone-line"></i>
-                            </span>
-                        </button>
-
-                        <div class="dropdown">
-                            <button class="btn avatar-xs p-0" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="avatar-title bg-light text-body rounded">
-                                    <i class="ri-more-fill"></i>
-                                </span>
-                            </button>
-
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-inbox-archive-line align-bottom text-muted me-2"></i>Archive</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-mic-off-line align-bottom text-muted me-2"></i>Muted</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>Delete</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border-top border-top-dashed p-3">
-                    <h5 class="fs-15 mb-3">Personal Details</h5>
-                    <div class="mb-3">
-                        <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Number</p>
-                        <h6>{{tech.mobile}}</h6>
-                    </div>
-                    <div class="mb-3">
-                        <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Email</p>
-                        <h6>{{tech.email}}</h6>
-                    </div>
-                    <div>
-                        <p class="text-muted text-uppercase fw-medium fs-12 mb-1">Location</p>
-                        <h6 class="mb-0">{{tech.city}}, {{tech.state}}</h6>
-                    </div>
-                </div>
-                
-                <div class="border-top border-top-dashed p-3">    
-                    <h5 class="fs-15 mb-3">Attached Files</h5>
-                    
-                    <div class="vstack gap-2">
-                        <div class="border rounded border-dashed p-2">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="avatar-xs">
-                                        <div class="avatar-title bg-light text-secondary rounded fs-20">
-                                            <i class="ri-folder-zip-line"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1 overflow-hidden">
-                                    <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">App pages.zip</a></h5>
-                                    <div class="text-muted">2.2MB</div>
-                                </div>
-                                <div class="flex-shrink-0 ms-2">
-                                    <div class="d-flex gap-1">
-                                        <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
-                                        <div class="dropdown">
-                                            <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="ri-more-fill"></i>
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
-                                                <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
-                                                <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="border rounded border-dashed p-2">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="avatar-xs">
-                                        <div class="avatar-title bg-light text-secondary rounded fs-20">
-                                            <i class="ri-file-ppt-2-line"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1 overflow-hidden">
-                                    <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">Project Rocket admin.ppt</a></h5>
-                                    <div class="text-muted">2.4MB</div>
-                                </div>
-                                <div class="flex-shrink-0 ms-2">
-                                    <div class="d-flex gap-1">
-                                        <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
-                                        <div class="dropdown">
-                                            <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="ri-more-fill"></i>
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
-                                                <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
-                                                <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="border rounded border-dashed p-2">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="avatar-xs">
-                                        <div class="avatar-title bg-light text-secondary rounded fs-20">
-                                            <i class="ri-folder-zip-line"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1 overflow-hidden">
-                                    <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">Images.zip</a></h5>
-                                    <div class="text-muted">1.2MB</div>
-                                </div>
-                                <div class="flex-shrink-0 ms-2">
-                                    <div class="d-flex gap-1">
-                                        <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
-                                        <div class="dropdown">
-                                            <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="ri-more-fill"></i>
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
-                                                <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
-                                                <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="border rounded border-dashed p-2">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="avatar-xs">
-                                        <div class="avatar-title bg-light text-secondary rounded fs-20">
-                                            <i class="ri-image-2-line"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1 overflow-hidden">
-                                    <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">bg-pattern.png</a></h5>
-                                    <div class="text-muted">1.1MB</div>
-                                </div>
-                                <div class="flex-shrink-0 ms-2">
-                                    <div class="d-flex gap-1">
-                                        <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
-                                        <div class="dropdown">
-                                            <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="ri-more-fill"></i>
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li><a class="dropdown-item" href="#"><i class="ri-share-line align-bottom me-2 text-muted"></i> Share</a></li>
-                                                <li><a class="dropdown-item" href="#"><i class="ri-bookmark-line align-bottom me-2 text-muted"></i> Bookmark</a></li>
-                                                <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-line align-bottom me-2 text-muted"></i> Delete</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="text-center mt-2">
-                            <button type="button" class="btn btn-danger">Load more <i class="ri-arrow-right-fill align-bottom ms-1"></i></button>
-                        </div>
-                    </div>
-                </div>
-            </div><!--end offcanvas-body-->
-        </div><!--end offcanvas-->
-        {% endfor %}
+        
     {% endfor %} {% endcomment %}
-
-
 {% endblock extra_content %}
+
 {% block extra_js %}
+    <!-- list.js min js -->
+    <script src="{% static 'libs/list.js/dist/list.min.js'%}"></script>
 
-        <script>
-            let ticketListURL = "{% url 'apps:tickets.list' %}";
-            let ticketCreateURL = "{% url 'apps:tickets.create' %}";
-        </script>
+    <!--list pagination js-->
+    <script src="{% static 'libs/list.pagination.js/dist/list.pagination.min.js'%}"></script>
 
-        <!-- Sweet Alerts js -->
-        <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
+    <!-- Sweet Alerts js -->
+    <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
 
-        <!-- ticket init js -->
-        <script src="{% static 'js/pages/ticketlist.init.js' %}"></script>
+    <!-- ticket init js -->
+    <script src="{% static 'js/pages/ticketlist.init.js' %}"></script>
 
-        <!-- ckeditor -->
-        <script src="{% static 'libs/@ckeditor/ckeditor5-build-classic/build/ckeditor.js'%}"></script>
+    <!-- Load Ticket functionality - runs after all other scripts -->
+    <script>
+    // Wait for all other scripts to load
+    window.addEventListener('load', function() {
+        console.log('Load Ticket script loaded after all other scripts');
         
-        <!-- dropzone js -->
-        <script src="{% static 'libs/dropzone/dist/dropzone-min.js'%}"></script>
-
-        <!-- ticket-create init -->
-        <script src="{% static 'js/pages/ticket-create.init.js' %}" type="module"></script>
+        // Handle Load Ticket button click
+        const loadTicketBtn = document.querySelector('[data-load-ticket="true"]');
+        const showModal = document.getElementById('showModal');
         
-        <script>CKEDITOR.replace( 'ticket-description' );</script>
+        console.log('Elements found:', {
+            loadTicketBtn: !!loadTicketBtn,
+            showModal: !!showModal
+        });
+        
+        if (loadTicketBtn && showModal) {
+            loadTicketBtn.addEventListener('click', function(e) {
+                console.log('Load Ticket button clicked - switching to Load Ticket tab');
+                
+                // Wait for modal to be shown, then switch to Load Ticket tab
+                setTimeout(() => {
+                    const loadTicketTab = document.querySelector('[href="#load-ticket-tab"]');
+                    if (loadTicketTab) {
+                        loadTicketTab.click();
+                        console.log('Switched to Load Ticket tab');
+                        initializeLoadTicketForm();
+                    } else {
+                        console.error('Load Ticket tab not found');
+                    }
+                }, 100);
+            });
+        }
+        
+        function initializeLoadTicketForm() {
+            console.log('Initializing Load Ticket form');
+            
+            const loadTicketForm = document.getElementById('loadTicketForm');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadProgress = document.getElementById('uploadProgress');
+            const uploadResult = document.getElementById('uploadResult');
+            const progressBar = uploadProgress ? uploadProgress.querySelector('.progress-bar') : null;
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('excel_file');
+            const fileName = document.getElementById('file-name');
+            const filePreview = document.getElementById('file-preview');
+            const previewFileName = document.getElementById('preview-file-name');
+            const previewFileSize = document.getElementById('preview-file-size');
+            
+            console.log('Form elements found:', {
+                loadTicketForm: !!loadTicketForm,
+                dropZone: !!dropZone,
+                fileInput: !!fileInput,
+                uploadBtn: !!uploadBtn
+            });
+            
+            // Drag and drop functionality
+            if (dropZone && fileInput) {
+                console.log('Setting up drag and drop');
+                
+                // Prevent default drag behaviors
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
 
+                // Highlight drop zone when item is dragged over it
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, highlight, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, unhighlight, false);
+                });
+
+                // Handle dropped files
+                dropZone.addEventListener('drop', handleDrop, false);
+                
+                // Handle click on drop zone
+                dropZone.addEventListener('click', () => {
+                    fileInput.click();
+                });
+                
+                // File input change handler
+                fileInput.addEventListener('change', handleFileSelect);
+            }
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            function highlight(e) {
+                dropZone.classList.add('border-primary');
+                dropZone.style.backgroundColor = '#e3f2fd';
+            }
+            
+            function unhighlight(e) {
+                dropZone.classList.remove('border-primary');
+                dropZone.style.backgroundColor = '#f8f9fa';
+            }
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+            
+            function handleFileSelect(e) {
+                const files = e.target.files;
+                handleFiles(files);
+            }
+            
+            function handleFiles(files) {
+                if (files.length > 0) {
+                    const file = files[0];
+                    
+                    // Check file type
+                    if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                        showResult('Please select an Excel file (.xlsx or .xls).', 'danger');
+                        return;
+                    }
+                    
+                    // Check file size (250MB = 262,144,000 bytes)
+                    if (file.size > 262144000) {
+                        showResult('File size exceeds 250MB limit.', 'danger');
+                        return;
+                    }
+                    
+                    // Update file input
+                    fileInput.files = files;
+                    
+                    // Update display
+                    if (fileName) fileName.textContent = file.name;
+                    if (previewFileName) previewFileName.textContent = file.name;
+                    if (previewFileSize) previewFileSize.textContent = formatFileSize(file.size);
+                    if (filePreview) filePreview.style.display = 'block';
+                    
+                    // Hide any previous error messages
+                    if (uploadResult) uploadResult.style.display = 'none';
+                }
+            }
+            
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            function removeFile() {
+                if (fileInput) fileInput.value = '';
+                if (fileName) fileName.textContent = 'No file chosen';
+                if (filePreview) filePreview.style.display = 'none';
+                if (uploadResult) uploadResult.style.display = 'none';
+            }
+            
+            // Make removeFile function globally available
+            window.removeFile = removeFile;
+            
+            if (loadTicketForm) {
+                console.log('Setting up form submission');
+                loadTicketForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('Form submitted');
+                    
+                    const formData = new FormData(this);
+                    
+                    // Validate file
+                    if (!fileInput || !fileInput.files[0]) {
+                        showResult('Please select a file to upload.', 'danger');
+                        return;
+                    }
+                    
+                    const file = fileInput.files[0];
+                    
+                    // Check file size (250MB = 262,144,000 bytes)
+                    if (file.size > 262144000) {
+                        showResult('File size exceeds 250MB limit.', 'danger');
+                        return;
+                    }
+                    
+                    // Check file type
+                    if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                        showResult('Please select an Excel file (.xlsx or .xls).', 'danger');
+                        return;
+                    }
+                    
+                    // Show progress
+                    if (uploadBtn) {
+                        uploadBtn.disabled = true;
+                        uploadBtn.innerHTML = '<i class="ri-loader-4-line align-bottom me-1"></i> Uploading...';
+                    }
+                    if (uploadProgress) uploadProgress.style.display = 'block';
+                    if (uploadResult) uploadResult.style.display = 'none';
+                    
+                    // Simulate progress
+                    let progress = 0;
+                    const progressInterval = setInterval(() => {
+                        progress += Math.random() * 15;
+                        if (progress > 90) progress = 90;
+                        if (progressBar) progressBar.style.width = progress + '%';
+                    }, 200);
+                    
+                    // Send request
+                    fetch('{% url "apps:tickets.bulk_upload" %}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        clearInterval(progressInterval);
+                        if (progressBar) progressBar.style.width = '100%';
+                        
+                        setTimeout(() => {
+                            if (data.success) {
+                                showResult(data.message, 'success');
+                                // Reset form
+                                loadTicketForm.reset();
+                                removeFile();
+                                // Close modal after 2 seconds
+                                setTimeout(() => {
+                                    const modal = bootstrap.Modal.getInstance(showModal);
+                                    if (modal) {
+                                        modal.hide();
+                                    }
+                                    // Reload page to show new tickets
+                                    location.reload();
+                                }, 2000);
+                            } else {
+                                showResult(data.message, 'danger');
+                            }
+                            
+                            // Reset button
+                            if (uploadBtn) {
+                                uploadBtn.disabled = false;
+                                uploadBtn.innerHTML = '<i class="ri-upload-line align-bottom me-1"></i> Upload & Create Tickets';
+                            }
+                            if (uploadProgress) uploadProgress.style.display = 'none';
+                        }, 500);
+                    })
+                    .catch(error => {
+                        clearInterval(progressInterval);
+                        showResult('An error occurred while uploading the file.', 'danger');
+                        if (uploadBtn) {
+                            uploadBtn.disabled = false;
+                            uploadBtn.innerHTML = '<i class="ri-upload-line align-bottom me-1"></i> Upload & Create Tickets';
+                        }
+                        if (uploadProgress) uploadProgress.style.display = 'none';
+                        console.error('Error:', error);
+                    });
+                });
+            }
+            
+            function showResult(message, type) {
+                if (uploadResult) {
+                    uploadResult.className = `alert alert-${type}`;
+                    uploadResult.innerHTML = message;
+                    uploadResult.style.display = 'block';
+                }
+            }
+        }
+    });
+    </script>
 {% endblock extra_js %}

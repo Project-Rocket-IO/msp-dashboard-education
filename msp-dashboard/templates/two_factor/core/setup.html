@@ -24,10 +24,25 @@
                 <ul class="list-unstyled">
                     <li><i class="ri-check-line text-success me-2"></i>Google Authenticator</li>
                     <li><i class="ri-check-line text-success me-2"></i>Microsoft Authenticator</li>
+                    {% if request.tenant.enable_entra_id_auth %}
+                    <li><i class="ri-check-line text-success me-2"></i>Microsoft Authenticator - Entra ID</li>
+                    {% endif %}
                     <li><i class="ri-check-line text-success me-2"></i>Authy</li>
                     <li><i class="ri-check-line text-success me-2"></i>1Password</li>
                 </ul>
             </div>
+            
+            {% if request.tenant.enable_entra_id_auth %}
+            <div class="mb-4">
+                <div class="alert alert-info" role="alert">
+                    <h6 class="alert-heading">
+                        <i class="ri-microsoft-line me-2"></i>
+                        Microsoft Entra ID Authentication Available
+                    </h6>
+                    <p class="mb-0">Your organization has enabled Microsoft Entra ID (Azure AD) authentication. You can use your Microsoft account to sign in with enhanced security.</p>
+                </div>
+            </div>
+            {% endif %}
         {% elif wizard.steps.current == 'generator' %}
 
             <div> <h1>Hello</h1></div>

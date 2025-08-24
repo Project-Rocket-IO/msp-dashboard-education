@@ -124,6 +124,20 @@
                 </button>
             </div>
         </form>
+        
+        {% if request.tenant.enable_entra_id_auth %}
+        <div class="mt-4">
+            <div class="text-center">
+                <span class="text-muted">or</span>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'social:begin' 'azuread-oauth2' %}" class="btn btn-outline-primary w-100">
+                    <i class="ri-microsoft-line me-2"></i>
+                    Sign in with Microsoft Entra ID
+                </a>
+            </div>
+        </div>
+        {% endif %}
     </div>
     
     {% block 'backup_tokens' %}

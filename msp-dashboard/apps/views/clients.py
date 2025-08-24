@@ -399,7 +399,6 @@ def apps_client_details_companies_view(request, pk):
     technicians = TechnicianUser.objects.all()
     all_tickets = TicketList.objects.all()
     all_projects = ProjectList.objects.all()
-    work_type_rates = ClientWorkTypeRate.objects.filter(client_id=pk)
 
     from django.core.paginator import Paginator
     from rbac.utils import paginate_queryset
@@ -433,7 +432,6 @@ def apps_client_details_companies_view(request, pk):
         "client_locations": client_locations,
         "client_members": client_members,
         "active_tab": active_tab,
-        "work_type_rates": work_type_rates,
     }
 
     return render(request, "apps/client/apps-client-details.html", context=context)
@@ -451,44 +449,4 @@ def apps_client_threshold_view(request, pk):
     return redirect(reverse("apps:client.details", kwargs={"pk": company.pk}))
 
 
-def apps_client_work_type_rates_create_view(request, client_company_pk):
-    company = get_object_or_404(ClientCompany, pk=client_company_pk)
-    if request.method == "POST":
-        form = ClientWorkTypeRateAddForm(request.POST or None, request.FILES or None)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Work Type Rate Created!")
-        else:
-            print(form.errors)
-            messages.error(
-                request, "Something went wrong while creating the work type rate!"
-            )
-    return redirect(reverse("apps:client.details", kwargs={"pk": company.pk}))
 
-
-def apps_client_work_type_rates_update_view(request, client_company_pk, id):
-    work_type_rate = get_object_or_404(ClientWorkTypeRate, pk=id)
-    if request.method == "POST":
-        form = ClientWorkTypeRateUpdateForm(
-            request.POST or None, request.FILES or None, instance=work_type_rate
-        )
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Work Type Rate Updated!")
-    else:
-        messages.error(
-            request, "Something went wrong while updating the work type rate!"
-        )
-    return redirect(reverse("apps:client.details", kwargs={"pk": client_company_pk}))
-
-
-def apps_client_work_type_rates_delete_view(request, client_company_pk, id):
-    try:
-        work_type_rate = get_object_or_404(ClientWorkTypeRate, pk=id)
-        work_type_rate.delete()
-        messages.success(request, "Work Type Rate Deleted!")
-    except Exception as e:
-        messages.error(
-            request, "Something went wrong while deleting the work type rate!"
-        )
-    return redirect(reverse("apps:client.details", kwargs={"pk": client_company_pk}))

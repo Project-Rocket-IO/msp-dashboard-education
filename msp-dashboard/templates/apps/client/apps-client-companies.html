@@ -87,7 +87,7 @@
                                                                         <img src="{{company.get_photo_url}}" alt="ugh" class="avatar-xxs rounded-circle image_src object-cover">
                                                                         
                                                                     </div>
-                                                                    <div class="flex-grow-1 ms-2 name"><a href="{% url 'apps:client.details' company.pk %}">{{company.name}}</a>
+                                                                    <div class="flex-grow-1 ms-2 name"><a href="{% url 'pages:pages.profile_with_pk' company.pk %}">{{company.name}}</a>
                                                                     </div>
                                                                 </div>
                                                             </td>
@@ -98,7 +98,7 @@
                                                             <td>
                                                                 <ul class="list-inline hstack gap-2 mb-0">
                                                                     <li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="View">
-                                                                        <a href="{% url 'apps:client.details' company.pk %}" class="view-item-btn"><i class="ri-eye-fill align-bottom text-muted"></i></a>
+                                                                        <a href="{% url 'pages:pages.profile_with_pk' company.pk %}" class="view-item-btn"><i class="ri-eye-fill align-bottom text-muted"></i></a>
                                                                     </li>
                                                                     {% if perms.apps.change_clientcompany %}
                                                                     <li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Edit">

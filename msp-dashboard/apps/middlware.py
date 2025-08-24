@@ -4,6 +4,7 @@ from apps.models import ClientCompany, Invoice, TicketList
 from django.db.models import Sum
 from django.shortcuts import redirect
 from django_otp.plugins.otp_email.models import EmailDevice
+from django_tenants.utils import tenant_context
 import time
 
 
@@ -99,6 +100,7 @@ class EnforceTwoFactorMiddleware:
 
     def __call__(self, request):
         print("[EnforceTwoFactorMiddleware] Called for path:", request.path)
+        
         # Skip 2FA check for static files, media, and 2FA-related URLs
         if any(
             path in request.path
@@ -112,6 +114,10 @@ class EnforceTwoFactorMiddleware:
                 "/logout/", # Yes I should be able to logout without 2fa
                 "/setup_complete/",  # Add setup completion URL
                 "/complete/",  # Add any completion URLs
+                "/account/two_factor/",  # Add account 2FA URLs
+                "/login/",  # Allow login without 2FA
+                "/signup/",  # Allow signup without 2FA
+                "/password/",  # Allow password reset without 2FA
             ]
         ):
             return self.get_response(request)
@@ -119,7 +125,18 @@ class EnforceTwoFactorMiddleware:
         # Only check authenticated users
         if request.user.is_authenticated:
             try:
-                device = EmailDevice.objects.filter(user=request.user).first()
+                # Get current tenant
+                tenant = getattr(request, 'tenant', None)
+                
+                # Check if user has 2FA enabled in the current tenant context
+                device = None
+                if tenant:
+                    with tenant_context(tenant):
+                        device = EmailDevice.objects.filter(user=request.user).first()
+                else:
+                    # Fallback to current context
+                    device = EmailDevice.objects.filter(user=request.user).first()
+                
                 # If no device is found, user doesn't have 2FA enabled
                 if not device:
                     # Don't show the message if we're already on the setup page or related pages
@@ -131,9 +148,13 @@ class EnforceTwoFactorMiddleware:
                             "profile",
                             "backup",
                             "phone",
+                            "two_factor",
+                            "account/two_factor",
+                            "login",
+                            "signup",
+                            "password",
                         ]
                     ):
-
                         # Only show message if user is NOT coming from a 2FA-related page
                         # This means they're trying to access protected pages directly
                         
@@ -149,6 +170,8 @@ class EnforceTwoFactorMiddleware:
                                 "password_reset/done",
                                 "reset",
                                 "reset/done",
+                                "two_factor",
+                                "account/two_factor",
                             ]
                         ):
                             messages.error(
@@ -156,7 +179,7 @@ class EnforceTwoFactorMiddleware:
                                 "You must enable two-factor authentication to access this application.",
                                 extra_tags="2fa_required",
                             )
-                        return redirect("two_factor:setup")
+                        return redirect("apps:two_factor_setup")
             except ImportError:
                 print(
                     "[EnforceTwoFactorMiddleware] ImportError: django-two-factor-auth not available. Skipping 2FA check."

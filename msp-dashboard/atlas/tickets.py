@@ -322,31 +322,7 @@ def create_ticket(ticket_data, conversation_key):
             'project': ticket_data.get('project'),
         }
         
-        print(f"Model data before work_type: {model_data}")
-
-        # Handle work_type - try to get the default work type for this client
-        try:
-            work_type = client.work_type_rates.first()
-            if work_type:
-                model_data['work_type'] = work_type
-                print(f"Using existing work_type: {work_type.name}")
-            else:
-                # Create a default work type for the client if none exists
-                work_type = ClientWorkTypeRate.objects.create(
-                    client=client,
-                    name="Default",
-                    rate=Decimal('50.00')
-                )
-                model_data['work_type'] = work_type
-                print(f"Created new work_type: {work_type.name}")
-        except Exception as e:
-            print(f"Error handling work_type: {e}")
-            return {
-                "response": f"Failed to set work type for ticket: {str(e)}",
-                "error": True
-            }
-        
-        print(f"Final model data: {model_data}")
+        print(f"Model data: {model_data}")
 
         assigned_to_usernames = ticket_data.get('assigned_to')
         if assigned_to_usernames:

@@ -111,6 +111,30 @@ class MspCompany(MyBaseModel, TenantMixin):
     )
     
     company_id = models.UUIDField(primary_key=True, default=uuid.uuid1, editable=False)
+    
+    # Entra ID (Azure AD) Configuration for External Clients
+    enable_entra_id_auth = models.BooleanField(
+        default=False,
+        help_text="Enable Microsoft Entra ID (Azure AD) authentication for this tenant"
+    )
+    entra_id_tenant_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Client's Microsoft Entra ID Tenant ID (Directory ID)"
+    )
+    entra_id_client_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Client's Microsoft Entra ID Application (Client) ID"
+    )
+    entra_id_client_secret = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Client's Microsoft Entra ID Application Client Secret"
+    )
 
     auto_create_schema = True
 

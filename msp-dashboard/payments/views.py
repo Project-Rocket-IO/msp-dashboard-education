@@ -185,10 +185,14 @@ def stripe_webhook(request):
                 # Create the user without billing (since payment is already completed)
                 result = create_user_without_billing(form_data)
                 
-                if result['success']:
-                    print(f"User created successfully: {user_email}")
+                if isinstance(result, tuple):
+                    success, error_message = result
+                    if success:
+                        print(f"User created successfully: {user_email}")
+                    else:
+                        print(f"Failed to create user: {error_message}")
                 else:
-                    print(f"Failed to create user: {result.get('error', 'Unknown error')}")
+                    print(f"Unexpected result format: {result}")
                     
             except Exception as e:
                 print(f"Error creating user in webhook: {str(e)}")

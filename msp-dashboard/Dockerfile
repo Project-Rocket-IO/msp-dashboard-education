@@ -12,6 +12,7 @@ ENV C_FORCE_ROOT=true
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     gcc \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file

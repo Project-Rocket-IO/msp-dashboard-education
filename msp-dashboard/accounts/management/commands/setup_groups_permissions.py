@@ -6,24 +6,64 @@ from pathlib import Path
 import json
 
 class Command(BaseCommand):
-    help = 'Set up groups and permissions from a JSON file'
+    help = 'Set up groups and permissions from groups.json file'
 
     def handle(self, *args, **kwargs):
-        file_path = settings.BASE_DIR / 'src' / 'json' / 'groups_and_permissions.json'
-        print(file_path)
-        if not file_path.exists():
-            self.stdout.write(self.style.ERROR('File not found.'))
+        # Try multiple possible file locations
+        possible_paths = [
+            settings.BASE_DIR / 'groups.json',
+            settings.BASE_DIR / 'src' / 'json' / 'groups.json',
+            settings.BASE_DIR / 'static' / 'json' / 'groups.json',
+        ]
+        
+        file_path = None
+        for path in possible_paths:
+            if path.exists():
+                file_path = path
+                break
+        
+        if not file_path:
+            self.stdout.write(self.style.ERROR(f'Groups file not found. Tried: {[str(p) for p in possible_paths]}'))
             return
+        
+        self.stdout.write(f'Using file: {file_path}')
         
         with open(file_path, 'r') as file:
             data = json.load(file)
+            
             for item in data:
-                group, created = Group.objects.get_or_create(name=item['fields']['name'])
+                group_name = item['fields']['name']
+                group, created = Group.objects.get_or_create(name=group_name)
+                
+                if created:
+                    self.stdout.write(f'Created group: {group_name}')
+                else:
+                    self.stdout.write(f'Group already exists: {group_name}')
+                
                 permissions = item['fields']['permissions']
-                for perm in permissions:
-                    permission = Permission.objects.get(codename=perm)
-                    group.permissions.add(permission)
+                added_permissions = 0
+                
+                for perm_data in permissions:
+                    try:
+                        # Handle the permission format: [codename, app_label, model_name]
+                        if isinstance(perm_data, list) and len(perm_data) == 3:
+                            codename, app_label, model_name = perm_data
+                            permission = Permission.objects.get(
+                                codename=codename,
+                                content_type__app_label=app_label,
+                                content_type__model=model_name
+                            )
+                            group.permissions.add(permission)
+                            added_permissions += 1
+                        else:
+                            self.stdout.write(self.style.WARNING(f'Invalid permission format: {perm_data}'))
+                    except Permission.DoesNotExist:
+                        self.stdout.write(self.style.WARNING(f'Permission not found: {perm_data}'))
+                    except Exception as e:
+                        self.stdout.write(self.style.ERROR(f'Error adding permission {perm_data}: {e}'))
+                
                 group.save()
+                self.stdout.write(f'Added {added_permissions} permissions to {group_name}')
 
         self.stdout.write(self.style.SUCCESS('Groups and permissions set up successfully!'))
 

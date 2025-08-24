@@ -54,12 +54,6 @@ SHARED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
-    "django_otp",
-    "django_otp.plugins.otp_static",
-    "django_otp.plugins.otp_totp",
-    "django_otp.plugins.otp_email",
-    "two_factor",
-    "two_factor.plugins.email",
     "multiselectfield",
     "phonenumber_field",
     "auditlog",
@@ -72,6 +66,12 @@ SHARED_APPS = [
     "tenants",
     "django_celery_beat",
     "atlas",
+    "django_otp",
+    "django_otp.plugins.otp_static",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_email",
+    "two_factor",
+    "two_factor.plugins.email",
 ]
 
 TENANT_APPS = [
@@ -88,6 +88,13 @@ TENANT_APPS = [
     "pages",
     "taggit",
     "atlas",
+    # 2FA apps (tenant-specific for proper isolation)
+    "django_otp",
+    "django_otp.plugins.otp_static",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_email",
+    "two_factor",
+    "two_factor.plugins.email",
 ]
 
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -113,11 +120,14 @@ MIDDLEWARE = [
     "pages.middleware.PasswordUpdateWarningMiddleware",
     "auditlog.middleware.AuditlogMiddleware",
     "apps.middlware.ClientThresholdMiddleware",
-    "apps.middlware.EnforceTwoFactorMiddleware",
+    "apps.middlware.EnforceTwoFactorMiddleware",  # Re-enabled with improvements
 ]
 
 ROOT_URLCONF = "projectRocket.urls"
 PUBLIC_SCHEMA_URLCONF = "projectRocket.urls_public"
+
+# Custom error handlers
+handler403 = 'projectRocket.views.handler403'
 
 TEMPLATES = [
     {
@@ -140,9 +150,10 @@ TEMPLATES = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
+    "accounts.backends.TenantAwareModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
     "social_core.backends.google.GoogleOAuth2",
+    "accounts.backends.TenantAwareAzureADOAuth2",
 ]
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
@@ -338,8 +349,22 @@ TWO_FACTOR_QR_FACTORY = "qrcode.image.pil.PilImage"
 TWO_FACTOR_FORCE_OTP_ADMIN = False
 TWO_FACTOR_LOGIN_TIMEOUT = 600  # 10 minutes
 
+# 2FA Session Settings
+TWO_FACTOR_SESSION_KEY = "2fa_verified"
+TWO_FACTOR_REMEMBER_COOKIE_AGE = 30 * 24 * 60 * 60  # 30 days
+
+# 2FA Multi-Tenant Configuration
+TWO_FACTOR_TENANT_AWARE = True
+TWO_FACTOR_REQUIRE_SUPERUSER = False
+TWO_FACTOR_REQUIRE_STAFF = False
+
 LOGIN_URL = "two_factor:login"
 LOGIN_REDIRECT_URL = "/"
+
+# Microsoft Entra ID (Azure AD) Settings for External Client Authentication
+# Each tenant provides their own Azure AD configuration
+SOCIAL_AUTH_AZUREAD_OAUTH2_RESOURCE = 'https://graph.microsoft.com'
+SOCIAL_AUTH_AZUREAD_OAUTH2_SCOPE = ['User.Read', 'email', 'profile']
 
 OTP_EMAIL_SUBJECT = "MSP Dashboard Verification"
 OTP_EMAIL_BODY_HTML_TEMPLATE_PATH = "two_factor/email/2fa_code_email.html"

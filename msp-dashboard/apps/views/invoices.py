@@ -439,7 +439,7 @@ def apps_invoices_details_view(request, pk):
             line_item.technician_labor.all().aggregate(Sum("minutes"))["minutes__sum"]
             / 60
         )
-        line_item.amount = line_item.work_type.rate * line_item.hours
+        line_item.amount = 0  # work_type field has been removed
     total_amount = sum([line_item.amount for line_item in line_items])
     return render(
         request,

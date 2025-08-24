@@ -22,16 +22,20 @@
                             <div class="row g-4">
                                 <div class="col-auto">
                                     <div class="avatar-lg">
-                                        <img src="{% static 'images/users/avatar-1.jpg'%}" alt="user-img" class="img-thumbnail rounded-circle" />
+                                        <img src="{{company.get_photo_url}}" alt="client-img" class="img-thumbnail rounded-circle" />
                                     </div>
                                 </div><!--end col-->
                                 <div class="col">
                                     <div class="p-2">
-                                        <h3 class="text-white mb-1">{{user.username}}</h3>
-                                        <p class="text-white-75">{{user.role}}</p>
+                                        <h3 class="text-white mb-1">{{company.name}}</h3>
+                                        <p class="text-white-75">{{company.industry_type|default:"Client"}}</p>
                                         <div class="hstack text-white-50 gap-1">
-                                            <div class="me-2"><i class="ri-map-pin-user-line me-1 text-white-75 fs-16 align-middle"></i>{{user.state}}, {{user.country}}</div>
-                                            <div><i class="ri-building-line me-1 text-white-75 fs-16 align-middle"></i>Themesbrand</div>
+                                            {% if company.city and company.state %}
+                                            <div class="me-2"><i class="ri-map-pin-user-line me-1 text-white-75 fs-16 align-middle"></i>{{company.city}}, {{company.state}}</div>
+                                            {% endif %}
+                                            {% if company.website %}
+                                            <div><i class="ri-building-line me-1 text-white-75 fs-16 align-middle"></i>{{company.website}}</div>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div><!--end col-->
@@ -39,14 +43,14 @@
                                     <div class="row text text-white-50 text-center">
                                         <div class="col-lg-6 col-4">
                                             <div class="p-2">
-                                                <h4 class="text-white mb-1">24.3K</h4>
-                                                <p class="fs-14 mb-0">Followers</p>
+                                                <h4 class="text-white mb-1">{{tickets.count}}</h4>
+                                                <p class="fs-14 mb-0">Tickets</p>
                                             </div>
                                         </div> 
                                         <div class="col-lg-6 col-4">
                                             <div class="p-2">
-                                                <h4 class="text-white mb-1">1.3K</h4>
-                                                <p class="fs-14 mb-0">Following</p>
+                                                <h4 class="text-white mb-1">{{projects.count}}</h4>
+                                                <p class="fs-14 mb-0">Projects</p>
                                             </div>
                                         </div>
                                     </div>
@@ -67,8 +71,8 @@
                                                 </a>
                                             </li>
                                             <li class="nav-item">
-                                                <a class="nav-link fs-14" data-bs-toggle="tab" href="#activities" role="tab">
-                                                    <i class="ri-list-unordered d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">Activities</span>
+                                                <a class="nav-link fs-14" data-bs-toggle="tab" href="#tickets" role="tab">
+                                                    <i class="ri-list-unordered d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">Tickets</span>
                                                 </a>
                                             </li>
                                             <li class="nav-item">
@@ -83,7 +87,7 @@
                                             </li>
                                         </ul>
                                         <div class="flex-shrink-0">
-                                            <a href="{% url 'pages:pages.profile_settings' %}" class="btn btn-success"><i class="ri-edit-box-line align-bottom"></i> Edit Profile</a>
+                                            <a href="{% url 'apps:client.update_companies' company.pk %}" class="btn btn-success"><i class="ri-edit-box-line align-bottom"></i> Edit Client</a>
                                         </div>
                                     </div>
                                     <!-- Tab panes -->
@@ -93,39 +97,42 @@
                                                 <div class="col-xxl-3">
                                                     <div class="card">
                                                         <div class="card-body">
-                                                            <h5 class="card-title mb-5">Complete Your Profile</h5>
-                                                            <div class="progress animated-progess custom-progress progress-label">
-                                                                <div class="progress-bar bg-danger" role="progressbar" style="width: 30%" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"><div class="label">30%</div></div>
-                                                            </div>
-                                                        </div>
-                                                      </div>
-
-                                                    <div class="card">
-                                                        <div class="card-body">
-                                                            <h5 class="card-title mb-3">Info</h5>
+                                                            <h5 class="card-title mb-3">Client Information</h5>
                                                             <div class="table-responsive">
                                                                 <table class="table table-borderless mb-0">
                                                                     <tbody>
                                                                         <tr>
-                                                                            <th class="ps-0" scope="row">Full Name :</th>
-                                                                            <td class="text-muted">Anna Adame</td>
+                                                                            <th class="ps-0" scope="row">Company Name :</th>
+                                                                            <td class="text-muted">{{company.name}}</td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <th class="ps-0" scope="row">Mobile :</th>
-                                                                            <td class="text-muted">+(1) 987 6543</td>
+                                                                            <th class="ps-0" scope="row">Phone :</th>
+                                                                            <td class="text-muted">{{company.phone|default:"Not provided"}}</td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <th class="ps-0" scope="row">E-mail :</th>
-                                                                            <td class="text-muted">daveadame@velzon.com</td>
+                                                                            <th class="ps-0" scope="row">Email :</th>
+                                                                            <td class="text-muted">{{company.email|default:"Not provided"}}</td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <th class="ps-0" scope="row">Location :</th>
-                                                                            <td class="text-muted">California, United States</td>
+                                                                            <th class="ps-0" scope="row">Address :</th>
+                                                                            <td class="text-muted">
+                                                                                {% if company.address_1 %}{{company.address_1}}{% endif %}
+                                                                                {% if company.city %}, {{company.city}}{% endif %}
+                                                                                {% if company.state %} {{company.state}}{% endif %}
+                                                                                {% if company.zip %} {{company.zip}}{% endif %}
+                                                                                {% if not company.address_1 and not company.city and not company.state %}Not provided{% endif %}
+                                                                            </td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <th class="ps-0" scope="row">Joining Date</th>
-                                                                            <td class="text-muted">24 Nov 2021</td>
+                                                                            <th class="ps-0" scope="row">Industry :</th>
+                                                                            <td class="text-muted">{{company.industry_type|default:"Not specified"}}</td>
                                                                         </tr>
+                                                                        {% if company.website %}
+                                                                        <tr>
+                                                                            <th class="ps-0" scope="row">Website :</th>
+                                                                            <td class="text-muted"><a href="{{company.website}}" target="_blank">{{company.website}}</a></td>
+                                                                        </tr>
+                                                                        {% endif %}
                                                                     </tbody>
                                                                 </table>
                                                             </div>
@@ -1035,138 +1042,57 @@
                                                 </div><!--end col-->
                                             </div><!--end row-->
                                         </div>
-                                        <div class="tab-pane fade" id="activities" role="tabpanel">
+                                        <div class="tab-pane fade" id="tickets" role="tabpanel">
                                             <div class="card">
                                                 <div class="card-body">
-                                                    <h5 class="card-title mb-3">Activities</h5>
-                                                    <div class="acitivity-timeline">
-                                                        <div class="acitivity-item d-flex">
-                                                            <div class="flex-shrink-0">
-                                                                <img src="{% static 'images/users/avatar-1.jpg'%}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
-                                                            </div>
-                                                            <div class="flex-grow-1 ms-3">
-                                                                <h6 class="mb-1">Oliver Phillips <span class="badge bg-soft-primary text-primary align-middle">New</span></h6>
-                                                                <p class="text-muted mb-2">We talked about a project on linkedin.</p>
-                                                                <small class="mb-0 text-muted">Today</small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="acitivity-item py-3 d-flex">
-                                                            <div class="flex-shrink-0 avatar-xs acitivity-avatar">
-                                                                <div class="avatar-title bg-soft-success text-success rounded-circle">
-                                                                    N
-                                                                </div>
-                                                            </div>
-                                                            <div class="flex-grow-1 ms-3">
-                                                                <h6 class="mb-1">Nancy Martino <span class="badge bg-soft-secondary text-secondary align-middle">In Progress</span></h6>
-                                                                <p class="text-muted mb-2"><i class="ri-file-text-line align-middle ms-2"></i> Create new project Buildng product</p>
-                                                                <div class="avatar-group mb-2">
-                                                                    <a href="javascript: void(0);" class="avatar-group-item" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-original-title="Christi">
-                                                                        <img src="{% static 'images/users/avatar-4.jpg'%}" alt="" class="rounded-circle avatar-xs" />
-                                                                    </a>
-                                                                    <a href="javascript: void(0);" class="avatar-group-item" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-original-title="Frank Hook">
-                                                                        <img src="{% static 'images/users/avatar-3.jpg'%}" alt="" class="rounded-circle avatar-xs" />
-                                                                    </a>
-                                                                    <a href="javascript: void(0);" class="avatar-group-item" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-original-title=" Ruby">
-                                                                        <div class="avatar-xs">
-                                                                            <div class="avatar-title rounded-circle bg-light text-primary">
-                                                                                R
+                                                    <h5 class="card-title mb-3">Client Tickets</h5>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-nowrap align-middle">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th scope="col">Ticket</th>
+                                                                    <th scope="col">Status</th>
+                                                                    <th scope="col">Priority</th>
+                                                                    <th scope="col">Created</th>
+                                                                    <th scope="col">Action</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for ticket in tickets %}
+                                                                <tr>
+                                                                    <td>
+                                                                        <div class="d-flex align-items-center">
+                                                                            <div class="flex-shrink-0">
+                                                                                <img src="{{ticket.get_photo_url}}" alt="" class="avatar-xs rounded-circle" />
+                                                                            </div>
+                                                                            <div class="flex-grow-1 ms-2">
+                                                                                <h6 class="mb-0">{{ticket.name}}</h6>
+                                                                                <p class="text-muted mb-0">{{ticket.description|truncatechars:50}}</p>
                                                                             </div>
                                                                         </div>
-                                                                    </a>
-                                                                    <a href="javascript: void(0);" class="avatar-group-item" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-original-title="more">
-                                                                        <div class="avatar-xs">
-                                                                            <div class="avatar-title rounded-circle">
-                                                                                2+
-                                                                            </div>
-                                                                        </div>
-                                                                    </a>
-                                                                </div>
-                                                                <small class="mb-0 text-muted">Yesterday</small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="acitivity-item py-3 d-flex">
-                                                            <div class="flex-shrink-0">
-                                                                <img src="{% static 'images/users/avatar-2.jpg'%}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
-                                                            </div>
-                                                            <div class="flex-grow-1 ms-3">
-                                                                <h6 class="mb-1">Natasha Carey <span class="badge bg-soft-success text-success align-middle">Completed</span></h6>
-                                                                <p class="text-muted mb-2">Adding a new event with attachments</p>
-                                                                <div class="row">
-                                                                    <div class="col-xxl-4">
-                                                                        <div class="row border border-dashed gx-2 p-2 mb-2">
-                                                                            <div class="col-4">
-                                                                                <img src="{% static 'images/small/img-2.jpg'%}" alt="" class="img-fluid rounded" />
-                                                                            </div><!--end col-->
-                                                                            <div class="col-4">
-                                                                                <img src="{% static 'images/small/img-3.jpg'%}" alt="" class="img-fluid rounded" />
-                                                                            </div><!--end col-->
-                                                                            <div class="col-4">
-                                                                                <img src="{% static 'images/small/img-4.jpg'%}" alt="" class="img-fluid rounded" />
-                                                                            </div><!--end col-->
-                                                                        </div><!--end row-->
-                                                                    </div>
-                                                                </div>
-                                                                <small class="mb-0 text-muted">25 Nov</small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="acitivity-item py-3 d-flex">
-                                                            <div class="flex-shrink-0">
-                                                                <img src="{% static 'images/users/avatar-6.jpg'%}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
-                                                            </div>
-                                                            <div class="flex-grow-1 ms-3">
-                                                                <h6 class="mb-1">Bethany Johnson</h6>
-                                                                <p class="text-muted mb-2">added a new member to velzon dashboard</p>
-                                                                <small class="mb-0 text-muted">19 Nov</small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="acitivity-item py-3 d-flex">
-                                                            <div class="flex-shrink-0">
-                                                                <div class="avatar-xs acitivity-avatar">
-                                                                    <div class="avatar-title rounded-circle bg-soft-danger text-danger">
-                                                                        <i class="ri-shopping-bag-line"></i>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="flex-grow-1 ms-3">
-                                                                <h6 class="mb-1">Your order is placed <span class="badge bg-soft-danger text-danger align-middle ms-1">Out of Delivery</span></h6>
-                                                                <p class="text-muted mb-2">These customers can rest assured their order has been placed.</p>
-                                                                <small class="mb-0 text-muted">16 Nov</small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="acitivity-item py-3 d-flex">
-                                                            <div class="flex-shrink-0">
-                                                                <img src="{% static 'images/users/avatar-7.jpg'%}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
-                                                            </div>
-                                                            <div class="flex-grow-1 ms-3">
-                                                                <h6 class="mb-1">Lewis Pratt</h6>
-                                                                <p class="text-muted mb-2">They all have something to say beyond the words on the page. They can come across as casual or neutral, exotic or graphic. </p>
-                                                                <small class="mb-0 text-muted">22 Oct</small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="acitivity-item py-3 d-flex">
-                                                            <div class="flex-shrink-0">
-                                                                <div class="avatar-xs acitivity-avatar">
-                                                                    <div class="avatar-title rounded-circle bg-soft-info text-info">
-                                                                        <i class="ri-line-chart-line"></i>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="flex-grow-1 ms-3">
-                                                                <h6 class="mb-1">Monthly sales report</h6>
-                                                                <p class="text-muted mb-2"><span class="text-danger">2 days left</span> notification to submit the monthly sales report. <a href="javascript:void(0);" class="link-warning text-decoration-underline">Reports Builder</a></p>
-                                                                <small class="mb-0 text-muted">15 Oct</small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="acitivity-item d-flex">
-                                                            <div class="flex-shrink-0">
-                                                                <img src="{% static 'images/users/avatar-8.jpg'%}" alt="" class="avatar-xs rounded-circle acitivity-avatar" />
-                                                            </div>
-                                                            <div class="flex-grow-1 ms-3">
-                                                                <h6 class="mb-1">New ticket received <span class="badge bg-soft-success text-success align-middle">Completed</span></h6>
-                                                                <p class="text-muted mb-2">User <span class="text-secondary">Erica245</span> submitted a ticket.</p>
-                                                                <small class="mb-0 text-muted">26 Aug</small>
-                                                            </div>
-                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="badge bg-soft-{% if ticket.status == 'New' %}primary{% elif ticket.status == 'In Progress' %}warning{% elif ticket.status == 'Completed' %}success{% elif ticket.status == 'Closed' %}secondary{% else %}info{% endif %} text-{% if ticket.status == 'New' %}primary{% elif ticket.status == 'In Progress' %}warning{% elif ticket.status == 'Completed' %}success{% elif ticket.status == 'Closed' %}secondary{% else %}info{% endif %}">
+                                                                            {{ticket.status}}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="badge bg-soft-{% if ticket.priority == 'High' %}danger{% elif ticket.priority == 'Medium' %}warning{% elif ticket.priority == 'Low' %}success{% else %}info{% endif %} text-{% if ticket.priority == 'High' %}danger{% elif ticket.priority == 'Medium' %}warning{% elif ticket.priority == 'Low' %}success{% else %}info{% endif %}">
+                                                                            {{ticket.priority|default:"Not set"}}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>{{ticket.create_date}}</td>
+                                                                    <td>
+                                                                        <a href="{% url 'apps:tickets.details' ticket.identifier %}" class="btn btn-sm btn-soft-primary">View</a>
+                                                                    </td>
+                                                                </tr>
+                                                                {% empty %}
+                                                                <tr>
+                                                                    <td colspan="5" class="text-center">No tickets found for this client.</td>
+                                                                </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 </div><!--end card-body-->
                                             </div><!--end card-->
@@ -1174,19 +1100,19 @@
                                         <div class="tab-pane fade" id="projects" role="tabpanel">
                                             <div class="card">
                                                 <div class="card-body">
+                                                    <h5 class="card-title mb-3">Client Projects</h5>
                                                     <div class="row">
                                                         {% for project in projects %}
-                                                        {% if tech in project %}
                                                         <div class="col-xxl-3 col-sm-6">
                                                             <div class="card profile-project-card shadow-none profile-project-warning">
                                                                 <div class="card-body p-4">
                                                                     <div class="d-flex">
                                                                         <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                            <h5 class="fs-14 text-truncate"><a href="#" class="text-dark">Chat App Update</a></h5>
-                                                                            <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">2 year Ago</span></p>
+                                                                            <h5 class="fs-14 text-truncate"><a href="#" class="text-dark">{{project.name}}</a></h5>
+                                                                            <p class="text-muted text-truncate mb-0">Created : <span class="fw-semibold text-dark">{{project.create_date}}</span></p>
                                                                         </div>
                                                                         <div class="flex-shrink-0 ms-2">
-                                                                            <div class="badge badge-soft-warning fs-10">Inprogress</div>
+                                                                            <div class="badge badge-soft-{% if project.status == 'New' %}primary{% elif project.status == 'In Progress' %}warning{% elif project.status == 'Completed' %}success{% elif project.status == 'Closed' %}secondary{% else %}info{% endif %} fs-10">{{project.status}}</div>
                                                                         </div>
                                                                     </div>
     
@@ -1194,26 +1120,10 @@
                                                                         <div class="flex-grow-1">
                                                                             <div class="d-flex align-items-center gap-2">
                                                                                 <div>
-                                                                                    <h5 class="fs-12 text-muted mb-0">Members :</h5>
+                                                                                    <h5 class="fs-12 text-muted mb-0">Description :</h5>
                                                                                 </div>
-                                                                                <div class="avatar-group">
-                                                                                    <div class="avatar-group-item">
-                                                                                        <div class="avatar-xs">
-                                                                                            <img src="{% static 'images/users/avatar-1.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="avatar-group-item">
-                                                                                        <div class="avatar-xs">
-                                                                                            <img src="{% static 'images/users/avatar-3.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="avatar-group-item">
-                                                                                        <div class="avatar-xs">
-                                                                                            <div class="avatar-title rounded-circle bg-light text-primary">
-                                                                                                J
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
+                                                                                <div class="text-muted">
+                                                                                    <p class="fs-12 mb-0">{{project.description|truncatechars:100|default:"No description"}}</p>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -1223,35 +1133,13 @@
                                                             </div>
                                                             <!-- end card -->
                                                         </div><!--end col-->
-                                                        {% endif %}
-                                                        {% endfor %}
-                                                        <div class="col-lg-12">
-                                                            <div class="mt-4">
-                                                                <ul class="pagination pagination-separated justify-content-center mb-0">
-                                                                    <li class="page-item disabled">
-                                                                        <a href="javascript:void(0);" class="page-link"><i class="mdi mdi-chevron-left"></i></a>
-                                                                    </li>
-                                                                    <li class="page-item active">
-                                                                        <a href="javascript:void(0);" class="page-link">1</a>
-                                                                    </li>
-                                                                    <li class="page-item">
-                                                                        <a href="javascript:void(0);" class="page-link">2</a>
-                                                                    </li>
-                                                                    <li class="page-item">
-                                                                        <a href="javascript:void(0);" class="page-link">3</a>
-                                                                    </li>
-                                                                    <li class="page-item">
-                                                                        <a href="javascript:void(0);" class="page-link">4</a>
-                                                                    </li>
-                                                                    <li class="page-item">
-                                                                        <a href="javascript:void(0);" class="page-link">5</a>
-                                                                    </li>
-                                                                    <li class="page-item">
-                                                                        <a href="javascript:void(0);" class="page-link"><i class="mdi mdi-chevron-right"></i></a>
-                                                                    </li>
-                                                                </ul>
+                                                        {% empty %}
+                                                        <div class="col-12">
+                                                            <div class="text-center">
+                                                                <p class="text-muted">No projects found for this client.</p>
                                                             </div>
                                                         </div>
+                                                        {% endfor %}
                                                     </div><!--end row-->
                                                 </div><!--end card-body-->
                                             </div><!--end card-->
@@ -1260,11 +1148,7 @@
                                             <div class="card">
                                                 <div class="card-body">
                                                     <div class="d-flex align-items-center mb-4">
-                                                        <h5 class="card-title flex-grow-1 mb-0">Documents</h5>
-                                                        <div class="flex-shrink-0">
-                                                            <input class="form-control d-none" type="file" id="formFile">
-                                                            <label for="formFile" class="btn btn-danger"><i class="ri-upload-2-fill me-1 align-bottom"></i> Upload File</label>
-                                                        </div>
+                                                        <h5 class="card-title flex-grow-1 mb-0">Client Files</h5>
                                                     </div>
                                                     <div class="row">
                                                         <div class="col-lg-12">
@@ -1280,38 +1164,40 @@
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
+                                                                        {% for file in client_files %}
                                                                         <tr>
                                                                             <td>
                                                                                 <div class="d-flex align-items-center">
                                                                                     <div class="avatar-sm">
                                                                                         <div class="avatar-title bg-soft-primary text-primary rounded fs-20">
-                                                                                            <i class="ri-file-zip-fill"></i>
+                                                                                            <i class="ri-file-fill"></i>
                                                                                         </div>
                                                                                     </div>
                                                                                     <div class="ms-3 flex-grow-1">
-                                                                                        <h6 class="fs-15 mb-0"><a href="javascript:void(0)">Artboard-documents.zip</a></h6>
+                                                                                        <h6 class="fs-15 mb-0"><a href="{{file.file.url}}" target="_blank">{{file.file.name|slice:"-50:"}}</a></h6>
                                                                                     </div>
                                                                                 </div>
                                                                             </td>
-                                                                            <td>Zip File</td>
-                                                                            <td>4.57 MB</td>
-                                                                            <td>12 Dec 2021</td>
+                                                                            <td>{{file.file.name|slice:"-3:"|upper}} File</td>
+                                                                            <td>{{file.file.size|filesizeformat}}</td>
+                                                                            <td>{{file.upload_date}}</td>
                                                                             <td>
                                                                                 <div class="dropdown">
-                                                                                    <a href="javascript:void(0);" class="btn btn-light btn-icon" id="dropdownMenuLink15" data-bs-toggle="dropdown" aria-expanded="true">
+                                                                                    <a href="javascript:void(0);" class="btn btn-light btn-icon" id="dropdownMenuLink{{forloop.counter}}" data-bs-toggle="dropdown" aria-expanded="true">
                                                                                         <i class="ri-equalizer-fill"></i>
                                                                                     </a>
-                                                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink15">
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill me-2 align-middle text-muted"></i>View</a></li>
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-download-2-fill me-2 align-middle text-muted"></i>Download</a></li>
-                                                                                        <li class="dropdown-divider"></li>
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line me-2 align-middle text-muted"></i>Delete</a></li>
+                                                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink{{forloop.counter}}">
+                                                                                        <li><a class="dropdown-item" href="{{file.file.url}}" target="_blank"><i class="ri-eye-fill me-2 align-middle text-muted"></i>View</a></li>
+                                                                                        <li><a class="dropdown-item" href="{{file.file.url}}" download><i class="ri-download-2-fill me-2 align-middle text-muted"></i>Download</a></li>
                                                                                     </ul>
                                                                                 </div>
                                                                             </td>
                                                                         </tr>
+                                                                        {% empty %}
                                                                         <tr>
-                                                                            <td>
+                                                                            <td colspan="5" class="text-center">No files found for this client.</td>
+                                                                        </tr>
+                                                                        {% endfor %}
                                                                                 <div class="d-flex align-items-center">
                                                                                     <div class="avatar-sm">
                                                                                         <div class="avatar-title bg-soft-danger text-danger rounded fs-20">

@@ -201,8 +201,8 @@ def apps_projects_edit_list_view(request, pk):
     projects = ProjectList.objects.get(pk=pk)
     technicians = TechnicianUser.objects.all()
     clients = ClientCompany.objects.all().order_by("-name")
-    # Only show tickets that are properly attached to this project (have ForeignKey relationship)
-    tickets = TicketList.objects.filter(project=projects)
+    # Show all tickets (both unassigned and already assigned to this project)
+    tickets = TicketList.objects.all()
     tags = ", ".join([x for x in projects.tag.all().values_list("name", flat=True)])
     if request.method == "POST":
         form = ProjectListAddForm(

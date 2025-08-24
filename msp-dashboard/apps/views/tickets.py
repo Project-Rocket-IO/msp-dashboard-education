@@ -8,16 +8,31 @@ from apps.models import (
     TicketComment,
     TechnicianLabor,
     TicketFiles,
+    TicketList,
+    ClientCompany,
 )
+from accounts.models import TechnicianUser
 from apps.forms import *
 from django.contrib import messages
-from datetime import date
+from datetime import date, datetime
 from rbac.decorators import has_permission
 from rbac.utils import paginate_queryset
 from django.core.exceptions import PermissionDenied
 import json
 import os
+import tempfile
 from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.contrib.auth import get_user_model
+
+# Try to import pandas for Excel processing
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+    pd = None
 
 
 #########
@@ -330,23 +345,7 @@ def apps_tickets_list_view(request):
     context = {}
     context.update(get_ticket_list_data(request))
 
-    # Group work types by client
-    work_types_by_client = {}
-    for work_type in ClientWorkTypeRate.objects.all():
-        if work_type.client_id not in work_types_by_client:
-            work_types_by_client[work_type.client_id] = []
-        work_types_by_client[work_type.client_id].append(
-            {
-                "id": work_type.id,
-                "name": work_type.name,
-                "rate": str(
-                    work_type.rate
-                ),  # Convert Decimal to string for JSON serialization
-            }
-        )
 
-    # Convert to JSON string for template
-    context["work_types_by_client"] = json.dumps(work_types_by_client)
 
     if request.user.has_perm("apps.view_ticket_stats"):
         context.update(get_ticket_stats_data())
@@ -417,20 +416,7 @@ def apps_tickets_edit_view(request, pk):
     files_count = ticket_files.count()
     comments_count = comments.count()
     labors = TechnicianLabor.objects.filter(ticket_id=tickets)
-    work_types = ClientWorkTypeRate.objects.filter(client_id=tickets.client_id)
     labors_count = labors.count()
-    work_types_by_client = {}
-    # Group work types by client, and format for json
-    for work_type in ClientWorkTypeRate.objects.all():
-        if work_type.client_id not in work_types_by_client:
-            work_types_by_client[work_type.client_id] = []
-        work_types_by_client[work_type.client_id].append(
-            {
-                "id": work_type.id,
-                "name": work_type.name,
-                "rate": str(work_type.rate),
-            }
-        )
 
     tags = ", ".join([x for x in tickets.tag.all().values_list("name", flat=True)])
 
@@ -455,8 +441,6 @@ def apps_tickets_edit_view(request, pk):
         "tags": tags,
         "ticket_files": ticket_files,
         "files_count": files_count,
-        "work_types": work_types,
-        "work_types_by_client": json.dumps(work_types_by_client),
     }
 
     if request.method == "POST":
@@ -575,3 +559,148 @@ def apps_ticket_file_delete_view(request, pk):
             return redirect(reverse("apps:tickets.details", kwargs={"pk": file_obj.ticket.pk}))
     
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@has_permission("apps.add_ticketlist")
+def apps_tickets_bulk_upload_view(request):
+    """Handle bulk ticket creation from Excel file"""
+    if not PANDAS_AVAILABLE:
+        return JsonResponse({
+            "success": False,
+            "message": "Excel processing is not available. Please contact your administrator."
+        }, status=500)
+    
+    if request.method == "POST":
+        try:
+            if 'excel_file' not in request.FILES:
+                return JsonResponse({"success": False, "message": "No file was uploaded."}, status=400)
+            
+            uploaded_file = request.FILES['excel_file']
+            
+            if uploaded_file.size > 262144000: # 250MB
+                return JsonResponse({"success": False, "message": "File size exceeds 250MB limit."}, status=400)
+            
+            if not uploaded_file.name.endswith(('.xlsx', '.xls')):
+                return JsonResponse({"success": False, "message": "Please upload an Excel file (.xlsx or .xls)."}, status=400)
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as temp_file:
+                for chunk in uploaded_file.chunks():
+                    temp_file.write(chunk)
+                temp_file_path = temp_file.name
+            
+            try:
+                df = pd.read_excel(temp_file_path)
+                
+                # Updated required columns
+                required_columns = ['name', 'client', 'technician']
+                missing_columns = [col for col in required_columns if col not in df.columns]
+                
+                if missing_columns:
+                    return JsonResponse({"success": False, "message": f"Missing required columns: {', '.join(missing_columns)}"}, status=400)
+                
+                created_count = 0
+                errors = []
+                
+                for index, row in df.iterrows():
+                    try:
+                        # Handle required fields
+                        ticket_name = str(row['name']).strip()
+                        if not ticket_name:
+                            errors.append(f"Row {index + 2}: Ticket name cannot be empty")
+                            continue
+                        
+                        client_name = str(row['client']).strip()
+                        if not client_name:
+                            errors.append(f"Row {index + 2}: Client name cannot be empty")
+                            continue
+                        
+                        technician_name = str(row['technician']).strip()
+                        if not technician_name:
+                            errors.append(f"Row {index + 2}: Technician name cannot be empty")
+                            continue
+                        
+                        # Create or get client
+                        client, created = ClientCompany.objects.get_or_create(
+                            name=client_name,
+                            defaults={'email': f'{client_name.lower().replace(" ", "")}@example.com'}
+                        )
+                        
+                        # Find technician by username
+                        try:
+                            technician = TechnicianUser.objects.get(auth_user__username=technician_name)
+                        except TechnicianUser.DoesNotExist:
+                            errors.append(f"Row {index + 2}: Technician '{technician_name}' not found")
+                            continue
+                        
+                        # Create ticket with required fields
+                        ticket = TicketList.objects.create(
+                            name=ticket_name,
+                            client=client,
+                            description=str(row.get('description', '')).strip() if 'description' in df.columns and pd.notna(row.get('description')) else '',
+                        )
+                        
+                        # Add technician assignment
+                        ticket.assignment.add(technician)
+                        
+                        # Handle optional fields
+                        if 'due_date' in df.columns and pd.notna(row['due_date']):
+                            if isinstance(row['due_date'], str):
+                                try:
+                                    ticket.due_date = datetime.strptime(row['due_date'], '%Y-%m-%d').date()
+                                except ValueError:
+                                    pass
+                            else:
+                                ticket.due_date = row['due_date'].date()
+                        
+                        if 'ticket_type' in df.columns and pd.notna(row['ticket_type']):
+                            ticket.ticket_type = str(row['ticket_type']).strip()
+                        
+                        if 'status' in df.columns and pd.notna(row['status']):
+                            ticket.status = str(row['status']).strip()
+                        else:
+                            ticket.status = 'New'  # Default status
+                        
+                        if 'priority' in df.columns and pd.notna(row['priority']):
+                            ticket.priority = str(row['priority']).strip()
+                        else:
+                            ticket.priority = 'Medium'  # Default priority
+                        
+                        ticket.save()
+                        created_count += 1
+                        
+                    except Exception as e:
+                        errors.append(f"Row {index + 2}: {str(e)}")
+                
+                os.unlink(temp_file_path) # Delete file after processing
+                
+                if created_count > 0:
+                    message = f"Successfully created {created_count} tickets."
+                    if errors:
+                        message += f" Errors: {len(errors)} rows failed."
+                    return JsonResponse({
+                        "success": True,
+                        "message": message,
+                        "created_count": created_count,
+                        "errors": errors
+                    })
+                else:
+                    return JsonResponse({
+                        "success": False,
+                        "message": "No tickets were created. Please check your Excel file format."
+                    }, status=400)
+                        
+            except Exception as e:
+                if os.path.exists(temp_file_path):
+                    os.unlink(temp_file_path)
+                return JsonResponse({
+                    "success": False,
+                    "message": f"Error processing Excel file: {str(e)}"
+                }, status=400)
+                    
+        except Exception as e:
+            return JsonResponse({
+                "success": False,
+                "message": f"Unexpected error: {str(e)}"
+            }, status=500)
+    
+    return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)

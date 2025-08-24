@@ -1,0 +1,51 @@
+services:
+  # Redis/Valkey for caching and session storage
+  valkey:
+    image: valkey/valkey:latest
+    container_name: msp-dashboard-valkey-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - app_network
+
+  # Main Django application
+  app:
+    build:
+      context: .
+    container_name: msp-dashboard-app-dev
+    restart: unless-stopped
+    env_file:
+      - .env-dev
+    environment:
+      - DJANGO_SETTINGS_MODULE=projectRocket.settings.development
+      - CELERY_BROKER_URL=redis://valkey:6379/0
+      - REDIS_URL=redis://valkey:6379/1
+      - DEBUG=False
+    volumes:
+      # Bind mount your local code for development
+      - .:/app:cached
+      # Mount named volumes for media and static files
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    networks:
+      - app_network
+    depends_on:
+      valkey:
+        condition: service_started
+    command: >
+      bash -c "
+        python manage.py collectstatic --noinput &&
+        python manage.py migrate &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+
+volumes:
+  static_volume:
+  media_volume:
+
+networks:
+  app_network:
+    driver: bridge 

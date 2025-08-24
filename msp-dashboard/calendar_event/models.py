@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from recurrence.fields import RecurrenceField
 import projectRocket.settings as settings
-from django.contrib.auth import get_user_model
+from accounts.models import MSPAuthUser
 # Selection  # FOR TYPE
 EVENT_CHOICES = (
     ('Danger','Danger'),
@@ -35,9 +35,9 @@ class CalendarEvents(models.Model):
     name = models.CharField(max_length=145,null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     location = models.CharField(max_length=100, null=True, blank=True)
-    creator = models.ForeignKey(get_user_model(), null=True, blank=True, on_delete=models.CASCADE,
+    creator = models.ForeignKey(MSPAuthUser, null=True, blank=True, on_delete=models.CASCADE,
                                 related_name='event_creator')
-    guests = models.ManyToManyField(get_user_model(), blank=True)
+    guests = models.ManyToManyField(MSPAuthUser, blank=True)
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)
     event_last_date = models.DateField(null=True, blank=True)

@@ -3,283 +3,359 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0">
             <div class="modal-header p-3 bg-soft-info">
-                <h5 class="modal-title" id="exampleModalLabel"></h5>
+                <h5 class="modal-title" id="exampleModalLabel">Ticket Management</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
             </div>
-            {% if perms.apps.add_ticketlist %}
-            <form action="{% url 'apps:tickets.create' %}" enctype="multipart/form-data" class="dropzone needs-validation" id="createTicketDropzone" novalidate>
-                {% csrf_token %}
-                {{ form.media }}
-                {{ form.as_p }}
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-lg-12">
-                            <div id="modal-id">
-                            </div>
-                        </div>
-                        <div class="col-lg-12">
-                            <div>
-                                <label for="tasksTitle-field" class="form-label">Title<span class="required-asterix">*</span></label>
-                                <input type="text" name="name" class="form-control" autocomplete="given-name" placeholder="Title" value="{{ticket.name}}" required />
-                                <div class="invalid-feedback">Please give a ticket title</div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="mb-3">
-                                <label class="form-label" for="project-thumbnail-img">Ticket Image</label>
-                                <input class="form-control" name="logo" id="ticket-thumbnail-img" value="{{ticket.logo}}" type="file" accept="image/png, image/gif, image/jpeg">
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="mb-3">
-                                <label for="choices-text-input" class="form-label">Tags</label>
-                                <input class="form-control" id="choices-text-input" data-choices-removeItem data-choices data-choices-limit="Required Limit" placeholder="Enter Tags" type="text" name="tag"
-                                value="{{ticket.tag}}" />  
-                            </div>
-                        </div>
-
-                        {% if user.technician %}
-                        <div class="col-lg-4">
-                            <div>
-                                <label for="client-field" class="form-label">Client<span class="required-asterix">*</span></label><sup> <a href="{% url 'apps:client.companies' %}"> (<u>Create Client</u>)</a></sup>
-                                <select class="form-select" id="assignment-field" name="client" aria-multiselectable="true" required >
-                                    <option value="">None</option>
-                                    {% for client in clients %}
-                                    <option value="{{client.pk}}">{{client.name}}</option>
-                                    {% endfor %}
-                                </select>
-                                <div class="invalid-feedback">Please select a client</div>
-                            </div>
-                        </div>
-                        {% elif user.client %} <!-- Explicit is better than implicit -->
-                        <select hidden name="client" >
-                            <option value="{{user.client.company.pk}}">{{client.name}}</option>
-                        </select>
-
-                        {% comment %} <input type="hidden" name="client" value="{{user.client.company.pk}}"> {% endcomment %}
-                        {% endif %}
-
-                        {% if user.technician %}
-                        <div class="col-lg-4">
-                            <div>
-                                <label for="choices-text-input" class="form-label">Technician<span class="required-asterix">*</span></label>
-                                <select class="form-select" data-choices data-choices-search-false data-choices-removeItem
-                                id="choices-lead-input" name="assignment" id="assignment" value="{{tech.name}}" multiple required>
-                                    {% for tech in technicians %}
-                                    <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
-                                    {% endfor %}
-                                </select>
-                                <div class="invalid-feedback">Please select a technician</div>
-                            </div>
-                        </div>
-                        {% elif user.client %} <!-- Explicit is better than implicit -->
-
-                        <select hidden name="assignment" >
-                            <option value="{{user.client.company.main_tech.pk}}">{{client.name}}</option>
-                        </select>
-                        {% comment %} <input type="hidden" name="assignment" value="{{user.client.company.main_tech}}"> {% endcomment %}
-                        {% endif %}
-
-                        <div class="col-lg-4">
-                            <label for="duedate-field" class="form-label">Due Date</label>
-                            <input type="text" name="due_date" class="form-control" data-provider="flatpickr" data-date-format="Y-m-d" placeholder="Due Date" value="{{ticket.due_date}}" />
-                        </div>
-                        <div class="col-lg-4">
-                            <div>
-                                <label for="status-field" class="form-label">Ticket Status</label>
-                                <select class="form-select" id="status-field" name="status">
-                                    {% if ticket.status == "New" %}
-                                    <option value="New" selected>New</option>
-                                    {% else %}
-                                    <option value="New" selected>New</option>
-                                    {% endif %}
-                                    {% if ticket.status == "In Progress" %}
-                                    <option value="In Progress" selected>In Progress</option>
-                                    {% else %}
-                                    <option value="In Progress">In Progress</option>
-                                    {% endif %}
-                                    {% if ticket.status == "Scheduled" %}
-                                    <option value="Scheduled" selected>Scheduled</option>
-                                    {% else %}
-                                    <option value="Scheduled">Scheduled</option>
-                                    {% endif %}
-                                    {% if ticket.status == "Postponed" %}
-                                    <option value="Postponed" selected>Postponed</option>
-                                    {% else %}
-                                    <option value="Postponed">Postponed</option>
-                                    {% endif %}
-                                    {% if ticket.status == "Waiting on Client" %}
-                                    <option value="Waiting on Client" selected>Waiting on Client</option>
-                                    {% else %}
-                                    <option value="Waiting on Client">Waiting on Client</option>
-                                    {% endif %}
-                                    {% if ticket.status == "Waiting on Vendor" %}
-                                    <option value="Waiting on Vendor" selected>Waiting on Vendor</option>
-                                    {% else %}
-                                    <option value="Waiting on Vendor">Waiting on Vendor</option>
-                                    {% endif %}
-                                    {% if ticket.status == "Follow-Up" %}
-                                    <option value="Follow-Up" selected>Follow-Up</option>
-                                    {% else %}
-                                    <option value="Follow-Up">Follow-Up</option>
-                                    {% endif %}
-                                    {% if ticket.status == "Need to Post" %}
-                                    <option value="Need to Post" selected>Need to Post</option>
-                                    {% else %}
-                                    <option value="Need to Post">Need to Post</option>
-                                    {% endif %}
-                                    {% if ticket.status == "Completed" %}
-                                    <option value="Completed" selected>Completed</option>
-                                    {% else %}
-                                    <option value="Completed">Completed</option>
-                                    {% endif %}
-                                    {% if ticket.status == "Closed" %}
-                                    <option value="Closed" selected>Closed</option>
-                                    {% else %}
-                                    <option value="Closed">Closed</option>
-                                    {% endif %}
-                                </select>
-                                <div class="invalid-feedback">Please pick a ticket status</div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4">
-                            <div>
-                                <label for="priority_type-field" class="form-label">Ticket Priority</label>
-                                <select class="form-select" id="priority_type-field" name="priority">
-                                    {% if ticket.priority == "Medium" %}
-                                    <option value="Medium" selected>Medium</option>
-                                    {% else %}
-                                    <option value="Medium">Medium</option>
-                                    {% endif %}
-                                    {% if ticket.priority == "Low" %}
-                                    <option value="Low" selected>Low</option>
-                                    {% else %}
-                                    <option value="Low">Low</option>
-                                    {% endif %}
-                                    {% if ticket.priority == "High" %}
-                                    <option value="High" selected>High</option>
-                                    {% else %}
-                                    <option value="High">High</option>
-                                    {% endif %}
-                                    {% if ticket.priority == "Emergency" %}
-                                    <option value="Emergency" selected>Emergency</option>
-                                    {% else %}
-                                    <option value="Emergency">Emergency</option>
-                                    {% endif %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-lg-4">
-                            <div>
-                                <label for="work-type-field" class="form-label">Work Type<span class="required-asterix">*</span></label>
-                                <select required class="form-select" id="work-type-field" name="work_type">
-                                    <option value="">Select Work Type</option>
-                                </select>
-                                <div class="invalid-feedback">Please select a work type</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div><br></div>
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="mb-3 mb-lg-0">
-                                <label class="form-label">Ticket Description</label>
-                                    <textarea id="ckeditor-classic" class="form-control" name="description" 
-                                    id="ticket-thumbnail-img" value="{{ticket.description}}" type="text" 
-                                    rows="10" placeholder="">{{ticket.description}}
-                                </textarea>
-                                    
-                            </div>
-                        </div>
-                    </div>
-
-                    <script>
-                        // Parse the JSON data from the server
-                        const workTypesByClient = JSON.parse('{{ work_types_by_client|safe }}');
-                        
-                        document.addEventListener('DOMContentLoaded', function() {
-                            const clientSelect = document.getElementById('assignment-field');
-                            const workTypeSelect = document.getElementById('work-type-field');
-                            
-                            clientSelect.addEventListener('change', function() {
-                                const clientId = this.value;
-                                // Clear current work types
-                                workTypeSelect.innerHTML = '<option value="">Select Work Type</option>';
-                                
-                                if (clientId && workTypesByClient[clientId]) {
-                                    // Add work types for selected client
-                                    workTypesByClient[clientId].forEach(workType => {
-                                        const option = document.createElement('option');
-                                        option.value = workType.id;
-                                        option.textContent = `${workType.name} ($${workType.rate}/hr)`;
-                                        workTypeSelect.appendChild(option);
-                                    });
-                                }
-                            });
-                        });
-                    </script>
-                        
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Attached files</h5>
-                        </div>
-                        <div class="card-body">
-                            <div>
-                                <p class="text-muted">Add Attached files here.</p>
-
-                                <div class="area">
-                                    <div id="create-ticket" class="fallback">
-                                        <input name="file" type="file" class="area-input" multiple="multiple">
-                                    </div>
-                                    <div class="dz-message needsclick text-center">
-                                        <div class="mb-3">
-                                            <i class="display-4 text-muted ri-upload-cloud-2-fill"></i>
+            
+            <!-- Tab Navigation -->
+            <div class="modal-body p-0">
+                <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#create-ticket-tab" role="tab">
+                            <i class="ri-add-line align-bottom me-1"></i> Create Ticket
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#load-ticket-tab" role="tab">
+                            <i class="ri-upload-line align-bottom me-1"></i> Load Tickets
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="tab-content">
+                    <!-- Create Ticket Tab -->
+                    <div class="tab-pane fade show active" id="create-ticket-tab" role="tabpanel">
+                        {% if perms.apps.add_ticketlist %}
+                        <form action="{% url 'apps:tickets.create' %}" enctype="multipart/form-data" class="dropzone needs-validation" id="createTicketDropzone" novalidate>
+                            {% csrf_token %}
+                            {{ form.media }}
+                            {{ form.as_p }}
+                            <div class="p-3">
+                                <div class="row g-3">
+                                    <div class="col-lg-12">
+                                        <div id="modal-id">
                                         </div>
+                                    </div>
+                                    <div class="col-lg-12">
+                                        <div>
+                                            <label for="tasksTitle-field" class="form-label">Title<span class="required-asterix">*</span></label>
+                                            <input type="text" name="name" class="form-control" autocomplete="given-name" placeholder="Title" value="{{ticket.name}}" required />
+                                            <div class="invalid-feedback">Please give a ticket title</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label class="form-label" for="project-thumbnail-img">Ticket Image</label>
+                                            <input class="form-control" name="logo" id="ticket-thumbnail-img" value="{{ticket.logo}}" type="file" accept="image/png, image/gif, image/jpeg">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label for="choices-text-input" class="form-label">Tags</label>
+                                            <input class="form-control" id="choices-text-input" data-choices-removeItem data-choices data-choices-limit="Required Limit" placeholder="Enter Tags" type="text" name="tag"
+                                            value="{{ticket.tag}}" />  
+                                        </div>
+                                    </div>
 
-                                        <h5>Drop files here or click to upload.</h5>
+                                    {% if user.technician %}
+                                    <div class="col-lg-4">
+                                        <div>
+                                            <label for="client-field" class="form-label">Client<span class="required-asterix">*</span></label><sup> <a href="{% url 'apps:client.companies' %}"> (<u>Create Client</u>)</a></sup>
+                                            <select class="form-select" id="assignment-field" name="client" aria-multiselectable="true" required >
+                                                <option value="">None</option>
+                                                {% for client in clients %}
+                                                <option value="{{client.pk}}">{{client.name}}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback">Please select a client</div>
+                                        </div>
+                                    </div>
+                                    {% elif user.client %} <!-- Explicit is better than implicit -->
+                                    <select hidden name="client" >
+                                        <option value="{{user.client.company.pk}}">{{client.name}}</option>
+                                    </select>
+
+                                    {% comment %} <input type="hidden" name="client" value="{{user.client.company.pk}}"> {% endcomment %}
+                                    {% endif %}
+
+                                    {% if user.technician %}
+                                    <div class="col-lg-4">
+                                        <div>
+                                            <label for="choices-text-input" class="form-label">Technician<span class="required-asterix">*</span></label>
+                                            <select class="form-select" data-choices data-choices-search-false data-choices-removeItem
+                                            id="choices-lead-input" name="assignment" id="assignment" value="{{tech.name}}" multiple required>
+                                                {% for tech in technicians %}
+                                                <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback">Please select a technician</div>
+                                        </div>
+                                    </div>
+                                    {% elif user.client %} <!-- Explicit is better than implicit -->
+
+                                    <select hidden name="assignment" >
+                                        <option value="{{user.client.company.main_tech.pk}}">{{client.name}}</option>
+                                    </select>
+                                    {% comment %} <input type="hidden" name="assignment" value="{{user.client.company.main_tech}}"> {% endcomment %}
+                                    {% endif %}
+
+                                    <div class="col-lg-4">
+                                        <label for="duedate-field" class="form-label">Due Date</label>
+                                        <input type="text" name="due_date" class="form-control" data-provider="flatpickr" data-date-format="Y-m-d" placeholder="Due Date" value="{{ticket.due_date}}" />
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div>
+                                            <label for="status-field" class="form-label">Ticket Status</label>
+                                            <select class="form-select" id="status-field" name="status">
+                                                {% if ticket.status == "New" %}
+                                                <option value="New" selected>New</option>
+                                                {% else %}
+                                                <option value="New" selected>New</option>
+                                                {% endif %}
+                                                {% if ticket.status == "In Progress" %}
+                                                <option value="In Progress" selected>In Progress</option>
+                                                {% else %}
+                                                <option value="In Progress">In Progress</option>
+                                                {% endif %}
+                                                {% if ticket.status == "Closed" %}
+                                                <option value="Closed" selected>Closed</option>
+                                                {% else %}
+                                                <option value="Closed">Closed</option>
+                                                {% endif %}
+                                                {% if ticket.status == "Completed" %}
+                                                <option value="Completed" selected>Completed</option>
+                                                {% else %}
+                                                <option value="Completed">Completed</option>
+                                                {% endif %}
+                                                {% if ticket.status == "Postponed" %}
+                                                <option value="Postponed" selected>Postponed</option>
+                                                {% else %}
+                                                <option value="Postponed">Postponed</option>
+                                                {% endif %}
+                                                {% if ticket.status == "Waiting on Client" %}
+                                                <option value="Waiting on Client" selected>Waiting on Client</option>
+                                                {% else %}
+                                                <option value="Waiting on Client">Waiting on Client</option>
+                                                {% endif %}
+                                                {% if ticket.status == "Waiting on Vendor" %}
+                                                <option value="Waiting on Vendor" selected>Waiting on Vendor</option>
+                                                {% else %}
+                                                <option value="Waiting on Vendor">Waiting on Vendor</option>
+                                                {% endif %}
+                                                {% if ticket.status == "Follow-Up" %}
+                                                <option value="Follow-Up" selected>Follow-Up</option>
+                                                {% else %}
+                                                <option value="Follow-Up">Follow-Up</option>
+                                                {% endif %}
+                                                {% if ticket.status == "Need to Post" %}
+                                                <option value="Need to Post" selected>Need to Post</option>
+                                                {% else %}
+                                                <option value="Need to Post">Need to Post</option>
+                                                {% endif %}
+                                                {% if ticket.status == "Scheduled" %}
+                                                <option value="Scheduled" selected>Scheduled</option>
+                                                {% else %}
+                                                <option value="Scheduled">Scheduled</option>
+                                                {% endif %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div>
+                                            <label for="priority-field" class="form-label">Priority</label>
+                                            <select class="form-select" id="priority-field" name="priority">
+                                                {% if ticket.priority == "Medium" %}
+                                                <option value="Medium" selected>Medium</option>
+                                                {% else %}
+                                                <option value="Medium" selected>Medium</option>
+                                                {% endif %}
+                                                {% if ticket.priority == "Low" %}
+                                                <option value="Low" selected>Low</option>
+                                                {% else %}
+                                                <option value="Low">Low</option>
+                                                {% endif %}
+                                                {% if ticket.priority == "High" %}
+                                                <option value="High" selected>High</option>
+                                                {% else %}
+                                                <option value="High">High</option>
+                                                {% endif %}
+                                                {% if ticket.priority == "Emergency" %}
+                                                <option value="Emergency" selected>Emergency</option>
+                                                {% else %}
+                                                <option value="Emergency">Emergency</option>
+                                                {% endif %}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div><br></div>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="mb-3 mb-lg-0">
+                                            <label class="form-label">Ticket Description</label>
+                                                <textarea id="ckeditor-classic" class="form-control" name="description" 
+                                                id="ticket-thumbnail-img" value="{{ticket.description}}" type="text" 
+                                                rows="10" placeholder="">{{ticket.description}}
+                                            </textarea>
+                                                
+                                        </div>
                                     </div>
                                 </div>
 
-                                <ul class="list-unstyled mb-0" id="dropzone-preview">
-                                    <li class="mt-2" id="dropzone-preview-list">
-                                        <!-- This is used as the file preview template -->
-                                        <div class="border rounded">
-                                            <div class="d-flex p-2">
-                                                <div class="flex-shrink-0 me-3">
-                                                    <div class="avatar-sm bg-light rounded">
-                                                        <img src="#" alt="Ticket-Image" data-dz-thumbnail class="img-fluid rounded d-block" />
+                                    
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Attached files</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div>
+                                            <p class="text-muted">Add Attached files here.</p>
+
+                                            <div class="area">
+                                                <div id="create-ticket" class="fallback">
+                                                    <input name="file" type="file" class="area-input" multiple="multiple">
+                                                </div>
+                                                <div class="dz-message needsclick text-center">
+                                                    <div class="mb-3">
+                                                        <i class="display-4 text-muted ri-upload-cloud-2-fill"></i>
                                                     </div>
+
+                                                    <h5>Drop files here or click to upload.</h5>
+                                                </div>
+                                            </div>
+
+                                            <ul class="list-unstyled mb-0" id="dropzone-preview">
+                                                <li class="mt-2" id="dropzone-preview-list">
+                                                    <!-- This is used as the file preview template -->
+                                                    <div class="border rounded">
+                                                        <div class="d-flex p-2">
+                                                            <div class="flex-shrink-0 me-3">
+                                                                <div class="avatar-sm bg-light rounded">
+                                                                    <img src="#" alt="Ticket-Image" data-dz-thumbnail class="img-fluid rounded d-block" />
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <div class="pt-1">
+                                                                    <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                                                                    <div class="dz-success-mark"><span>✔</span></div>
+                                                                    <div class="dz-error-mark"><span>✘</span></div>
+                                                                    <h5 class="fs-14 mb-1" data-dz-name>&nbsp;</h5>
+                                                                    <p class="fs-13 text-muted mb-0" data-dz-size></p>
+                                                                    <strong class="error text-danger" data-dz-errormessage></strong>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex-shrink-0 ms-3">
+                                                                <button data-dz-remove class="btn btn-sm btn-danger">Delete</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                            <!-- end dropzon-preview -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="modal-footer">
+                                <div class="hstack gap-2 justify-content-end">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-success" id="add-btn">Add Ticket</button>
+                                </div>
+                            </div>
+                        </form>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Load Ticket Tab -->
+                    <div class="tab-pane fade" id="load-ticket-tab" role="tabpanel">
+                        <div class="p-3">
+                            <form id="loadTicketForm" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                
+                                <!-- File Upload Section -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">Attached files</label>
+                                    <div class="mb-3">
+                                        <label for="excel_file" class="form-label">Add Attached files here.</label>
+                                        <input type="file" class="form-control" id="excel_file" name="excel_file" accept=".xlsx,.xls" required style="display: none;">
+                                        <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('excel_file').click();">
+                                            Choose Files
+                                        </button>
+                                        <span id="file-name" class="ms-2 text-muted">No file chosen</span>
+                                    </div>
+                                    
+                                    <!-- Drag and Drop Area -->
+                                    <div id="drop-zone" class="border-2 border-dashed border-secondary rounded p-5 text-center" style="background-color: #f8f9fa; cursor: pointer;">
+                                        <div class="mb-3">
+                                            <i class="ri-cloud-upload-line" style="font-size: 4rem; color: #6c757d;"></i>
+                                        </div>
+                                        <h5 class="mb-2">Drop files here or click to upload</h5>
+                                        <p class="text-muted mb-0">Maximum file size: 250MB. Supported formats: .xlsx, .xls</p>
+                                    </div>
+                                    
+                                    <!-- File Preview -->
+                                    <div id="file-preview" class="mt-3" style="display: none;">
+                                        <div class="border rounded p-3 bg-light">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <i class="ri-file-excel-line text-success" style="font-size: 2rem;"></i>
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <div class="pt-1">
-                                                        <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
-                                                        <div class="dz-success-mark"><span>✔</span></div>
-                                                        <div class="dz-error-mark"><span>✘</span></div>
-                                                        <h5 class="fs-14 mb-1" data-dz-name>&nbsp;</h5>
-                                                        <p class="fs-13 text-muted mb-0" data-dz-size></p>
-                                                        <strong class="error text-danger" data-dz-errormessage></strong>
-                                                    </div>
+                                                    <h6 class="mb-1" id="preview-file-name">Ticket-Image</h6>
+                                                    <small class="text-muted" id="preview-file-size"></small>
                                                 </div>
-                                                <div class="flex-shrink-0 ms-3">
-                                                    <button data-dz-remove class="btn btn-sm btn-danger">Delete</button>
+                                                <div class="flex-shrink-0">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile()">
+                                                        <i class="ri-delete-bin-line"></i> Delete
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
-                                    </li>
-                                </ul>
-                                <!-- end dropzon-preview -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Excel Format Instructions -->
+                                <div class="alert alert-info">
+                                    <h6 class="fw-semibold">Required Excel Columns:</h6>
+                                    <ul class="mb-0">
+                                        <li><strong>name</strong> - Ticket name</li>
+                                        <li><strong>client</strong> - Client name (will be created if doesn't exist)</li>
+                                        <li><strong>technician</strong> - Assigned user (this is the assigned to field in ticket)</li>
+                                    </ul>
+                                    <hr class="my-2">
+                                    <h6 class="fw-semibold">Optional Columns:</h6>
+                                    <ul class="mb-0">
+                                        <li><strong>description</strong> - Ticket description</li>
+                                        <li><strong>due_date</strong> - Due date (YYYY-MM-DD format)</li>
+                                        <li><strong>ticket_type</strong> - Ticket type (Full Time, Part Time)</li>
+                                        <li><strong>status</strong> - Ticket status (New, In Progress, etc.)</li>
+                                        <li><strong>priority</strong> - Ticket priority (High, Medium, Low, Emergency)</li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Progress Bar -->
+                                <div id="uploadProgress" class="progress mb-3" style="display: none;">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                
+                                <!-- Result Message -->
+                                <div id="uploadResult" class="alert" style="display: none;"></div>
+                            </form>
+                            
+                            <div class="modal-footer">
+                                <div class="hstack gap-2 justify-content-end">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-success" id="uploadBtn" form="loadTicketForm">
+                                        <i class="ri-upload-line align-bottom me-1"></i> Upload & Create Tickets
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    
-                <div class="modal-footer">
-                    <div class="hstack gap-2 justify-content-end">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-success" id="add-btn">Add Ticket</button>
-                    </div>
                 </div>
-            </form>
-            {% endif %}
+            </div>
         </div>
     </div>
 </div>

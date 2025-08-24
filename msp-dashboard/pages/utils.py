@@ -131,24 +131,27 @@ def create_user_billing_session(role_id, user_email, user_name, current_user, fo
             })
         
         # Create checkout session
-        checkout_session = stripe.checkout.Session.create(
-            line_items=[{
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {
-                        'name': f'User Creation - {role_name}',
-                        'description': f'One-time charge for creating {user_name} as {role_name} ({tier_pricing["name"]} rate)',
+        try:
+            checkout_session = stripe.checkout.Session.create(
+                line_items=[{
+                    'price_data': {
+                        'currency': 'usd',
+                        'product_data': {
+                            'name': f'User Creation - {role_name}',
+                            'description': f'One-time charge for creating {user_name} as {role_name} ({tier_pricing["name"]} rate)',
+                        },
+                        'unit_amount': price,
                     },
-                    'unit_amount': price,
-                },
-                'quantity': 1,
-            }],
-            payment_method_types=['card'],
-            mode='payment',
-            success_url='https://rocket-command.com/pages/pages/profile-settings?session_id={CHECKOUT_SESSION_ID}&user_created=true',
-            cancel_url='https://rocket-command.com/pages/pages/profile-settings?cancelled=true',
-            metadata=metadata
-        )
+                    'quantity': 1,
+                }],
+                payment_method_types=['card'],
+                mode='payment',
+                success_url='http://localhost:8000/pages/pages/profile-settings?session_id={CHECKOUT_SESSION_ID}&user_created=true',
+                cancel_url='http://localhost:8000/pages/pages/profile-settings?cancelled=true',
+                metadata=metadata
+            )
+        except Exception as stripe_error:
+            return {"success": False, "error": f"Stripe error: {str(stripe_error)}"}
         
         return {
             "success": True,
@@ -226,12 +229,21 @@ def get_form_data_sets(users_data):
     Returns:
         zip: A zip object containing tuples of form data for each user.
     """
+    print(f"DEBUG: get_form_data_sets called with users_data: {users_data}")
+    print(f"DEBUG: first_name: {users_data.getlist('first_name')}")
+    print(f"DEBUG: last_name: {users_data.getlist('last_name')}")
+    print(f"DEBUG: email: {users_data.getlist('email')}")
+    print(f"DEBUG: client_id: {users_data.getlist('client_id')}")
+    print(f"DEBUG: role: {users_data.getlist('role')}")
+    print(f"DEBUG: phone: {users_data.getlist('phone')}")
+    print(f"DEBUG: title: {users_data.getlist('title')}")
+    print(f"DEBUG: password: {users_data.getlist('password')}")
 
     return zip(
         users_data.getlist("first_name"),
         users_data.getlist("last_name"),
         users_data.getlist("email"),
-        users_data.getlist("choices")
+        users_data.getlist("client_id")
         or ["" for _ in range(len(users_data.getlist("email")))],
         users_data.getlist("role"),
         users_data.getlist("phone"),
@@ -256,8 +268,20 @@ def create_user(form_data: list, current_user=None):
     (first_name, last_name, email, client_id, role, phone, title, password) = form_data
     role_id = int(role)
     
+    print(f"DEBUG: create_user - role_id: {role_id}, CLIENT_ROLE: {CLIENT_ROLE}")
+    
     # Check if billing is required (not a client)
-    if role_id != CLIENT_ROLE:
+    # Get the actual Client group ID from the database
+    from django.contrib.auth.models import Group
+    try:
+        client_group = Group.objects.get(name='Client')
+        client_group_id = client_group.id
+        print(f"DEBUG: Client group ID from database: {client_group_id}")
+    except Group.DoesNotExist:
+        client_group_id = CLIENT_ROLE  # Fallback to hardcoded value
+        print(f"DEBUG: Client group not found, using fallback ID: {client_group_id}")
+    
+    if role_id != client_group_id:
         # Create billing session for non-client roles
         user_name = f"{first_name} {last_name}".strip()
         
@@ -289,7 +313,9 @@ def create_user_without_billing(form_data: list):
     """
     Create a user without billing (for clients or after payment is completed).
     """
+    print(f"DEBUG: create_user_without_billing called with form_data: {form_data}")
     (first_name, last_name, email, client_id, role, phone, title, password) = form_data
+    print(f"DEBUG: Parsed data - first_name: {first_name}, last_name: {last_name}, email: {email}, client_id: {client_id}, role: {role}")
     # Generate username from email, first name and lastname
     username = generate_unique_username(get_base_user_str(email, first_name, last_name))
     form_data = {
@@ -314,15 +340,19 @@ def create_user_without_billing(form_data: list):
             else:
                 tech_user = UserManager.create_technician_user(user)
                 if tech_user:
-                    dict_role_choice = dict(ROLE_CHOICES)
-                    print(dict_role_choice)
-                    role = dict_role_choice.get(int(role))
-                    print(role)
-                    group = Group.objects.get(name=role)
-                    user.groups.add(group.pk)
+                    # Use the role ID directly to get the group instead of trying to match by name
+                    try:
+                        group = Group.objects.get(id=int(role))
+                        user.groups.add(group)
+                    except Group.DoesNotExist:
+                        print(f"Group with ID {role} not found")
+                        return False, f"Role with ID {role} not found"
 
     except Exception as e:
         print("False returned, didn't save")
+        print(f"DEBUG: Exception details: {str(e)}")
+        import traceback
+        print(f"DEBUG: Full traceback: {traceback.format_exc()}")
         return False, str(e)
 
     return True, ""
@@ -371,15 +401,17 @@ def process_form_data_sets(form_data_sets, current_user=None):
 
     for form_data in form_data_sets:
         result = create_user(form_data, current_user)
+
         
         if isinstance(result, tuple):
-            is_success, error = result
-            if not is_success:
-                unsuccessful_creations += 1
-                error_message += error
-        elif result == "billing_required":
-            # This is a billing requirement, not an error
-            billing_sessions.append(error)  # error contains the billing result
+            if result[0] == "billing_required":
+                # This is a billing requirement, not an error
+                billing_sessions.append(result[1])  # result[1] contains the billing result
+            else:
+                is_success, error = result
+                if not is_success:
+                    unsuccessful_creations += 1
+                    error_message += error
         else:
             # Handle billing result
             billing_sessions.append(result)
@@ -407,6 +439,10 @@ def get_context_data(user):
         dict: A dictionary containing the context data for rendering the profile settings page.
     """
     context = {"user": user, "webviews": WebviewIntegrations.objects.filter(user=user)}
+    
+    # Add company subscription tier (default to starter)
+    context["company_subscription_tier"] = "starter"
+    
     if user.is_superuser:
         # Only an admin can create users, we need to fetch clients only for user creation
         context["clients"] = list(ClientCompany.objects.all().values("name", "id"))
@@ -415,15 +451,35 @@ def get_context_data(user):
         from accounts.models import MSPAuthUser, TechnicianUser
         from apps.models import ClientUser
         
-        # Get all non-client users (technicians, admins, etc.)
-        non_client_users = MSPAuthUser.objects.filter(
-            technician__isnull=False
-        ).select_related('technician').prefetch_related('groups')
+        # Get the Client group ID
+        from django.contrib.auth.models import Group
+        try:
+            client_group = Group.objects.get(name='Client')
+            client_group_id = client_group.id
+        except Group.DoesNotExist:
+            client_group_id = None
         
-        # Get all client users
-        client_users = MSPAuthUser.objects.filter(
-            client__isnull=False
-        ).select_related('client').prefetch_related('groups')
+        # Get all non-client users (users not in Client group)
+        if client_group_id:
+            non_client_users = MSPAuthUser.objects.exclude(
+                groups__id=client_group_id
+            ).prefetch_related('groups')
+        else:
+            # Fallback: get users with technician profiles
+            non_client_users = MSPAuthUser.objects.filter(
+                technician__isnull=False
+            ).select_related('technician').prefetch_related('groups')
+        
+        # Get all client users (users in Client group)
+        if client_group_id:
+            client_users = MSPAuthUser.objects.filter(
+                groups__id=client_group_id
+            ).prefetch_related('groups')
+        else:
+            # Fallback: get users with client profiles
+            client_users = MSPAuthUser.objects.filter(
+                client__isnull=False
+            ).select_related('client').prefetch_related('groups')
         
         context["non_client_users"] = non_client_users
         context["client_users"] = client_users
