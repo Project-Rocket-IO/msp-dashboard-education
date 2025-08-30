@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django_tenants.utils import get_tenant
 from social_core.backends.azuread import AzureADOAuth2
 from social_core.exceptions import AuthException
+from django_tenants.utils import tenant_context
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,12 +21,27 @@ class TenantAwareAzureADOAuth2(AzureADOAuth2):
     def get_tenant_config(self):
         """Get Entra ID configuration from the current tenant"""
         try:
-            tenant = get_tenant()
+            # Get tenant from request
+            if not hasattr(self, 'request') or not self.request:
+                raise AuthException(self, "Request not available")
+            
+            tenant = getattr(self.request, 'tenant', None)
+            if not tenant:
+                raise AuthException(self, "No tenant found in request")
+            
+            # Check if Entra ID is enabled for this tenant
             if not tenant.enable_entra_id_auth:
                 raise AuthException(self, "Entra ID authentication is not enabled for this tenant")
             
-            if not all([tenant.entra_id_tenant_id, tenant.entra_id_client_id, tenant.entra_id_client_secret]):
-                raise AuthException(self, "Entra ID configuration is incomplete for this tenant")
+            # Check if all required fields are configured
+            if not tenant.entra_id_tenant_id:
+                raise AuthException(self, "Entra ID Tenant ID is not configured for this tenant")
+            
+            if not tenant.entra_id_client_id:
+                raise AuthException(self, "Entra ID Client ID is not configured for this tenant")
+            
+            if not tenant.entra_id_client_secret:
+                raise AuthException(self, "Entra ID Client Secret is not configured for this tenant")
             
             return {
                 'key': tenant.entra_id_client_id,

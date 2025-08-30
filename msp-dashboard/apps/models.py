@@ -1001,7 +1001,7 @@ class TechnicianLabor(models.Model):
     minutes = models.BigIntegerField(default=0)
     is_tracked = models.BooleanField(default=False)
     created_by = models.ForeignKey(TechnicianUser, on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(default=timezone.now)
     comment = models.TextField(blank=True, null=True)
     # intervals = models.CharField(max_length=75, choices=LABOR_INTERVAL)
 

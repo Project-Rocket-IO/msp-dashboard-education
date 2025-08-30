@@ -26,7 +26,7 @@
                     <!-- Create Ticket Tab -->
                     <div class="tab-pane fade show active" id="create-ticket-tab" role="tabpanel">
                         {% if perms.apps.add_ticketlist %}
-                        <form action="{% url 'apps:tickets.create' %}" enctype="multipart/form-data" class="dropzone needs-validation" id="createTicketDropzone" novalidate>
+                        <form action="{% url 'apps:tickets.create' %}" method="POST" enctype="multipart/form-data" class="dropzone needs-validation" id="createTicketDropzone" novalidate>
                             {% csrf_token %}
                             {{ form.media }}
                             {{ form.as_p }}
@@ -246,7 +246,9 @@
                                                                 </div>
                                                             </div>
                                                             <div class="flex-shrink-0 ms-3">
-                                                                <button data-dz-remove class="btn btn-sm btn-danger">Delete</button>
+                                                                <button data-dz-remove class="btn btn-sm btn-link text-danger p-0" style="border: none; background: none;">
+                                                                    <i class="ri-close-line fs-5"></i>
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>

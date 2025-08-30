@@ -23,7 +23,7 @@ if DIGITAL_OCEAN_EXTERNAL_HOSTNAME:
 
 # CSRF_TRUSTED_ORIGINS in .env will be a string of comma separated values
 CSRF_TRUSTED_ORIGINS = os.environ.get(
-    "CSRF_TRUSTED_ORIGINS", "http://127.0.0.1:8000,http://157.230.230.23"
+    "CSRF_TRUSTED_ORIGINS", "http://127.0.0.1:8000,http://138.197.78.59"
 ).split(
     ","
 )  # Split by comma

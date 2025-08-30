@@ -194,6 +194,35 @@
                                                         </div>
                                                     </td>
                                                 </tr>
+                                                {% empty %}
+                                                <tr class="no-tickets-placeholder">
+                                                    <th scope="row">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="checkAll" value="option1" disabled>
+                                                        </div>
+                                                    </th>
+                                                    <td class="id">-</td>
+                                                    <td class="tasks_name">-</td>
+                                                    <td class="description">-</td>
+                                                    <td class="client">-</td>
+                                                    <td class="assignment">-</td>
+                                                    <td class="create_date">-</td>
+                                                    <td class="due_date">-</td>
+                                                    <td class="status">-</td>
+                                                    <td class="priority">-</td>
+                                                    <td class="text-center">
+                                                        <div class="text-muted">
+                                                            <i class="ri-inbox-line fs-1 d-block mb-2"></i>
+                                                            <h5>No tickets found</h5>
+                                                            <p class="mb-0">Get started by creating your first ticket.</p>
+                                                            {% if perms.apps.add_ticketlist %}
+                                                            <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#showModal">
+                                                                <i class="ri-add-line align-bottom me-1"></i> Create Ticket
+                                                            </button>
+                                                            {% endif %}
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                                 {% endfor %}
                                             </tbody>
                                         </table>                                        
@@ -376,6 +405,30 @@
                                                                         class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
                                                                     Delete</a></li>
                                                                 </ul>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    {% empty %}
+                                                    <tr class="no-tickets-placeholder">
+                                                        <th scope="row">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="checkAll" value="option1" disabled>
+                                                            </div>
+                                                        </th>
+                                                        <td class="id">-</td>
+                                                        <td class="tasks_name">-</td>
+                                                        <td class="description">-</td>
+                                                        <td class="client">-</td>
+                                                        <td class="assignment">-</td>
+                                                        <td class="create_date">-</td>
+                                                        <td class="due_date">-</td>
+                                                        <td class="status">-</td>
+                                                        <td class="priority">-</td>
+                                                        <td class="text-center">
+                                                            <div class="text-muted">
+                                                                <i class="ri-close-circle-line fs-1 d-block mb-2"></i>
+                                                                <h5>No closed tickets</h5>
+                                                                <p class="mb-0">Closed tickets will appear here.</p>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -566,6 +619,30 @@
                                                                     class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
                                                                 Delete</a></li>
                                                             </ul>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% empty %}
+                                                <tr class="no-tickets-placeholder">
+                                                    <th scope="row">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="checkAll" value="option1" disabled>
+                                                        </div>
+                                                    </th>
+                                                    <td class="id">-</td>
+                                                    <td class="tasks_name">-</td>
+                                                    <td class="description">-</td>
+                                                    <td class="client">-</td>
+                                                    <td class="assignment">-</td>
+                                                    <td class="create_date">-</td>
+                                                    <td class="due_date">-</td>
+                                                    <td class="status">-</td>
+                                                    <td class="priority">-</td>
+                                                    <td class="text-center">
+                                                        <div class="text-muted">
+                                                            <i class="ri-check-double-line fs-1 d-block mb-2"></i>
+                                                            <h5>No completed tickets</h5>
+                                                            <p class="mb-0">Completed tickets will appear here.</p>
                                                         </div>
                                                     </td>
                                                 </tr>

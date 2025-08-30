@@ -1,5 +1,6 @@
 # Python Imports
 from datetime import datetime, timezone
+from django.utils import timezone as django_timezone
 # Django imports
 from django.shortcuts import get_object_or_404
 
@@ -12,12 +13,12 @@ def active_entry(request):
         
         if untracked_labor:
             active_entry = untracked_labor.first()
-            active_entry.seconds_since = int((datetime.now(timezone.utc) - active_entry.created_at).total_seconds())
+            active_entry.seconds_since = int((django_timezone.now() - active_entry.created_at).total_seconds())
             
             return {'active_entry_seconds':active_entry.seconds_since,
                     'start_time':active_entry.created_at.isoformat()}
 
-    return {'active_entry_seconds':0, 'start_time':datetime.now().isoformat()}
+    return {'active_entry_seconds':0, 'start_time':django_timezone.now().isoformat()}
 
 def integrations(request):
     if request.user.is_authenticated:

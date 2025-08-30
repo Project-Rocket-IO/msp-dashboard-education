@@ -10,6 +10,7 @@ from apps.models import TicketList, TechnicianLabor, get_tickets_worked_on, Proj
 
 from collections import defaultdict
 from datetime import datetime, timedelta
+from django.utils import timezone as django_timezone
 from json import dumps
 
 
@@ -196,7 +197,7 @@ def prepare_heatmap_data_weekly(tech_labor, start_date, end_date):
     # only for weekly view
     if count < 7:
         # Ensure the entire week is filled regardless of data
-        start_date = datetime.now() - timedelta(days=6) 
+        start_date = django_timezone.now() - timedelta(days=6) 
 
         # Loop through the entire week (7 days)
         for i in range(7):
@@ -228,7 +229,7 @@ def prepare_heatmap_data_daily(tech_labor, start_date, end_date):
         print('only in daily view')
         print(start_date, end_date)
         # It should only be for daily view
-        date = datetime.now().strftime("%Y-%m-%d")
+        date = django_timezone.now().strftime("%Y-%m-%d")
         data[date]['date'] = date
         return list(data.values())
 

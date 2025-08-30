@@ -50,8 +50,7 @@ COPY . .
 RUN mkdir -p ./media/public/images/default/users/
 RUN mkdir -p /var/log/django
 
-# Copy default media files
-COPY ./media/public/images/default/users/ ./media/public/images/default/users/
+# Default media files will be created at runtime if needed
 
 # Expose port 8000
 EXPOSE 8000

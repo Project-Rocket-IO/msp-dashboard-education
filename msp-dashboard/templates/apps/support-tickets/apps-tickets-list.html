@@ -85,8 +85,80 @@
     <!-- Sweet Alerts js -->
     <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
 
+    <!-- Define URLs for ticket creation JavaScript -->
+    <script>
+        var ticketCreateURL = "{% url 'apps:tickets.create' %}";
+        var ticketListURL = "{% url 'apps:tickets.list' %}";
+    </script>
+
     <!-- ticket init js -->
     <script src="{% static 'js/pages/ticketlist.init.js' %}"></script>
+
+    <!-- Simple ticket creation script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const submitButton = document.querySelector("#add-btn");
+            if (submitButton) {
+                submitButton.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    console.log("Create ticket button clicked");
+                    
+                    const form = document.getElementById("createTicketDropzone");
+                    if (form) {
+                        console.log("Form found, submitting...");
+                        
+                        // Validate form before submission
+                        if (form.checkValidity()) {
+                            // Submit form normally (will redirect to ticket list)
+                            form.submit();
+                        } else {
+                            // Show validation errors
+                            form.classList.add('was-validated');
+                            console.log("Form validation failed");
+                        }
+                    } else {
+                        console.error("Form not found");
+                    }
+                });
+            }
+            
+            // Initialize dropzone functionality
+            if (typeof Dropzone !== 'undefined') {
+                const dropzoneElement = document.querySelector('.dropzone');
+                if (dropzoneElement) {
+                    // Disable auto processing to prevent automatic uploads
+                    Dropzone.autoDiscover = false;
+                    
+                    const dropzone = new Dropzone('.dropzone', {
+                        url: '#', // We don't want to upload immediately
+                        autoProcessQueue: false,
+                        uploadMultiple: true,
+                        parallelUploads: 10,
+                        maxFiles: 10,
+                        addRemoveLinks: true,
+                        maxFilesize: 5, // 5MB
+                        acceptedFiles: 'image/*,.pdf,.doc,.docx,.txt',
+                        clickable: true,
+                        previewTemplate: document.querySelector('#dropzone-preview-list').innerHTML,
+                        previewsContainer: '#dropzone-preview',
+                        init: function() {
+                            this.on("addedfile", function(file) {
+                                console.log("File added:", file.name);
+                            });
+                            
+                            this.on("removedfile", function(file) {
+                                console.log("File removed:", file.name);
+                            });
+                            
+                            this.on("error", function(file, errorMessage) {
+                                console.error("Upload error:", errorMessage);
+                            });
+                        }
+                    });
+                }
+            }
+        });
+    </script>
 
     <!-- Load Ticket functionality - runs after all other scripts -->
     <script>

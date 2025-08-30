@@ -127,8 +127,8 @@ services:
       --email ${CERTBOT_EMAIL}
       --agree-tos
       --no-eff-email
-      -d rocket-command.com
-      -d '*.rocket-command.com'
+      -d rocket-education.com
+      -d '*.rocket-education.com'
 
   certbot-renew:
     image: certbot/dns-cloudflare

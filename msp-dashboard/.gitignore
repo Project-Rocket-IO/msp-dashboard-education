@@ -58,6 +58,8 @@ env
 
 # Media folders
 media
+# But allow default user images
+!media/public/images/default/users/
 
 # Node modules
 node_modules

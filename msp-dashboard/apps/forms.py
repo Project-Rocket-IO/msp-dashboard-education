@@ -173,9 +173,24 @@ class ProjectCommentAddForm(forms.ModelForm):
 
 
 class TechnicianLaborAddForm(forms.ModelForm):
+    created_at = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'text', 'data-provider': 'flatpickr', 'data-date-format': 'Y-m-d'}),
+        help_text="Select the date when the work was performed"
+    )
+    
     class Meta:
         model = TechnicianLabor
         fields = ["minutes", "created_at", "comment", "created_by"]
+    
+    def clean_created_at(self):
+        date_value = self.cleaned_data.get('created_at')
+        if date_value:
+            # Convert date to timezone-aware datetime
+            from django.utils import timezone
+            from datetime import datetime
+            # Create a datetime at midnight in the current timezone
+            return timezone.make_aware(datetime.combine(date_value, datetime.min.time()))
+        return date_value
 
 
 class WebviewIntegrationsAddForm(forms.ModelForm):

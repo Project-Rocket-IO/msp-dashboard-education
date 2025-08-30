@@ -376,15 +376,13 @@ def apps_tickets_create_view(request):
                     file.name = file.name[:100]  # Truncate filename if necessary
                     TicketFiles.objects.create(file=file, ticket=ticket)
             messages.success(request, "Ticket Created!")
-            return JsonResponse({"message": "Ticket created successfully!"}, status=201)
+            return redirect("apps:tickets.list")
         else:
             messages.error(request, "Something went wrong!")
             print(form.errors)
-            return JsonResponse(
-                {"message": "Something went wrong!", "errors": form.errors}, status=400
-            )
+            return redirect("apps:tickets.list")
 
-    return redirect("apps.tickets.list")
+    return redirect("apps:tickets.list")
 
 
 @has_permission("apps.close_ticketlist")
