@@ -52,26 +52,14 @@ TAG_CHOICES = (
 
 COUNTRY_CHOICES = (("United States", "United States"), ("Canada", "Canada"))
 
-INDUSTRY_TYPE = (
-    ("", "Select industry type"),
-    ("Agriculture", "Agriculture"),
-    ("Construction", "Construction"),
-    ("Education", "Education"),
-    ("Entertainment", "Entertainment"),
-    ("Finance & Insurance", "Finance &  Insurance"),
-    ("Healthcare", "Healthcare"),
-    ("Higher Education", "Higher  Education"),
-    ("Hospitality", "Hospitality"),
-    ("Information Technology", "Information  Technology"),
-    ("Manufacturing", "Manufacturing"),
-    ("Nonprofit", "Nonprofit"),
-    ("Professional Services", "Professional  Services"),
-    ("Real Estate", "Real  Estate"),
-    ("Retail", "Retail"),
-    ("Telecommunications", "Telecommunications"),
-    ("Transportation", "Transportation"),
-    ("Utilities", "Utilities"),
-    ("Wholesale", "Wholesale"),
+GRADE_LEVEL = (
+    ("", "Select grade level"),
+    ("9th", "9th"),
+    ("10th", "10th"),
+    ("11th", "11th"),
+    ("12th", "12th"),
+    ("Teacher", "Teacher"),
+    ("Administration", "Administration"),
 )
 
 STATUS_CHOICE = (
@@ -688,9 +676,10 @@ class ClientCompany(MyBaseModel, models.Model):
     name = models.CharField(max_length=150)
     contact_first = models.CharField(max_length=50)
     contact_last = models.CharField(max_length=50)
-    industry = models.CharField(
-        max_length=50, choices=INDUSTRY_TYPE, blank=True, null=True
+    grade_level = models.CharField(
+        max_length=50, choices=GRADE_LEVEL, blank=True, null=True
     )
+    house = models.CharField(max_length=100, blank=True, null=True)
     website = models.URLField(max_length=150, blank=True, null=True)
     date_added = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -938,8 +927,8 @@ class LeadCompany(MyBaseModel, models.Model):
     name = models.CharField(max_length=150)
     contact_first = models.CharField(max_length=50)
     contact_last = models.CharField(max_length=50)
-    industry = models.CharField(
-        max_length=50, choices=INDUSTRY_TYPE, blank=True, null=True
+    grade_level = models.CharField(
+        max_length=50, choices=GRADE_LEVEL, blank=True, null=True
     )
     website = models.URLField(max_length=150, blank=True, null=True)
     date_added = models.DateTimeField(auto_now_add=True)

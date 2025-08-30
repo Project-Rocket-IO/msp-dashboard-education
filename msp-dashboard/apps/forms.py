@@ -52,28 +52,65 @@ class CleanPhoneFaxParent:
 class LeadCompanyAddForm(forms.ModelForm, CleanPhoneFaxParent):
     class Meta:
         model = LeadCompany
-        fields = "__all__"
+        fields = [
+            "logo",
+            "name",
+            "contact_first",
+            "contact_last",
+            "grade_level",
+            "website",
+            "email",
+            "score",
+            "assignment"
+        ]
 
 
 class LeadCompanyUpdateForm(forms.ModelForm, CleanPhoneFaxParent):
     class Meta:
         model = LeadCompany
-        fields = "__all__"
+        fields = [
+            "logo",
+            "name",
+            "contact_first",
+            "contact_last",
+            "grade_level",
+            "website",
+            "email",
+            "score",
+            "assignment"
+        ]
 
 
 class ClientCompanyAddForm(forms.ModelForm, CleanPhoneFaxParent):
     class Meta:
         model = ClientCompany
         exclude = ["threshold"]
-        fields = "__all__"
+        fields = [
+            "logo",
+            "contact_first",
+            "contact_last",
+            "grade_level",
+            "house",
+            "email",
+            "main_tech",
+            "phone"
+        ]
 
 
 class ClientCompanyUpdateForm(forms.ModelForm, CleanPhoneFaxParent):
 
     class Meta:
         model = ClientCompany
-        fields = "__all__"
         exclude = ["main_tech", "threshold"]
+        fields = [
+            "logo",
+            "contact_first",
+            "contact_last",
+            "grade_level",
+            "house",
+            "email",
+            "phone"
+        ]
 
 
 class ClientLocationsAddForm(forms.ModelForm):

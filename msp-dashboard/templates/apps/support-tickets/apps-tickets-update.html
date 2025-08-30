@@ -88,7 +88,7 @@
                                                     </div>
                                                     <div class="col-lg-4">
                                                         <div class="mb-3 mb-lg-0">
-                                                            <label for="choices-text-input" class="form-label">Client Name<span class="required-asterix">*</span></label>
+                                                            <label for="choices-text-input" class="form-label">User<span class="required-asterix">*</span></label>
                                                             <select class="form-select" data-choices data-choices-search-true
                                                                 id="client" name="client" id="client_list" value="{{client.name}}" required>
                                                                     {% for client in clients %}
@@ -100,7 +100,7 @@
                                                                     {% endfor %}
                                                                     <option value="">None</option>
                                                                 </select>
-                                                            <div class="invalid-feedback">Please set Client Name</div>
+                                                            <div class="invalid-feedback">Please set User Name</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -129,11 +129,11 @@
                                                                 {% else %}
                                                                 <option value="Postponed">Postponed</option>
                                                                 {% endif %}
-                                                                {% if tickets.status == "Waiting on Client" %}
-                                                                <option value="Waiting on Client" selected>Waiting on Client</option>
-                                                                {% else %}
-                                                                <option value="Waiting on Client">Waiting on Client</option>
-                                                                {% endif %}
+                                                                                                    {% if tickets.status == "Waiting on Client" %}
+                                    <option value="Waiting on Client" selected>Waiting on User</option>
+                                    {% else %}
+                                    <option value="Waiting on Client">Waiting on User</option>
+                                    {% endif %}
                                                                 {% if tickets.status == "Waiting on Vendor" %}
                                                                 <option value="Waiting on Vendor" selected>Waiting on Vendor</option>
                                                                 {% else %}
@@ -497,7 +497,7 @@
                                                         <td>{{tickets.name}}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td class="fw-medium">Client</td>
+                                                        <td class="fw-medium">User</td>
                                                         {% if tickets.client.name %}
                                                         <td>{{tickets.client.name}}</td>
                                                         {% else %}
@@ -533,8 +533,8 @@
                                                             <span class="badge badge-soft-primary text-uppercase">New</span>
                                                             {% elif tickets.status == "Postponed" %}
                                                             <span class="badge badge-soft-dark text-uppercase">Postponed</span>
-                                                            {% elif tickets.status == "Waiting on Client" %}
-                                                            <span class="badge badge-soft-light text-uppercase">Waiting on Client</span>
+                                                                                                                    {% elif tickets.status == "Waiting on Client" %}
+                                                        <span class="badge badge-soft-light text-uppercase">Waiting on User</span>
                                                             {% elif tickets.status == "Waiting on Vendor" %}
                                                             <span class="badge badge-soft-light text-uppercase">Waiting on Vendor</span>
                                                             {% elif tickets.status == "Follow-Up" %}

@@ -51,7 +51,7 @@
                                                                 {% elif tickets.status == "Postponed" %}
                                                                 <span class="badge badge-soft-dark text-uppercase">Postponed</span>
                                                                 {% elif tickets.status == "Waiting on Client" %}
-                                                                <span class="badge badge-soft-light text-uppercase">Waiting on Client</span>
+                                                                <span class="badge badge-soft-light text-uppercase">Waiting on User</span>
                                                                 {% elif tickets.status == "Waiting on Vendor" %}
                                                                 <span class="badge badge-soft-light text-uppercase">Waiting on Vendor</span>
                                                                 {% elif tickets.status == "Follow-Up" %}
@@ -282,7 +282,7 @@
                                                         <td>{{tickets.pk | add:1000}}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td class="fw-medium">Client</td>
+                                                        <td class="fw-medium">User</td>
                                                         {% if tickets.client %}
                                                         <td>
                                                             <button class="btn btn-light" onclick="location.href = '{% url 'apps:client.details' tickets.client.pk %}';">{{ tickets.client.name }}</button>
@@ -331,7 +331,7 @@
                                                             {% elif tickets.status == "Postponed" %}
                                                             <span class="badge badge-soft-dark text-uppercase">Postponed</span>
                                                             {% elif tickets.status == "Waiting on Client" %}
-                                                            <span class="badge badge-soft-light text-uppercase">Waiting on Client</span>
+                                                            <span class="badge badge-soft-light text-uppercase">Waiting on User</span>
                                                             {% elif tickets.status == "Waiting on Vendor" %}
                                                             <span class="badge badge-soft-light text-uppercase">Waiting on Vendor</span>
                                                             {% elif tickets.status == "Follow-Up" %}

@@ -26,12 +26,6 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link fw-semibold {% if active_tab == 'completed' %}active{% endif %}" 
-                    data-bs-toggle="tab" href="#completed-tickets" role="tab">
-                        Completed Tickets
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link fw-semibold {% if active_tab == 'closed' %}active{% endif %}" 
                        data-bs-toggle="tab" href="#closed-tickets">
                         Closed Tickets
@@ -92,7 +86,7 @@
                                                     <th class="sort" data-sort="id">ID</th>
                                                     <th class="sort" data-sort="tasks_name">Name</th>
                                                     <th class="sort" data-sort="description">Description</th>
-                                                    <th class="sort" data-sort="client_name">Client</th>
+                                                    <th class="sort" data-sort="client_name">User</th>
                                                     <th class="sort" data-sort="assignedto">Assigned To</th>
                                                     <th class="sort" data-sort="create_date">Create Date</th>
                                                     <th class="sort" data-sort="due_date">Due Date</th>
@@ -151,7 +145,7 @@
                                                         {% elif ticket.status == "Completed" %}
                                                         <span class="badge badge-soft-success text-uppercase">Completed</span>
                                                         {% elif ticket.status == "Waiting on Client" %}
-                                                        <span class="badge badge-soft-light text-uppercase">Waiting on Client</span>
+                                                        <span class="badge badge-soft-light text-uppercase">Waiting on User</span>
                                                         {% elif ticket.status == "Waiting on Vendor" %}
                                                         <span class="badge badge-soft-light text-uppercase">Waiting on Vendor</span>
                                                         {% elif ticket.status == "Follow-Up" %}
@@ -219,7 +213,7 @@
                                                             <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#showModal">
                                                                 <i class="ri-add-line align-bottom me-1"></i> Create Ticket
                                                             </button>
-                                                            {% endif %}
+                                                                {% endif %}
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -312,7 +306,7 @@
                                                         <th class="sort" data-sort="id">ID</th>
                                                         <th class="sort" data-sort="tasks_name">Name</th>
                                                         <th class="sort" data-sort="description">Description</th>
-                                                        <th class="sort" data-sort="client_name">Client</th>
+                                                        <th class="sort" data-sort="client_name">User</th>
                                                         <th class="sort" data-sort="assignedto">Assigned To</th>
                                                         <th class="sort" data-sort="create_date">Create Date</th>
                                                         <th class="sort" data-sort="due_date">Due Date</th>
@@ -369,7 +363,7 @@
                                                             {% elif ticket.status == "Postponed" %}
                                                             <span class="badge badge-soft-dark text-uppercase">Postponed</span>
                                                             {% elif ticket.status == "Waiting on Client" %}
-                                                            <span class="badge badge-soft-light text-uppercase">Waiting on Client</span>
+                                                        <span class="badge badge-soft-light text-uppercase">Waiting on User</span>
                                                             {% elif ticket.status == "Waiting on Vendor" %}
                                                             <span class="badge badge-soft-light text-uppercase">Waiting on Vendor</span>
                                                             {% elif ticket.status == "Follow-Up" %}
@@ -509,213 +503,8 @@
                                     </div>
                                  </div>
 
-                                <!-- Completed Tickets Table -->
-                                <div class="tab-pane {% if active_tab == 'completed' %}show active{% endif %}" 
-                                id="completed-tickets" role="tabpanel">
-                                    <div class="table-responsive table-card mb-4" style="overflow-y: scroll;">
-                                        <table class="table align-middle table-nowrap mb-3" id="ticketTable">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col" style="width: 40px;">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" id="checkAll" value="option">
-                                                        </div>
-                                                    </th>
-                                                    <th class="sort" data-sort="id">ID</th>
-                                                    <th class="sort" data-sort="tasks_name">Name</th>
-                                                    <th class="sort" data-sort="description">Description</th>
-                                                    <th class="sort" data-sort="client_name">Client</th>
-                                                    <th class="sort" data-sort="assignedto">Assigned To</th>
-                                                    <th class="sort" data-sort="create_date">Create Date</th>
-                                                    <th class="sort" data-sort="due_date">Due Date</th>
-                                                    <th class="sort" data-sort="status">Status</th>
-                                                    <th class="sort" data-sort="priority">Priority</th>
-                                                    <th class="sort" data-sort="action">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="list form-check-all" id="ticket-list-data">
-                                                {% for ticket in completed_tickets %}
-                                                <tr>
-                                                    <th scope="row">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" name="checkAll" value="option1">
-                                                        </div>
-                                                    </th>
-                                                    <td class="id">
-                                                        <button class="btn btn-light" onclick="location.href = '{% url 'apps:tickets.details' ticket.pk %}';" onclick="ViewTickets(this)" data-id="001" class="fw-medium link-primary">{{ ticket.pk | add:1000 }}</button>
-                                                    </td>
-                                                    <td class="tasks_name">
-                                                        <button class="btn btn-light" onclick="location.href = '{% url 'apps:tickets.details' ticket.pk %}';" onclick="ViewTickets(this)" data-id="001" class="fw-medium link-primary">{{ ticket.name }}</button>
-                                                    </td>
-                                                    {% if ticket.description %}
-                                                    <td class="description">{{ticket.description|striptags|safe|truncatechars:25}}</td>
-                                                    {% else %}
-                                                    <td class="description">None</td>
-                                                    {% endif %}
-                                                    {% if ticket.client %}
-                                                    <td class="client">
-                                                        <button class="btn btn-light" onclick="location.href = '{% url 'apps:client.details' ticket.client.pk %}';">{{ ticket.client.name }}</button>
-                                                    </td>
-                                                    {% else %}
-                                                    <td>None</td>
-                                                    {% endif %}
-                                                    <td class="assignment">
-                                                        {% for tech in ticket.assignment.all %}
-                                                        <button class="btn btn-light" onclick="location.href =#userProfileCanvasExample{{tech.pk}}" class="avatar-group-item" data-bs-toggle="offcanvas" data-bs-trigger="hover"
-                                                data-bs-target="#userProfileCanvasExample{{tech.pk}}" aria-controls="userProfileCanvasExample{{tech.pk}}" title={{tech.username}}>
-                                                                        {{tech.username }}
-                                                            </button>                                                        
-                                                        {% empty %}
-                                                        <p>No User Attached</p>
-                                                    {% endfor %}
-                                                    </td>
-                                                    <td class="create_date">{{ ticket.create_date|date:"d M, Y" }}</td>
-                                                    <td class="due_date">{{ ticket.due_date|date:"d M, Y" }}</td>
-                                                    <td class="status">
-                                                        {% if ticket.status == "Closed" %}
-                                                        <span class="badge badge-soft-danger text-uppercase">Closed</span>
-                                                        {% elif ticket.status == "In Progress" %}
-                                                        <span class="badge badge-soft-info text-uppercase">In Progress</span>
-                                                        {% elif ticket.status == "New" %}
-                                                        <span class="badge badge-soft-primary text-uppercase">New</span>
-                                                        {% elif ticket.status == "Postponed" %}
-                                                        <span class="badge badge-soft-dark text-uppercase">Postponed</span>
-                                                        {% elif ticket.status == "Completed" %}
-                                                        <span class="badge badge-soft-success text-uppercase">Completed</span>
-                                                        {% elif ticket.status == "Waiting on Client" %}
-                                                        <span class="badge badge-soft-dark text-uppercase">Waiting on Client</span>
-                                                        {% elif ticket.status == "Waiting on Vendor" %}
-                                                        <span class="badge badge-soft-dark text-uppercase">Waiting on Vendor</span>
-                                                        {% elif ticket.status == "Follow-Up" %}
-                                                        <span class="badge badge-soft-secondary text-uppercase">Follow-Up</span>
-                                                        {% elif ticket.status == "Need to Post" %}
-                                                        <span class="badge badge-soft-secondary text-uppercase">Need to Post</span>
-                                                        {% elif ticket.status == "Scheduled" %}
-                                                        <span class="badge badge-soft-success text-uppercase">Scheduled</span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td class="priority">
-                                                        {% if ticket.priority == "Emergency" %}
-                                                        <span class="badge badge-pill bg-danger text-uppercase">Emergency</span>
-                                                        {% elif ticket.priority == "High" %}
-                                                        <span class="badge bg-danger text-uppercase">High</span>
-                                                        {% elif ticket.priority == "Low" %}
-                                                        <span class="badge bg-info text-uppercase">Low</span>
-                                                        {% elif ticket.priority == "Medium" %}
-                                                        <span class="badge bg-warning text-uppercase">Medium</span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        <div class="dropdown">
-                                                            <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                <i class="ri-more-fill align-middle"></i>
-                                                            </button>
-                                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                                <li><button class="dropdown-item" onclick="location.href = '{% url 'apps:tickets.details' ticket.pk %}';"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> View</button></li>
-                                                                <li><button class="dropdown-item" onclick="location.href='{% url 'apps:tickets.edit' ticket.pk %}';"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit</button></li>
-                                                            <div class="dropdown-divider"></div>
-                                                                <li><a class="dropdown-item" href="{% url 'apps:tickets.delete_list' ticket.pk %}" data-bs-toggle="modal"
-                                                                data-bs-target="#removeTicketModal{{ticket.pk}}"><i
-                                                                    class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                                                Delete</a></li>
-                                                            </ul>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                {% empty %}
-                                                <tr class="no-tickets-placeholder">
-                                                    <th scope="row">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" name="checkAll" value="option1" disabled>
-                                                        </div>
-                                                    </th>
-                                                    <td class="id">-</td>
-                                                    <td class="tasks_name">-</td>
-                                                    <td class="description">-</td>
-                                                    <td class="client">-</td>
-                                                    <td class="assignment">-</td>
-                                                    <td class="create_date">-</td>
-                                                    <td class="due_date">-</td>
-                                                    <td class="status">-</td>
-                                                    <td class="priority">-</td>
-                                                    <td class="text-center">
-                                                        <div class="text-muted">
-                                                            <i class="ri-check-double-line fs-1 d-block mb-2"></i>
-                                                            <h5>No completed tickets</h5>
-                                                            <p class="mb-0">Completed tickets will appear here.</p>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div> 
-                                    <div>                
-                                        <!-- START Completed Tickets PAGINATION -->
-                                        <div id="completed-tickets-section">
-                                            {% if completed_tickets.has_other_pages %}
-                                            <div class="d-flex justify-content-end mt-2">
-                                                <div class="pagination-wrap hstack gap-2">
-                                                    {% if completed_tickets.has_previous %}
-                                                    <a class="page-item pagination-next" href="?completed_page=1">
-                                                        First
-                                                    </a>
-                                                    {% endif %}
 
-                                                    {% if completed_tickets.has_previous %}
-                                                        <a class="page-item pagination-prev" href="?completed_page={{ completed_tickets.previous_page_number }}">
-                                                            Previous
-                                                        </a>
-                                                    {% else %}
-                                                        <a class="page-item pagination-prev disabled" href="#">
-                                                            Previous
-                                                        </a>
-                                                    {% endif %}
-    
-                                                    <ul class="pagination listjs-pagination mb-0">
-                                                        {% for i in completedPaginator.page_range %}
-                                                        {% if i >= completed_tickets.number|add:'-2' and i <= completed_tickets.number|add:'2' %}
-                                                            {% if completed_tickets.number == i %}
-                                                                <li class="active"><a class="page" href="#">{{ i }}</a></li>
-                                                            {% else %}
-                                                                <li><a class="page" href="?completed_page={{ i }}">{{ i }}</a></li>
-                                                            {% endif %}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                    </ul>
-                                                     
-                                                    {% if completed_tickets.has_next %}
-                                                        <a class="page-item pagination-next" href="?completed_page={{ completed_tickets.next_page_number }}">
-                                                            Next
-                                                        </a>
-                                                    {% else %}
-                                                        <a class="page-item pagination-next disabled" href="#">
-                                                            Next
-                                                        </a>
-                                                    {% endif %}
-
-                                                    {% if completed_tickets.has_next %}
-                                                    <a class="page-item pagination-next" href="?completed_page={{ completed_tickets.paginator.num_pages }}">
-                                                        Last
-                                                    </a>
-                                                    {% endif %}
-                                                    
-                                                </div>
-                                            </div>
-
-                                            <div class="d-flex justify-content-between mt-2">
-                                                <div>
-                                                    Showing {{ completed_tickets.start_index }} to {{ completed_tickets.end_index }} of {{ completedPaginator.count }} entries
-                                                </div>
-                                                <div>
-                                                    Page {{ completed_tickets.number }} of {{ completedPaginator.num_pages }}
-                                                </div>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                        <!-- END Completed Tickets PAGINATION -->
-                                    </div>   
-                                </div>
+ 
 
                             </div>
                         </div>

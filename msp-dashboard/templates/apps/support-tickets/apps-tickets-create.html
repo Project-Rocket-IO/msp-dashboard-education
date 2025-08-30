@@ -60,14 +60,14 @@
                                     {% if user.technician %}
                                     <div class="col-lg-4">
                                         <div>
-                                            <label for="client-field" class="form-label">Client<span class="required-asterix">*</span></label><sup> <a href="{% url 'apps:client.companies' %}"> (<u>Create Client</u>)</a></sup>
+                                            <label for="client-field" class="form-label">User<span class="required-asterix">*</span></label><sup> <a href="{% url 'apps:client.companies' %}"> (<u>Create User</u>)</a></sup>
                                             <select class="form-select" id="assignment-field" name="client" aria-multiselectable="true" required >
                                                 <option value="">None</option>
                                                 {% for client in clients %}
                                                 <option value="{{client.pk}}">{{client.name}}</option>
                                                 {% endfor %}
                                             </select>
-                                            <div class="invalid-feedback">Please select a client</div>
+                                            <div class="invalid-feedback">Please select a user</div>
                                         </div>
                                     </div>
                                     {% elif user.client %} <!-- Explicit is better than implicit -->

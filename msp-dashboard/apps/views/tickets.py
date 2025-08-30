@@ -220,21 +220,17 @@ def get_ticket_list_data(request, per_page=8):
         # A client is logged in
         all_tickets = all_tickets.filter(client__users=user.client)
 
-    open_tickets = all_tickets.exclude(status__in=["Closed", "Completed"])
+    open_tickets = all_tickets.exclude(status__in=["Closed"])
     closed_tickets = all_tickets.filter(status="Closed")
-    completed_tickets = all_tickets.filter(status="Completed")
 
     all_page_number = request.GET.get("all_page", 1)
     open_page_number = request.GET.get("open_page", 1)
     closed_page_number = request.GET.get("closed_page", 1)
-    completed_page_number = request.GET.get("completed_page", 1)
 
     all_tickets_paginated, allTicketsPaginator = paginate_queryset(
         all_tickets, all_page_number, per_page
     )
-    completed_tickets_paginated, completedTicketsPaginator = paginate_queryset(
-        completed_tickets, completed_page_number, per_page
-    )
+
     open_tickets_paginated, openTicketsPaginator = paginate_queryset(
         open_tickets, open_page_number, per_page
     )
@@ -245,30 +241,24 @@ def get_ticket_list_data(request, per_page=8):
     query_params_pagination_type = (
         request.GET.get("closed_page")
         or request.GET.get("open_page")
-        or request.GET.get("completed_page")
     )
 
     active_tab = "open"
     if query_params_pagination_type:
         if "closed_page" in request.GET:
             active_tab = "closed"
-        elif "completed_page" in request.GET:
-            active_tab = "completed"
 
     return {
         "total_tickets": all_tickets.count(),
         "all_tickets": all_tickets_paginated,
-        "completed_tickets": completed_tickets_paginated,
         "open_tickets": open_tickets_paginated,
         "closed_tickets": closed_tickets_paginated,
         "all_tickets_is_paginated": all_tickets_paginated.has_other_pages(),
         "open_tickets_is_paginated": open_tickets_paginated.has_other_pages(),
         "closed_tickets_is_paginated": closed_tickets_paginated.has_other_pages(),
-        "completed_tickets_is_paginated": completed_tickets_paginated.has_other_pages(),
         "allPaginator": allTicketsPaginator,
         "openPaginator": openTicketsPaginator,
         "closedPaginator": closedTicketsPaginator,
-        "completedPaginator": completedTicketsPaginator,
         "active_tab": active_tab,
     }
 

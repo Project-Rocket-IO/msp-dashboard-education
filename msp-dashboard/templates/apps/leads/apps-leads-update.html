@@ -166,27 +166,15 @@
                                                 <!--end col-->
                                                 <div class="col-lg-12">
                                                     <div>
-                                                        <label for="industry_type-field" class="form-label">Industry Type</label>
-                                                        <select class="form-select" id="industry_type-field" name="industry">
-                                                            <option {% if lead.industry == "" %}selected{% endif %} value="">Select industry type</option>
-                                                            <option {% if lead.industry == "Agriculture"  %}selected{% endif %} value="Agriculture">Agriculture</option>
-                                                            <option {% if lead.industry == "Construction"  %}selected{% endif %} value="Construction">Construction</option>
-                                                            <option {% if lead.industry == "Education"  %}selected{% endif %} value="Education">Education</option>
-                                                            <option {% if lead.industry == "Entertainment"  %}selected{% endif %} value="Entertainment">Entertainment</option>
-                                                            <option {% if lead.industry == "Finance"  %}selected{% endif %} value="Finance & Insurance">Finance & Insurance</option>
-                                                            <option {% if lead.industry == "Healthcare"  %}selected{% endif %} value="Healthcare">Healthcare</option>
-                                                            <option {% if lead.industry == "Higher"  %}selected{% endif %} value="Higher Education">Higher Education</option>
-                                                            <option {% if lead.industry == "Hospitality"  %}selected{% endif %} value="Hospitality">Hospitality</option>
-                                                            <option {% if lead.industry == "Information"  %}selected{% endif %} value="Information Technology">Information Technology</option>
-                                                            <option {% if lead.industry == "Manufacturing"  %}selected{% endif %} value="Manufacturing">Manufacturing</option>
-                                                            <option {% if lead.industry == "Nonprofit"  %}selected{% endif %} value="Nonprofit">Nonprofit</option>
-                                                            <option {% if lead.industry == "Professional"  %}selected{% endif %} value="Professional Services">Professional Services</option>
-                                                            <option {% if lead.industry == "Real"  %}selected{% endif %} value="Real Estate">Real Estate</option>
-                                                            <option {% if lead.industry == "Retail"  %}selected{% endif %} value="Retail">Retail</option>
-                                                            <option {% if lead.industry == "Telecommunications"  %}selected{% endif %} value="Telecommunications">Telecommunications</option>
-                                                            <option {% if lead.industry == "Transportation"  %}selected{% endif %} value="Transportation">Transportation</option>
-                                                            <option {% if lead.industry == "Utilities"  %}selected{% endif %} value="Utilities">Utilities</option>
-                                                            <option {% if lead.industry == "Wholesale"  %}selected{% endif %} value="Wholesale">Wholesale</option>
+                                                        <label for="industry_type-field" class="form-label">Grade Level</label>
+                                                        <select class="form-select" id="industry_type-field" name="grade_level">
+                                                            <option {% if lead.grade_level == "" %}selected{% endif %} value="">Select grade level</option>
+<option {% if lead.grade_level == "9th"  %}selected{% endif %} value="9th">9th</option>
+<option {% if lead.grade_level == "10th"  %}selected{% endif %} value="10th">10th</option>
+<option {% if lead.grade_level == "11th"  %}selected{% endif %} value="11th">11th</option>
+<option {% if lead.grade_level == "12th"  %}selected{% endif %} value="12th">12th</option>
+<option {% if lead.grade_level == "Teacher"  %}selected{% endif %} value="Teacher">Teacher</option>
+<option {% if lead.grade_level == "Administration"  %}selected{% endif %} value="Administration">Administration</option>
                                                         </select>
                                                     </div>
                                                 </div>

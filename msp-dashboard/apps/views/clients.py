@@ -74,10 +74,16 @@ def apps_client_companies_list_view(request):
 
         form = ClientCompanyAddForm(request.POST or None, request.FILES or None)
         if form.is_valid():
-            instance = form.save()
-            # Create Locations automatically if relevant info given
-            if request.user.has_perm("apps.add_clientlocations"):
-                create_location(instance)
+            # Construct name from first and last name
+            contact_first = form.cleaned_data.get('contact_first', '')
+            contact_last = form.cleaned_data.get('contact_last', '')
+            full_name = f"{contact_first} {contact_last}".strip()
+            
+            # Set the name field before saving
+            instance = form.save(commit=False)
+            instance.name = full_name
+            instance.save()
+            
             messages.success(request, "Company inserted successfully!")
             return redirect("apps:client.companies")
         else:
@@ -136,11 +142,19 @@ def apps_update_client_companies_view(request, pk):
         form = ClientCompanyUpdateForm(
             request.POST or None, request.FILES or None, instance=company
         )
-        messages.success(request, "Client Updated successfully!")
 
         if form.is_valid():
-            instance = form.save()
+            # Construct name from first and last name
+            contact_first = form.cleaned_data.get('contact_first', '')
+            contact_last = form.cleaned_data.get('contact_last', '')
+            full_name = f"{contact_first} {contact_last}".strip()
+            
+            # Set the name field before saving
+            instance = form.save(commit=False)
+            instance.name = full_name
             instance.save()
+            
+            messages.success(request, "Client Updated successfully!")
             files = request.FILES.getlist("files")
             for file in files:
                 if file:
