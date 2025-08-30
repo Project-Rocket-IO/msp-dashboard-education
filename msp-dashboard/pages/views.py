@@ -503,7 +503,26 @@ def pages_profile_with_pk(request, pk):
 
     # Get client data similar to the client details view
     projects = ProjectList.objects.filter(client_id=company)
-    tickets = TicketList.objects.filter(client_id=company)
+    
+    # Get tickets where this company is the client (tickets created for this company)
+    tickets_queryset = TicketList.objects.filter(client_id=company)
+    
+    # Get tickets where this company's main technician is assigned to work on
+    if company.main_tech:
+        assigned_tickets_queryset = TicketList.objects.filter(assignment=company.main_tech)
+        # Combine both querysets and remove duplicates
+        all_tickets_for_company = (tickets_queryset | assigned_tickets_queryset).distinct()
+    else:
+        all_tickets_for_company = tickets_queryset
+    
+    # Get projects where this company's main technician is assigned to work on
+    if company.main_tech:
+        assigned_projects_queryset = ProjectList.objects.filter(assignment=company.main_tech)
+        # Combine both querysets and remove duplicates
+        all_projects_for_company = (projects | assigned_projects_queryset).distinct()
+    else:
+        all_projects_for_company = projects
+    
     client_files = ClientCompanyFiles.objects.filter(client_id=pk)
     client_locations = ClientLocations.objects.filter(client_id=pk)
     client_members = ClientTeamMembers.objects.filter(client_id=pk)
@@ -515,7 +534,7 @@ def pages_profile_with_pk(request, pk):
     # Pagination for tickets
     client_tickets_page_number = request.GET.get("client_ticket_page", 1)
     tickets, ticketsPaginator = paginate_queryset(
-        tickets, client_tickets_page_number, per_page=8
+        tickets_queryset, client_tickets_page_number, per_page=8
     )
 
     query_params_pagination_type = request.GET.get(
@@ -531,11 +550,12 @@ def pages_profile_with_pk(request, pk):
 
     context = {
         "technicians": technicians,
-        "tickets": tickets,
+        "tickets": tickets,  # Paginated tickets for display
+        "tickets_count": all_tickets_for_company,  # Combined queryset for counting (client + assigned)
         "ticketPaginator": ticketsPaginator,
         "all_tickets": all_tickets,
         "clients": clients,
-        "projects": projects,
+        "projects": all_projects_for_company,  # Combined queryset for display and counting
         "all_projects": all_projects,
         "company": company,
         "client_files": client_files,

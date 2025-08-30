@@ -168,6 +168,17 @@ def apps_update_client_companies_view(request, pk):
             form_errors = form.errors.as_text()
             messages.error(request, f"Something went wrong")
 
+    # Check if the request came from the profile page
+    referer = request.META.get('HTTP_REFERER', '')
+    if 'pages/profile' in referer:
+        # Extract the profile ID from the referer URL
+        import re
+        profile_match = re.search(r'/pages/profile/(\d+)', referer)
+        if profile_match:
+            profile_id = profile_match.group(1)
+            return redirect(f"/pages/pages/profile/{profile_id}")
+    
+    # Default redirect to client companies list
     return redirect("apps:client.companies")
 
 

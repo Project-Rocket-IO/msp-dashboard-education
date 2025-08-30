@@ -4,6 +4,8 @@
 {% block extra_css %}
     <!-- swiper css -->
     <link rel="stylesheet" href="{% static 'libs/swiper/swiper-bundle.min.css'%}">
+    <!-- intlTelInput css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.min.css">
 {% endblock extra_css %}
 {% block content %}
             <!-- ============================================================== -->
@@ -28,28 +30,21 @@
                                 <div class="col">
                                     <div class="p-2">
                                         <h3 class="text-white mb-1">{{company.name}}</h3>
-                                        <p class="text-white-75">{{company.industry_type|default:"Client"}}</p>
-                                        <div class="hstack text-white-50 gap-1">
-                                            {% if company.city and company.state %}
-                                            <div class="me-2"><i class="ri-map-pin-user-line me-1 text-white-75 fs-16 align-middle"></i>{{company.city}}, {{company.state}}</div>
-                                            {% endif %}
-                                            {% if company.website %}
-                                            <div><i class="ri-building-line me-1 text-white-75 fs-16 align-middle"></i>{{company.website}}</div>
-                                            {% endif %}
-                                        </div>
+                                        <p class="text-white-75 mb-1">Grade Level: {{company.grade_level|default:"Grade Level Not Set"}}</p>
+                                        <p class="text-white-75">House: {{company.house|default:"House Not Set"}}</p>
                                     </div>
                                 </div><!--end col-->
                                 <div class="col-12 col-lg-auto order-last order-lg-0">
                                     <div class="row text text-white-50 text-center">
                                         <div class="col-lg-6 col-4">
                                             <div class="p-2">
-                                                <h4 class="text-white mb-1">{{tickets.count}}</h4>
+                                                <h4 class="text-white mb-1">{{tickets_count.count|default:"0"}}</h4>
                                                 <p class="fs-14 mb-0">Tickets</p>
                                             </div>
                                         </div> 
                                         <div class="col-lg-6 col-4">
                                             <div class="p-2">
-                                                <h4 class="text-white mb-1">{{projects.count}}</h4>
+                                                <h4 class="text-white mb-1">{{projects.count|default:"0"}}</h4>
                                                 <p class="fs-14 mb-0">Projects</p>
                                             </div>
                                         </div>
@@ -87,265 +82,43 @@
                                             </li>
                                         </ul>
                                         <div class="flex-shrink-0">
-                                            <a href="{% url 'apps:client.update_companies' company.pk %}" class="btn btn-success"><i class="ri-edit-box-line align-bottom"></i> Edit Client</a>
+                                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#editUserModal"><i class="ri-edit-box-line align-bottom"></i> Edit User</button>
                                         </div>
                                     </div>
                                     <!-- Tab panes -->
                                     <div class="tab-content pt-4 text-muted">
                                         <div class="tab-pane active" id="overview-tab" role="tabpanel">
                                             <div class="row">
-                                                <div class="col-xxl-3">
+                                                <div class="col-xxl-6">
                                                     <div class="card">
                                                         <div class="card-body">
-                                                            <h5 class="card-title mb-3">Client Information</h5>
+                                                            <h5 class="card-title mb-3">User Information</h5>
                                                             <div class="table-responsive">
                                                                 <table class="table table-borderless mb-0">
                                                                     <tbody>
                                                                         <tr>
-                                                                            <th class="ps-0" scope="row">Company Name :</th>
+                                                                            <th class="ps-0" scope="row">Full Name :</th>
                                                                             <td class="text-muted">{{company.name}}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <th class="ps-0" scope="row">Phone :</th>
-                                                                            <td class="text-muted">{{company.phone|default:"Not provided"}}</td>
                                                                         </tr>
                                                                         <tr>
                                                                             <th class="ps-0" scope="row">Email :</th>
                                                                             <td class="text-muted">{{company.email|default:"Not provided"}}</td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <th class="ps-0" scope="row">Address :</th>
-                                                                            <td class="text-muted">
-                                                                                {% if company.address_1 %}{{company.address_1}}{% endif %}
-                                                                                {% if company.city %}, {{company.city}}{% endif %}
-                                                                                {% if company.state %} {{company.state}}{% endif %}
-                                                                                {% if company.zip %} {{company.zip}}{% endif %}
-                                                                                {% if not company.address_1 and not company.city and not company.state %}Not provided{% endif %}
-                                                                            </td>
+                                                                            <th class="ps-0" scope="row">Grade Level :</th>
+                                                                            <td class="text-muted">{{company.grade_level|default:"Not specified"}}</td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <th class="ps-0" scope="row">Industry :</th>
-                                                                            <td class="text-muted">{{company.industry_type|default:"Not specified"}}</td>
+                                                                            <th class="ps-0" scope="row">House :</th>
+                                                                            <td class="text-muted">{{company.house|default:"Not specified"}}</td>
                                                                         </tr>
-                                                                        {% if company.website %}
-                                                                        <tr>
-                                                                            <th class="ps-0" scope="row">Website :</th>
-                                                                            <td class="text-muted"><a href="{{company.website}}" target="_blank">{{company.website}}</a></td>
-                                                                        </tr>
-                                                                        {% endif %}
                                                                     </tbody>
                                                                 </table>
                                                             </div>
                                                         </div><!-- end card body -->
                                                     </div><!-- end card -->
-
-                                                    <div class="card">
-                                                        <div class="card-body">
-                                                            <h5 class="card-title mb-4">Portfolio</h5>
-                                                            <div class="d-flex flex-wrap gap-2">
-                                                                <div>
-                                                                    <a href="javascript:void(0);" class="avatar-xs d-block">
-                                                                        <span class="avatar-title rounded-circle fs-16 bg-dark text-light">
-                                                                            <i class="ri-github-fill"></i>
-                                                                        </span>
-                                                                    </a>
-                                                                </div>
-                                                                <div>
-                                                                    <a href="javascript:void(0);" class="avatar-xs d-block">
-                                                                        <span class="avatar-title rounded-circle fs-16 bg-primary">
-                                                                            <i class="ri-global-fill"></i>
-                                                                        </span>
-                                                                    </a>
-                                                                </div>
-                                                                <div>
-                                                                    <a href="javascript:void(0);" class="avatar-xs d-block">
-                                                                        <span class="avatar-title rounded-circle fs-16 bg-success">
-                                                                            <i class="ri-dribbble-fill"></i>
-                                                                        </span>
-                                                                    </a>
-                                                                </div>
-                                                                <div>
-                                                                    <a href="javascript:void(0);" class="avatar-xs d-block">
-                                                                        <span class="avatar-title rounded-circle fs-16 bg-danger">
-                                                                            <i class="ri-pinterest-fill"></i>
-                                                                        </span>
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-                                                        </div><!-- end card body -->
-                                                    </div><!-- end card -->
-
-                                                    <div class="card">
-                                                        <div class="card-body">
-                                                            <h5 class="card-title mb-4">Skills</h5>
-                                                            <div class="d-flex flex-wrap gap-2 fs-15">
-                                                                <a href="javascript:void(0);" class="badge badge-soft-primary">Photoshop</a>
-                                                                <a href="javascript:void(0);" class="badge badge-soft-primary">illustrator</a>
-                                                                <a href="javascript:void(0);" class="badge badge-soft-primary">HTML</a>
-                                                                <a href="javascript:void(0);" class="badge badge-soft-primary">CSS</a>
-                                                                <a href="javascript:void(0);" class="badge badge-soft-primary">Javascript</a>
-                                                                <a href="javascript:void(0);" class="badge badge-soft-primary">Php</a>
-                                                                <a href="javascript:void(0);" class="badge badge-soft-primary">Python</a>
-                                                            </div>
-                                                        </div><!-- end card body -->
-                                                    </div><!-- end card -->
-
-                                                    <div class="card">
-                                                        <div class="card-body">
-                                                            <div class="d-flex align-items-center mb-4">
-                                                                <div class="flex-grow-1">
-                                                                    <h5 class="card-title mb-0">Suggestions</h5>
-                                                                </div>
-                                                                <div class="flex-shrink-0">
-                                                                    <div class="dropdown">
-                                                                        <a href="#" role="button" id="dropdownMenuLink2" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                            <i class="ri-more-2-fill fs-14"></i>
-                                                                        </a>
-                                                                      
-                                                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink2">
-                                                                            <li><a class="dropdown-item" href="#">View</a></li>
-                                                                            <li><a class="dropdown-item" href="#">Edit</a></li>
-                                                                            <li><a class="dropdown-item" href="#">Delete</a></li>
-                                                                        </ul>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <div class="d-flex align-items-center py-3">
-                                                                    <div class="avatar-xs flex-shrink-0 me-3">
-                                                                        <img src="{% static 'images/users/avatar-3.jpg'%}" alt="" class="img-fluid rounded-circle" />
-                                                                    </div>
-                                                                    <div class="flex-grow-1">
-                                                                        <div>
-                                                                            <h5 class="fs-14 mb-1">Esther James</h5>
-                                                                            <p class="fs-13 text-muted mb-0">Frontend Developer</p>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0 ms-2">
-                                                                        <button type="button" class="btn btn-sm btn-outline-success"><i class="ri-user-add-line align-middle"></i></button>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="d-flex align-items-center py-3">
-                                                                    <div class="avatar-xs flex-shrink-0 me-3">
-                                                                        <img src="{% static 'images/users/avatar-4.jpg'%}" alt="" class="img-fluid rounded-circle" />
-                                                                    </div>
-                                                                    <div class="flex-grow-1">
-                                                                        <div>
-                                                                            <h5 class="fs-14 mb-1">Jacqueline Steve</h5>
-                                                                            <p class="fs-13 text-muted mb-0">UI/UX Designer</p>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0 ms-2">
-                                                                        <button type="button" class="btn btn-sm btn-outline-success"><i class="ri-user-add-line align-middle"></i></button>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="d-flex align-items-center py-3">
-                                                                    <div class="avatar-xs flex-shrink-0 me-3">
-                                                                        <img src="{% static 'images/users/avatar-5.jpg'%}" alt="" class="img-fluid rounded-circle" />
-                                                                    </div>
-                                                                    <div class="flex-grow-1">
-                                                                        <div>
-                                                                            <h5 class="fs-14 mb-1">George Whalen</h5>
-                                                                            <p class="fs-13 text-muted mb-0">Backend Developer</p>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0 ms-2">
-                                                                        <button type="button" class="btn btn-sm btn-outline-success"><i class="ri-user-add-line align-middle"></i></button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div><!-- end card body -->
-                                                    </div><!--end card-->
-
-                                                    <div class="card">
-                                                        <div class="card-body">
-                                                            <div class="d-flex align-items-center mb-4">
-                                                                <div class="flex-grow-1">
-                                                                    <h5 class="card-title mb-0">Popular Posts</h5>
-                                                                </div>
-                                                                <div class="flex-shrink-0">
-                                                                    <div class="dropdown">
-                                                                        <a href="#" role="button" id="dropdownMenuLink1" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                            <i class="ri-more-2-fill fs-14"></i>
-                                                                        </a>
-                                                                      
-                                                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink1">
-                                                                            <li><a class="dropdown-item" href="#">View</a></li>
-                                                                            <li><a class="dropdown-item" href="#">Edit</a></li>
-                                                                            <li><a class="dropdown-item" href="#">Delete</a></li>
-                                                                        </ul>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex mb-4">
-                                                                <div class="flex-shrink-0">
-                                                                    <img src="{% static 'images/small/img-4.jpg'%}" alt="" height="50" class="rounded" />
-                                                                </div>
-                                                                <div class="flex-grow-1 ms-3 overflow-hidden">
-                                                                    <a href="javascript:void(0);"><h6 class="text-truncate fs-14">Design your apps in your own way</h6></a>
-                                                                    <p class="text-muted mb-0">15 Dec 2021</p>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex mb-4">
-                                                                <div class="flex-shrink-0">
-                                                                    <img src="{% static 'images/small/img-5.jpg'%}" alt="" height="50" class="rounded" />
-                                                                </div>
-                                                                <div class="flex-grow-1 ms-3 overflow-hidden">
-                                                                    <a href="javascript:void(0);"><h6 class="text-truncate fs-14">Smartest Applications for Business</h6></a>
-                                                                    <p class="text-muted mb-0">28 Nov 2021</p>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex">
-                                                                <div class="flex-shrink-0">
-                                                                    <img src="{% static 'images/small/img-6.jpg'%}" alt="" height="50" class="rounded" />
-                                                                </div>
-                                                                <div class="flex-grow-1 ms-3 overflow-hidden">
-                                                                    <a href="javascript:void(0);"><h6 class="text-truncate fs-14">How to get creative in your work</h6></a>
-                                                                    <p class="text-muted mb-0">21 Nov 2021</p>
-                                                                </div>
-                                                            </div>
-                                                        </div><!--end card-body-->
-                                                    </div><!--end card-->
                                                 </div><!--end col-->
-                                                <div class="col-xxl-9">
-                                                    <div class="card">
-                                                        <div class="card-body">
-                                                            <h5 class="card-title mb-3">About</h5>
-                                                            <p>Hi I'm Anna Adame, It will be as simple as Occidental; in fact, it will be Occidental. To an English person, it will seem like simplified English, as a skeptical Cambridge friend of mine told me what Occidental is European languages are members of the same family.</p>
-                                                            <p>You always want to make sure that your fonts work well together and try to limit the number of fonts you use to three or less. Experiment and play around with the fonts that you already have in the software you’re working with reputable font websites. This may be the most commonly encountered tip I received from the designers I spoke with. They highly encourage that you use different fonts in one design, but do not over-exaggerate and go overboard.</p>
-                                                            <div class="row">
-                                                                <div class="col-6 col-md-4">
-                                                                    <div class="d-flex mt-4">
-                                                                        <div class="flex-shrink-0 avatar-xs align-self-center me-3">
-                                                                            <div class="avatar-title bg-light rounded-circle fs-16 text-primary">
-                                                                                <i class="ri-user-2-fill"></i>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="flex-grow-1 overflow-hidden">
-                                                                            <p class="mb-1">Designation :</p>
-                                                                            <h6 class="text-truncate mb-0">Lead Designer / Developer</h6>
-                                                                        </div>
-                                                                    </div>
-                                                                </div><!--end col-->
-                                                                <div class="col-6 col-md-4">
-                                                                    <div class="d-flex mt-4">
-                                                                        <div class="flex-shrink-0 avatar-xs align-self-center me-3">
-                                                                            <div class="avatar-title bg-light rounded-circle fs-16 text-primary">
-                                                                                <i class="ri-global-line"></i>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="flex-grow-1 overflow-hidden">
-                                                                            <p class="mb-1">Website :</p>
-                                                                            <a href="#" class="fw-semibold">www.velzon.com</a>
-                                                                        </div>
-                                                                    </div>
-                                                                </div><!--end col-->
-                                                            </div><!--end row-->
-                                                        </div><!--end card-body-->
-                                                    </div><!-- end card -->
-
-                                                    <div class="row">
-                                                        <div class="col-lg-12">
+                                                <div class="col-xxl-6">
                                                             <div class="card">
                                                                 <div class="card-header align-items-center d-flex">
                                                                     <h4 class="card-title mb-0  me-2">Recent Activity</h4>
@@ -808,9 +581,9 @@
 
                                                     <div class="card">
                                                         <div class="card-body">
-                                                            <h5 class="card-title">Projects</h5>
+                                                            <h5 class="card-title mb-3">Tickets</h5>
                                                             <!-- Swiper -->
-                                                            <div class="swiper project-swiper mt-n4">
+                                                            <div class="swiper project-swiper">
                                                                 <div class="d-flex justify-content-end gap-2 mb-2">
                                                                     <div class="slider-button-prev">
                                                                         <div class="avatar-title fs-18 rounded px-1">
@@ -824,48 +597,57 @@
                                                                     </div>
                                                                 </div>
                                                                 <div class="swiper-wrapper">
+                                                                    {% if tickets %}
+                                                                        {% for ticket in tickets %}
                                                                     <div class="swiper-slide">
-                                                                        <div class="card profile-project-card shadow-none profile-project-success mb-0">
+                                                                            <div class="card profile-project-card shadow-none profile-project-{% if ticket.status == 'New' %}success{% elif ticket.status == 'In Progress' %}warning{% elif ticket.status == 'Completed' %}info{% else %}danger{% endif %} mb-0">
                                                                             <div class="card-body p-4">
                                                                                 <div class="d-flex">
                                                                                     <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                                        <h5 class="fs-14 text-truncate mb-1"><a href="#" class="text-dark">ABC Project Customization</a></h5>
-                                                                                        <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">4 hr Ago</span></p>
+                                                                                            <h5 class="fs-14 text-truncate mb-1"><a href="{% url 'apps:tickets.details' ticket.pk %}" class="text-dark">{{ ticket.name }}</a></h5>
+                                                                                            <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">{{ ticket.updated_at|timesince }} ago</span></p>
                                                                                     </div>
                                                                                     <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="badge badge-soft-warning fs-10">Inprogress</div>
+                                                                                            <div class="badge badge-soft-{% if ticket.status == 'New' %}success{% elif ticket.status == 'In Progress' %}warning{% elif ticket.status == 'Completed' %}info{% else %}danger{% endif %} fs-10">{{ ticket.status }}</div>
                                                                                     </div>
                                                                                 </div>
                                                                                 <div class="d-flex mt-4">
                                                                                     <div class="flex-grow-1">
                                                                                         <div class="d-flex align-items-center gap-2">
                                                                                             <div>
-                                                                                                <h5 class="fs-12 text-muted mb-0">Members :</h5>
+                                                                                                    <h5 class="fs-12 text-muted mb-0">Assigned To :</h5>
                                                                                             </div>
-                                                                                            <div class="avatar-group">
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-4.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-5.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <div class="avatar-title rounded-circle bg-light text-primary">
-                                                                                                            A
+                                                                                                                                                                                            <div class="avatar-group">
+                                                                                                    {% if ticket.assignment.all %}
+                                                                                                        {% for tech in ticket.assignment.all %}
+                                                                                                        <div class="avatar-group-item" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ tech.auth_user.username|default:tech.auth_user.first_name|default:'Unknown User' }}">
+                                                                                                            <div class="avatar-xs">
+                                                                                                                {% if tech.auth_user.picture %}
+                                                                                                                    <img src="{{ tech.auth_user.picture.url }}" alt="{{ tech.auth_user.username|default:'User' }}" class="rounded-circle img-fluid" />
+                                                                                                                {% else %}
+                                                                                                                    <div class="avatar-title rounded-circle bg-light text-primary">
+                                                                                                                        {% if tech.auth_user.first_name and tech.auth_user.last_name %}
+                                                                                                                            {{ tech.auth_user.first_name|first|upper }}{{ tech.auth_user.last_name|first|upper }}
+                                                                                                                        {% elif tech.auth_user.username %}
+                                                                                                                            {{ tech.auth_user.username|first|upper }}
+                                                                                                                        {% else %}
+                                                                                                                            U
+                                                                                                                        {% endif %}
+                                                                                                                    </div>
+                                                                                                                {% endif %}
+                                                                                                            </div>
                                                                                                         </div>
-                                                                                                    </div>
+                                                                                                        {% endfor %}
+                                                                                                    {% else %}
+                                                                                                        <div class="avatar-group-item">
+                                                                                                            <div class="avatar-xs">
+                                                                                                                <div class="avatar-title rounded-circle bg-light text-muted">
+                                                                                                                    ?
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    {% endif %}
                                                                                                 </div>
-                                                                                                <div class="avatar-group-item"> 
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-2.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
@@ -874,157 +656,20 @@
                                                                         </div>
                                                                         <!-- end card -->
                                                                     </div>
-                                                                    <!-- end slide item -->
+                                                                        {% endfor %}
+                                                                    {% else %}
                                                                     <div class="swiper-slide">
-                                                                        <div class="card profile-project-card shadow-none profile-project-danger mb-0">
-                                                                            <div class="card-body p-4">
-                                                                                <div class="d-flex">
-                                                                                    <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                                        <h5 class="fs-14 text-truncate mb-1"><a href="#" class="text-dark">Client - John</a></h5>
-                                                                                        <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">1 hr Ago</span></p>
+                                                                            <div class="card profile-project-card shadow-none profile-project-light mb-0">
+                                                                                <div class="card-body p-4 text-center">
+                                                                                    <div class="text-muted">
+                                                                                        <i class="ri-ticket-line fs-48 mb-3"></i>
+                                                                                        <h6 class="mb-2">No Tickets Assigned</h6>
+                                                                                        <p class="mb-0">This user has no tickets assigned to them.</p>
                                                                                     </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="badge badge-soft-success fs-10">Completed</div>
                                                                                     </div>
                                                                                 </div>
-                                                                                <div class="d-flex mt-4">
-                                                                                    <div class="flex-grow-1">
-                                                                                        <div class="d-flex align-items-center gap-2">
-                                                                                            <div>
-                                                                                                <h5 class="fs-12 text-muted mb-0">Members :</h5>
                                                                                             </div>
-                                                                                            <div class="avatar-group">
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-2.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <div class="avatar-title rounded-circle bg-light text-primary">
-                                                                                                            C
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div><!-- end card body -->
-                                                                        </div><!-- end card -->
-                                                                    </div><!-- end slide item -->
-                                                                    <div class="swiper-slide">
-                                                                        <div class="card profile-project-card shadow-none profile-project-info mb-0">
-                                                                            <div class="card-body p-4">
-                                                                                <div class="d-flex">
-                                                                                    <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                                        <h5 class="fs-14 text-truncate mb-1"><a href="#" class="text-dark">Brand logo Design</a></h5>
-                                                                                        <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">2 hr Ago</span></p>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="badge badge-soft-warning fs-10">Inprogress</div>
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div class="d-flex mt-4">
-                                                                                    <div class="flex-grow-1">
-                                                                                        <div class="d-flex align-items-center gap-2">
-                                                                                            <div>
-                                                                                                <h5 class="fs-12 text-muted mb-0">Members :</h5>
-                                                                                            </div>
-                                                                                            <div class="avatar-group">
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-5.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div><!-- end card body -->
-                                                                        </div><!-- end card -->
-                                                                    </div><!-- end slide item -->
-                                                                    <div class="swiper-slide">
-                                                                        <div class="card profile-project-card shadow-none profile-project-danger mb-0">
-                                                                            <div class="card-body p-4">
-                                                                                <div class="d-flex">
-                                                                                    <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                                        <h5 class="fs-14 text-truncate mb-1"><a href="#" class="text-dark">Project update</a></h5>
-                                                                                        <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">4 hr Ago</span></p>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="badge badge-soft-success fs-10">Completed</div>
-                                                                                    </div>
-                                                                                </div>
-
-                                                                                <div class="d-flex mt-4">
-                                                                                    <div class="flex-grow-1">
-                                                                                        <div class="d-flex align-items-center gap-2">
-                                                                                            <div>
-                                                                                                <h5 class="fs-12 text-muted mb-0">Members :</h5>
-                                                                                            </div>
-                                                                                            <div class="avatar-group">
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-4.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-5.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <!-- end card body -->
-                                                                        </div>
-                                                                        <!-- end card -->
-                                                                    </div>
-                                                                    <!-- end slide item -->
-                                                                    <div class="swiper-slide">
-                                                                        <div class="card profile-project-card shadow-none profile-project-warning mb-0">
-                                                                            <div class="card-body p-4">
-                                                                                <div class="d-flex">
-                                                                                    <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                                        <h5 class="fs-14 text-truncate mb-1"><a href="#" class="text-dark">Chat App</a></h5>
-                                                                                        <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">1 hr Ago</span></p>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="badge badge-soft-warning fs-10">Inprogress</div>
-                                                                                    </div>
-                                                                                </div>
-
-                                                                                <div class="d-flex mt-4">
-                                                                                    <div class="flex-grow-1">
-                                                                                        <div class="d-flex align-items-center gap-2">
-                                                                                            <div>
-                                                                                                <h5 class="fs-12 text-muted mb-0">Members :</h5>
-                                                                                            </div>
-                                                                                            <div class="avatar-group">
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-4.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-5.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <div class="avatar-title rounded-circle bg-light text-primary">
-                                                                                                            A
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
+                                                                    {% endif %}
                                                                             </div>
                                                                             <!-- end card body -->
                                                                         </div>
@@ -1039,6 +684,110 @@
                                                         <!-- end card body -->
                                                     </div><!-- end card -->
 
+                                                </div><!--end col-->
+                                            </div><!--end row-->
+                                            
+                                            <!-- Projects Section -->
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title mb-3">Projects</h5>
+                                                            <!-- Swiper -->
+                                                            <div class="swiper project-swiper">
+                                                                <div class="d-flex justify-content-end gap-2 mb-2">
+                                                                    <div class="slider-button-prev">
+                                                                        <div class="avatar-title fs-18 rounded px-1">
+                                                                            <i class="ri-arrow-left-s-line"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="slider-button-next">
+                                                                        <div class="avatar-title fs-18 rounded px-1">
+                                                                            <i class="ri-arrow-right-s-line"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="swiper-wrapper">
+                                                                    {% if projects %}
+                                                                        {% for project in projects %}
+                                                                    <div class="swiper-slide">
+                                                                            <div class="card profile-project-card shadow-none profile-project-{% if project.status == 'Active' %}success{% elif project.status == 'In Progress' %}warning{% elif project.status == 'Completed' %}info{% else %}danger{% endif %} mb-0">
+                                                                            <div class="card-body p-4">
+                                                                                <div class="d-flex">
+                                                                                    <div class="flex-grow-1 text-muted overflow-hidden">
+                                                                                            <h5 class="fs-14 text-truncate mb-1"><a href="#" class="text-dark">{{ project.name }}</a></h5>
+                                                                                            <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">{{ project.updated_at|timesince }} ago</span></p>
+                                                                                    </div>
+                                                                                    <div class="flex-shrink-0 ms-2">
+                                                                                            <div class="badge badge-soft-{% if project.status == 'Active' %}success{% elif project.status == 'In Progress' %}warning{% elif project.status == 'Completed' %}info{% else %}danger{% endif %} fs-10">{{ project.status }}</div>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="d-flex mt-4">
+                                                                                    <div class="flex-grow-1">
+                                                                                        <div class="d-flex align-items-center gap-2">
+                                                                                            <div>
+                                                                                                    <h5 class="fs-12 text-muted mb-0">Assigned To :</h5>
+                                                                                            </div>
+                                                                                            <div class="avatar-group">
+                                                                                                {% if project.assignment.all %}
+                                                                                                    {% for tech in project.assignment.all %}
+                                                                                                    <div class="avatar-group-item" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ tech.auth_user.username|default:tech.auth_user.first_name|default:'Unknown User' }}">
+                                                                                                        <div class="avatar-xs">
+                                                                                                            {% if tech.auth_user.picture %}
+                                                                                                                <img src="{{ tech.auth_user.picture.url }}" alt="{{ tech.auth_user.username|default:'User' }}" class="rounded-circle img-fluid" />
+                                                                                                            {% else %}
+                                                                                                                <div class="avatar-title rounded-circle bg-light text-primary">
+                                                                                                                    {% if tech.auth_user.first_name and tech.auth_user.last_name %}
+                                                                                                                        {{ tech.auth_user.first_name|first|upper }}{{ tech.auth_user.last_name|first|upper }}
+                                                                                                                    {% elif tech.auth_user.username %}
+                                                                                                                        {{ tech.auth_user.username|first|upper }}
+                                                                                                                    {% else %}
+                                                                                                                        U
+                                                                                                                        {% endif %}
+                                                                                                                    </div>
+                                                                                                                {% endif %}
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        {% endfor %}
+                                                                                                    {% else %}
+                                                                                                        <div class="avatar-group-item">
+                                                                                                            <div class="avatar-xs">
+                                                                                                                <div class="avatar-title rounded-circle bg-light text-muted">
+                                                                                                                    ?
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    {% endif %}
+                                                                                                </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <!-- end card body -->
+                                                                        </div>
+                                                                        <!-- end card -->
+                                                                    </div>
+                                                                        {% endfor %}
+                                                                    {% else %}
+                                                                    <div class="swiper-slide">
+                                                                            <div class="card profile-project-card shadow-none profile-project-light mb-0">
+                                                                                <div class="card-body p-4 text-center">
+                                                                                    <div class="text-muted">
+                                                                                        <i class="ri-folder-line fs-48 mb-3"></i>
+                                                                                        <h6 class="mb-2">No Projects Assigned</h6>
+                                                                                        <p class="mb-0">No project assigned to {{company.name}}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    {% endif %}
+                                                                </div>
+                                                                
+                                                            </div>
+                                                    
+                                                        </div>
+                                                        <!-- end card body -->
+                                                    </div><!-- end card -->
                                                 </div><!--end col-->
                                             </div><!--end row-->
                                         </div>
@@ -1100,23 +849,37 @@
                                         <div class="tab-pane fade" id="projects" role="tabpanel">
                                             <div class="card">
                                                 <div class="card-body">
-                                                    <h5 class="card-title mb-3">Client Projects</h5>
+                                                    <h5 class="card-title mb-3">User Projects</h5>
                                                     <div class="row">
+                                                        {% if projects %}
                                                         {% for project in projects %}
-                                                        <div class="col-xxl-3 col-sm-6">
-                                                            <div class="card profile-project-card shadow-none profile-project-warning">
+                                                            <div class="col-xxl-4 col-sm-6">
+                                                                <div class="card profile-project-card shadow-none profile-project-{% if project.status == 'Active' %}success{% elif project.status == 'In Progress' %}warning{% elif project.status == 'Completed' %}info{% else %}danger{% endif %}">
                                                                 <div class="card-body p-4">
                                                                     <div class="d-flex">
                                                                         <div class="flex-grow-1 text-muted overflow-hidden">
                                                                             <h5 class="fs-14 text-truncate"><a href="#" class="text-dark">{{project.name}}</a></h5>
-                                                                            <p class="text-muted text-truncate mb-0">Created : <span class="fw-semibold text-dark">{{project.create_date}}</span></p>
+                                                                                <p class="text-muted text-truncate mb-0">Created : <span class="fw-semibold text-dark">{{project.created_at|date:"M d, Y"}}</span></p>
                                                                         </div>
                                                                         <div class="flex-shrink-0 ms-2">
-                                                                            <div class="badge badge-soft-{% if project.status == 'New' %}primary{% elif project.status == 'In Progress' %}warning{% elif project.status == 'Completed' %}success{% elif project.status == 'Closed' %}secondary{% else %}info{% endif %} fs-10">{{project.status}}</div>
+                                                                                <div class="badge badge-soft-{% if project.status == 'Active' %}success{% elif project.status == 'In Progress' %}warning{% elif project.status == 'Completed' %}info{% else %}danger{% endif %} fs-10">{{project.status}}</div>
                                                                         </div>
                                                                     </div>
     
                                                                     <div class="d-flex mt-4">
+                                                                            <div class="flex-grow-1">
+                                                                                <div class="d-flex align-items-center gap-2">
+                                                                                    <div>
+                                                                                        <h5 class="fs-12 text-muted mb-0">Progress :</h5>
+                                                                                    </div>
+                                                                                    <div class="text-muted">
+                                                                                        <span class="badge badge-soft-info fs-10">{{project.progress|default:"0"}}%</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        
+                                                                        <div class="d-flex mt-3">
                                                                         <div class="flex-grow-1">
                                                                             <div class="d-flex align-items-center gap-2">
                                                                                 <div>
@@ -1133,13 +896,18 @@
                                                             </div>
                                                             <!-- end card -->
                                                         </div><!--end col-->
-                                                        {% empty %}
+                                                        {% endfor %}
+                                                        {% else %}
                                                         <div class="col-12">
                                                             <div class="text-center">
-                                                                <p class="text-muted">No projects found for this client.</p>
+                                                                <div class="py-4">
+                                                                    <i class="ri-folder-line fs-1 text-muted"></i>
+                                                                    <h5 class="mt-3 text-muted">This User has No Projects Assigned</h5>
+                                                                    <p class="text-muted mb-0">No projects have been assigned to this user yet.</p>
                                                             </div>
                                                         </div>
-                                                        {% endfor %}
+                                                        </div>
+                                                        {% endif %}
                                                     </div><!--end row-->
                                                 </div><!--end card-body-->
                                             </div><!--end card-->
@@ -1367,6 +1135,122 @@
             {% include "partials/footer.html" %}
             {% endblock footer %}
             </div><!-- end main content-->
+
+            <!-- Edit User Modal -->
+            <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content border-0">
+                        <div class="modal-header bg-soft-primary p-3">
+                            <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+                        </div>
+                        <form method="POST" action="{% url 'apps:client.update_companies' company.pk %}" enctype="multipart/form-data" class="needs-validation" novalidate>
+                            {% csrf_token %}
+                            <div class="modal-body">
+                                <input type="hidden" id="id-field" />
+                                <div class="row g-3">
+                                    <div class="col-lg-12">
+                                        <div class="text-center">
+                                            <div class="position-relative d-inline-block">
+                                                <div class="position-absolute bottom-0 end-0">
+                                                    <label for="company-logo-input-edit" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                                        <div class="avatar-xs cursor-pointer">
+                                                            <div class="avatar-title bg-light border rounded-circle text-muted">
+                                                                <i class="ri-image-fill"></i>
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                    <input class="form-control d-none" value="{{company.get_photo_url}}" 
+                                                    name="logo" id="company-logo-input-edit" type="file" accept="image/png, image/gif, image/jpeg">
+                                                </div>
+                                                <div class="avatar-lg p-1">
+                                                    <div class="avatar-title bg-light rounded-circle">
+                                                        <img src="{{ company.get_photo_url }}" name="logo" id="company-logo-img-edit" class="avatar-md rounded-circle object-cover" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h5 class="fs-13 mt-3">User Logo</h5>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div>
+                                            <label for="owner_first-field" class="form-label">First Name<span class="required-asterix">*</span></label>
+                                            <input type="text" name="contact_first" class="form-control" placeholder="Enter first name" value="{{company.contact_first}}"  required />
+                                            <div class="invalid-feedback">Provide first name</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div>
+                                            <label for="owner_last-field" class="form-label">Last Name<span class="required-asterix">*</span></label>
+                                            <input type="text" name="contact_last" class="form-control" placeholder="Enter last name" value="{{company.contact_last}}" required />
+                                            <div class="invalid-feedback">Provide last name</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div>
+                                            <label for="website-field" class="form-label">Main Tech<span class="required-asterix">*</span></label>
+                                            <select class="form-select" data-choices data-choices-search-false 
+                                            id="choices-lead-input" name="main_tech" id="main_tech" value="{{tech.name}}" multiple required>
+                                                {% for tech in technicians %}
+                                                    {% if tech == company.main_tech %}
+                                                    <option selected value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                    {% else %}
+                                                    <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback">Please select a primary technician</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div>
+                                            <label for="email-field" class="form-label">User Email<span class="required-asterix">*</span></label>
+                                            <input type="text" name="email" class="form-control" placeholder="User Email" value="{{company.email}}" required />
+                                            <div class="invalid-feedback">Input valid user email</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div>
+                                            <label for="industry_type-field" class="form-label">Grade Level</label>
+                                            <select class="form-select" id="industry-field" name="grade_level">
+                                                <option {% if company.grade_level == "" %}selected{% endif %} value="">Select grade level</option>
+                                                <option {% if company.grade_level == "9th"  %}selected{% endif %} value="9th">9th</option>
+                                                <option {% if company.grade_level == "10th"  %}selected{% endif %} value="10th">10th</option>
+                                                <option {% if company.grade_level == "11th"  %}selected{% endif %} value="11th">11th</option>
+                                                <option {% if company.grade_level == "12th"  %}selected{% endif %} value="12th">12th</option>
+                                                <option {% if company.grade_level == "Teacher"  %}selected{% endif %} value="Teacher">Teacher</option>
+                                                <option {% if company.grade_level == "Administration"  %}selected{% endif %} value="Administration">Administration</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div>
+                                            <label for="house-field" class="form-label">House</label>
+                                            <input type="text" name="house" class="form-control" placeholder="Enter house name" value="{{company.house|default_if_none:""}}" />
+                                            <div class="invalid-feedback"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class='d-flex flex-column'>
+                                            <label for="zip-field" class="form-label">Phone</label>
+                                            <input type="tel" id="txtPhoneNo" name="phone" class="form-control" value="{{company.phone|default_if_none:""}}"/>
+                                            <div class="invalid-feedback"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <div class="hstack gap-2 justify-content-end">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-success" id="add-btn">Update</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!--end edit modal-->
+
 {% endblock content %}
 {% block extra_js %}
         <!-- swiper js -->
@@ -1374,4 +1258,78 @@
 
         <!-- profile init js -->
         <script src="{% static 'js/pages/profile.init.js'%}"></script>
+
+        <!-- Cleave.js -->
+        <script src="https://cdn.jsdelivr.net/npm/cleave.js@1/dist/cleave.min.js"></script>
+        <!-- Phone number formatter for US -->
+        <script src="https://cdn.jsdelivr.net/npm/cleave.js@1/dist/addons/cleave-phone.us.js"></script>
+        <!-- intlTelInput -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+
+        <script src="{% static 'js/pages/phoneValidation.js' %}"></script>
+
+        <!-- Edit User Modal Scripts -->
+        <script>
+            // Handle logo image preview
+            document.getElementById('company-logo-input-edit').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('company-logo-img-edit').src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Initialize phone field when modal opens
+            document.getElementById('editUserModal').addEventListener('shown.bs.modal', function() {
+                const phoneInput = document.getElementById('txtPhoneNo');
+                if (phoneInput && !phoneInput.classList.contains('iti')) {
+                    initializeIntlTelInput(phoneInput);
+                    initializeCleave(phoneInput);
+                }
+            });
+
+            // Handle form submission
+            document.querySelector('#editUserModal form').addEventListener('submit', function(e) {
+                // Form validation and submission logic can be added here
+                // The form will submit to the existing update endpoint
+            });
+
+            // Initialize all tooltips
+            document.addEventListener('DOMContentLoaded', function() {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+                
+                // Initialize all swipers
+                var swiperElements = document.querySelectorAll('.project-swiper');
+                swiperElements.forEach(function(element) {
+                    new Swiper(element, {
+                        slidesPerView: 1,
+                        spaceBetween: 24,
+                        navigation: {
+                            nextEl: element.querySelector('.slider-button-next'),
+                            prevEl: element.querySelector('.slider-button-prev')
+                        },
+                        breakpoints: {
+                            640: {
+                                slidesPerView: 1,
+                                spaceBetween: 15
+                            },
+                            768: {
+                                slidesPerView: 2,
+                                spaceBetween: 20
+                            },
+                            1200: {
+                                slidesPerView: 3,
+                                spaceBetween: 25
+                            }
+                        }
+                    });
+                });
+            });
+        </script>
 {% endblock extra_js %}
