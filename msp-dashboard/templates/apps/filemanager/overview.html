@@ -56,7 +56,7 @@
                                             <div class="collapse show" id="categories-collapse">
                                                 <div class="card border-0 shadow-none ps-2 mb-0">
                                                     <ul class="list-unstyled mb-0">
-                                                        {% for directory in directories %}
+                                                        {% for directory in sidebar_directories %}
                                                         {% if directory.directories %}
                                                         <li class="">
                                                           <i class="fa-solid fa-folder"></i>
@@ -85,11 +85,6 @@
                                             </div>
                                             </li>
                                             <hr class="mt-2">
-                                            <li>
-                                                <a href="https://drive.google.com/drive/u/0/folders/1Ht9PquWHirf9V_ofWI5JX5mJa2z3_5-c" target="_blank" rel="noopener noreferrer" class="text-body d-flex align-items-center">
-                                                    <i class="mdi mdi-google-drive font-size-16 text-muted me-2"></i> <span class="me-auto">Google Drive</span> 
-                                                </a>
-                                            </li>
                                             <li>
                                                 <a href="javascript: void(0);" class="text-body d-flex align-items-center">
                                                     <i class="mdi mdi-star-outline text-muted font-size-16 me-2"></i> <span class="me-auto">Pinned</span>
@@ -150,10 +145,10 @@
                                       </div>
                                   </div>
                                   <div class="col-xl-9 col-sm-6">
-                                      <form class="mt-4 mt-sm-0 float-sm-end d-flex align-items-center">
+                                      <form class="mt-4 mt-sm-0 float-sm-end d-flex align-items-center" method="GET">
                                           <div class="search-box mb-2 me-2">
                                               <div class="position-relative">
-                                                  <input type="text" class="form-control bg-light border-light rounded" placeholder="Search...">
+                                                  <input type="text" name="search" class="form-control bg-light border-light rounded" placeholder="Search..." value="{{ search_query }}">
                                                   <i class="bx bx-search-alt search-icon"></i>
                                               </div>
                                           </div>
@@ -175,6 +170,61 @@
                                   </div>
                               </div>
                           </div>
+                          
+                          <!-- Search Results -->
+                          {% if search_query %}
+                          <div class="row mb-3">
+                              <div class="col-12">
+                                  <div class="d-flex justify-content-between align-items-center">
+                                      <h5>Search Results for "{{ search_query }}"</h5>
+                                      <a href="{% url 'apps:filemanager.overview' %}" class="btn btn-sm btn-light">Clear Search</a>
+                                  </div>
+                                  <div class="table-responsive mt-3">
+                                      {% if search_results %}
+                                      <table class="table table-hover">
+                                          <thead class="table-light">
+                                              <tr>
+                                                  <th scope="col">File Name</th>
+                                                  <th scope="col">Location</th>
+                                                  <th scope="col">Size</th>
+                                                  <th scope="col">Actions</th>
+                                              </tr>
+                                          </thead>
+                                          <tbody>
+                                              {% for result in search_results %}
+                                              <tr>
+                                                  <td>
+                                                      <i class="mdi mdi-file-document font-size-16 align-middle text-primary me-2"></i>
+                                                      {{ result.filename }}
+                                                  </td>
+                                                  <td>{{ result.relative_path }}</td>
+                                                  <td>{{ result.size }}</td>
+                                                  <td>
+                                                      <div class="d-flex align-items-center actions">
+                                                          <span data-bs-toggle="tooltip" title="View File">
+                                                              <i class="ri-eye-fill text-primary"></i>
+                                                          </span>
+                                                          <div class="dot-separator mx-2"></div>
+                                                          <span data-bs-toggle="tooltip" title="Download">
+                                                              <i class="ri-download-line text-success"></i>
+                                                          </span>
+                                                      </div>
+                                                  </td>
+                                              </tr>
+                                              {% endfor %}
+                                          </tbody>
+                                      </table>
+                                      {% else %}
+                                      <div class="text-center py-4">
+                                          <i class="ri-search-line fs-1 text-muted"></i>
+                                          <h6 class="mt-3 text-muted">No Files Could Be Found</h6>
+                                          <p class="text-muted mb-0">No files match your search query "{{ search_query }}".</p>
+                                      </div>
+                                      {% endif %}
+                                  </div>
+                              </div>
+                          </div>
+                          {% endif %}
     
                             <div>
                                 <div class="row">

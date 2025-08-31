@@ -93,6 +93,7 @@ def apps_calendar_view_delete(request):
 
 def apps_calendar_view(request):
     events = CalendarEvents.objects.filter(creator=request.user)
+    # Get technicians for attendee selection (same as working ticket form)
     technicians = TechnicianUser.objects.all()
 
     # Serialize the events data
@@ -122,6 +123,15 @@ def apps_calendar_view(request):
 
         if form.is_valid():
             instance = form.save()
+            
+            # Handle many-to-many relationships for invites
+            if 'mandatory_invites' in clean_form:
+                instance.mandatory_invites.set(clean_form.getlist('mandatory_invites'))
+            if 'optional_invites' in clean_form:
+                instance.optional_invites.set(clean_form.getlist('optional_invites'))
+            if 'guests' in clean_form:
+                instance.guests.set(clean_form.getlist('guests'))
+            
             print(instance)
             return redirect("calendar_event:calendar-events")
         else:
@@ -157,7 +167,9 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
             )
             queryset = queryset.filter(
                 Q(creator = self.request.user.user_id) |
-                Q(guests__user_id__contains = self.request.user.user_id)
+                Q(guests__user_id__contains = self.request.user.user_id) |
+                Q(mandatory_invites__user_id__contains = self.request.user.user_id) |
+                Q(optional_invites__user_id__contains = self.request.user.user_id)
             )
             return queryset
         elif self.request.query_params.get('month'):
@@ -170,7 +182,9 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
             )
             queryset = queryset.filter(
                 Q(creator = self.request.user.user_id) |
-                Q(guests__user_id__contains = self.request.user.user_id)
+                Q(guests__user_id__contains = self.request.user.user_id) |
+                Q(mandatory_invites__user_id__contains = self.request.user.user_id) |
+                Q(optional_invites__user_id__contains = self.request.user.user_id)
             )
             return queryset
         else:
@@ -179,7 +193,9 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
             user = self.request.user
             calendar_events = CalendarEvents.objects.filter(
                 Q(creator = user.user_id) |
-                Q(guests__user_id__contains = user.user_id)
+                Q(guests__user_id__contains = user.user_id) |
+                Q(mandatory_invites__user_id__contains = user.user_id) |
+                Q(optional_invites__user_id__contains = user.user_id)
             )
             return calendar_events
 

@@ -81,10 +81,10 @@
 
                     <!-- Add New Event MODAL -->
                     <div class="modal fade" id="event-modal" tabindex="-1">
-                        <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-dialog modal-dialog-centered modal-xl">
                             <div class="modal-content border-0">
                                 <div class="modal-header p-3 bg-soft-info">
-                                    <h5 class="modal-title" id="modal-title">Event</h5>
+                                    <h5 class="modal-title" id="modal-title">New Meeting</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
                                 </div>
                                 <div class="modal-body p-4">
@@ -94,10 +94,8 @@
                                     </form>
                                     <form method="POST" class="needs-validation" action="{% url 'calendar_event:calendar-events' %}" name="event-form" id="form-event" novalidate>
                                         {% csrf_token %}
-                                        <div class="text-end">
-                                            <a href="#" class="btn btn-sm btn-soft-primary" id="edit-event-btn" data-id="edit-event" onclick="editEvent(this)" role="button">Edit</a>
-                                        </div>
-                                        <div class="event-details">
+                                        <!-- Hidden event details section for JavaScript compatibility -->
+                                        <div class="event-details d-none">
                                             <div class="d-flex mb-2">
                                                 <div class="flex-grow-1 d-flex align-items-center">
                                                     <div class="flex-shrink-0 me-3">
@@ -134,160 +132,226 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        
+                                        <!-- Hidden old form fields for JavaScript compatibility -->
+                                        <div class="d-none">
+                                            <input type="text" id="event-start-date" class="form-control flatpickr flatpickr-input" placeholder="Select date" readonly>
+                                            <input type="text" id="event-category" class="form-select" name="type">
+                                            <div id="event-time" style="display: none;">
+                                                <input type="text" id="timepicker1" class="form-control flatpickr flatpickr-input" placeholder="Select start time" readonly>
+                                                <input type="text" id="timepicker2" class="form-control flatpickr flatpickr-input" placeholder="Select end time" readonly>
+                                            </div>
+                                        </div>
+                                        
                                         <div class="row event-form">
+                                            <!-- Meeting Title - Top of Form -->
                                             <div class="col-12">
-                                                <div class="row">
-                                                    <div class="col-6">
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Type</label>
-                                                            <select class="form-select d-none" name="type" id="event-category" required>
-                                                                    <option value="Danger">Danger</option>
-                                                                    <option value="Success">Success</option>
-                                                                    <option value="Primary">Primary</option>
-                                                                    <option value="Info">Info</option>
-                                                                    <option value="Dark">Dark</option>
-                                                                    <option value="Warning">Warning</option>
-                                                                </select>
-                                                            <div class="invalid-feedback">Please select a valid event category</div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Event Name<span class="required-asterix">*</span></label>
-                                                            <input class="form-control d-none" placeholder="Enter event name" type="text" name="name" id="event-title" required />
-                                                            <div class="invalid-feedback">Please provide a valid event name</div>
-                                                        </div>
-                                                    </div>
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-semibold">
+                                                        <i class="ri-edit-line me-2"></i>Meeting Title
+                                                    </label>
+                                                    <input class="form-control form-control-lg" placeholder="Enter meeting title" type="text" name="name" id="event-title" required />
+                                                    <div class="invalid-feedback">Please provide a meeting title</div>
                                                 </div>
-
-                                                <!--end col-->
-                                                <div class="col-12">
-                                                    <div class="mb-3">
-                                                        <label>Event Date<span class="required-asterix">*</span></label>
-                                                        <div class="input-group d-none">
-                                                            <input type="hidden" id="start" name="start">
-                                                            <input type="hidden" id="end" name="end">
-                                                            <input type="text" id="event-start-date" class="form-control flatpickr flatpickr-input" placeholder="Select date" readonly required>
-                                                            <span class="input-group-text"><i class="ri-calendar-event-line"></i></span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <!--end col-->
-                                                <div class="col-12" id="event-time">
-                                                    <div class="row">
-                                                        <div class="col-6">
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Start Time</label>
-                                                                <div class="input-group d-none">
-                                                                    <input id="timepicker1" type="text" class="form-control flatpickr flatpickr-input" placeholder="Select start time" readonly required>
-                                                                    <span class="input-group-text"><i class="ri-time-line"></i></span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <div class="mb-3">
-                                                                <label class="form-label">End Time</label>
-                                                                <div class="input-group d-none">
-                                                                    <input id="timepicker2" type="text" class="form-control flatpickr flatpickr-input" placeholder="Select end time" readonly required>
-                                                                    <span class="input-group-text"><i class="ri-time-line"></i></span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <!--end col-->
-                                                <div class="col-12">
-                                                    <div class="mb-3">
-                                                        <label for="event-location">Location</label>
-                                                        <div>
-                                                            <input type="text" class="form-control d-none" name="location" id="event-location" placeholder="Event location">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <!--end col-->
-                                                <div class="col-12">
-                                                    <div class="mb-3">
-                                                        <label for="event-guests">Guest Email</label>
-                                                        <select class="form-control" name="guests" id="event-guests" multiple required >
-                                                             {% for tech in technicians %}
-                                                            <option value="{{tech.auth_user.user_id}}">{{tech.auth_user.email}}</option>                                                            
+                                            </div>
+                                            
+                                            <!-- Required and Optional Attendees on same row -->
+                                            <div class="row">
+                                                <!-- Required Attendees -->
+                                                <div class="col-md-6">
+                                                    <div class="mb-4">
+                                                        <label class="form-label fw-semibold">
+                                                            <i class="ri-user-line me-2"></i>Required Attendees
+                                                        </label>
+                                                        <select class="form-select" data-choices data-choices-search-false data-choices-removeItem
+                                                            id="choices-lead-input" name="mandatory_invites" multiple>
+                                                            {% for tech in technicians %}
+                                                            <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
                                                             {% endfor %} 
                                                         </select>
-                                                        <div class="invalid-feedback">Please select technicians</div>
+                                                        <small class="form-text text-muted">Select required meeting participants</small>
                                                     </div>
                                                 </div>
-                                                <!--end col-->
-                                                <input type="hidden" id="eventid" name="eventid" value="" />
-                                                <div class="col-12">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Description</label>
-                                                        <textarea class="form-control d-none" name="description" id="event-description" placeholder="Enter a description" rows="2" spellcheck="false"></textarea>
-                                                    </div>
-                                                </div>
-                                                <!--end col-->
-                                                <label class="form-label" for="isRepeating">Repeat Event :</label>
-                                                <input type="checkbox" id="isRepeating" name="repeating" onchange="toggleFields()">
-
-                                                <!--end col-->
-                                                <div id="RepeatFields" style="display: none;">
-
-                                                    <div class="col-12">
-                                                        <div class="row">
-                                                            <div class="col-6">
-                                                                <div class="mb-3">
-                                                                    <label class="form-label" for="repeat-category">Repeat</label>
-                                                                    <input type="number" class="form-control" name="repeat_interval" id="repeat-interval" placeholder="1" value=1>
-                                                                    <div class="invalid-feedback">Please select a valid event category</div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-6">
-                                                                <div class="mb-3">
-                                                                    <label class="form-label" for="repeat-frequency">Frequency</label>
-                                                                    <select class="form-select" name="repeat_frequency" id="repeat-frequency">
-                                                                    <option value="DAILY">DAILY</option>
-                                                                    <option value="WEEKLY">WEEKLY</option>
-                                                                    <option value="MONTHLY">MONTHLY</option>
-                                                                    <option value="YEARLY">YEARLY</option>
-                                                                </select>
-                                                                    <div class="invalid-feedback">Please select a valid event category</div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <!--end col-->
-                                                    <div class="col-12">
-                                                        <div class="mb-3">
-                                                            <label class="form-label" for="repeat_by_weekdays">Repeat by days</label>
-                                                            <select class="form-select" name="repeat_by_weekdays" id="repeat_by_weekdays" multiple>
-                                                            <option value="0">Monday</option>
-                                                            <option value="1">Tuesday</option>
-                                                            <option value="2">Wednesday</option>
-                                                            <option value="3">Thursday</option>
-                                                            <option value="4">Friday</option>
-                                                            <option value="5">Saturday</option>
-                                                            <option value="6">Sunday</option>
-                                                            <option value="ALL" selected disabled hidden></option>
+                                                
+                                                <!-- Optional Attendees -->
+                                                <div class="col-md-6">
+                                                    <div class="mb-4">
+                                                        <label class="form-label fw-semibold">
+                                                            <i class="ri-user-line me-2"></i>Optional Attendees
+                                                        </label>
+                                                        <select class="form-select" data-choices data-choices-search-false data-choices-removeItem
+                                                            id="choices-lead-input-optional" name="optional_invites" multiple>
+                                                            {% for tech in technicians %}
+                                                            <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                            {% endfor %} 
                                                         </select>
-                                                            <div class="invalid-feedback">Please select a valid event category</div>
+                                                        <small class="form-text text-muted">Select optional meeting participants</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Date and Time Selection -->
+                                            <div class="col-12">
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-semibold">
+                                                        <i class="ri-calendar-event-line me-2"></i>Date and Time
+                                                    </label>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Start Date</label>
+                                                            <div class="input-group">
+                                                                <input type="text" id="start_date" class="form-control flatpickr flatpickr-input" placeholder="Select start date" readonly required>
+                                                                <span class="input-group-text"><i class="ri-calendar-event-line"></i></span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">End Date</label>
+                                                            <div class="input-group">
+                                                                <input type="text" id="end_date" class="form-control flatpickr flatpickr-input" placeholder="Select end date" readonly required>
+                                                                <span class="input-group-text"><i class="ri-calendar-event-line"></i></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mt-3">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Start Time</label>
+                                                            <select class="form-select" id="timepicker1" name="start_time" required>
+                                                                <option value="">Select start time</option>
+                                                                <option value="08:00">8:00 AM</option>
+                                                                <option value="09:00">9:00 AM</option>
+                                                                <option value="10:00">10:00 AM</option>
+                                                                <option value="11:00">11:00 AM</option>
+                                                                <option value="12:00">12:00 PM</option>
+                                                                <option value="13:00">1:00 PM</option>
+                                                                <option value="14:00">2:00 PM</option>
+                                                                <option value="15:00">3:00 PM</option>
+                                                                <option value="16:00">4:00 PM</option>
+                                                                <option value="17:00">5:00 PM</option>
+                                                                <option value="18:00">6:00 PM</option>
+                                                                <option value="19:00">7:00 PM</option>
+                                                                <option value="20:00">8:00 PM</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">End Time</label>
+                                                            <select class="form-select" id="timepicker2" name="end_time" required>
+                                                                <option value="">Select end time</option>
+                                                                <option value="08:00">8:00 AM</option>
+                                                                <option value="09:00">9:00 AM</option>
+                                                                <option value="10:00">10:00 AM</option>
+                                                                <option value="11:00">11:00 AM</option>
+                                                                <option value="12:00">12:00 PM</option>
+                                                                <option value="13:00">1:00 PM</option>
+                                                                <option value="14:00">2:00 PM</option>
+                                                                <option value="15:00">3:00 PM</option>
+                                                                <option value="16:00">4:00 PM</option>
+                                                                <option value="17:00">5:00 PM</option>
+                                                                <option value="18:00">6:00 PM</option>
+                                                                <option value="19:00">7:00 PM</option>
+                                                                <option value="20:00">8:00 PM</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <input type="hidden" id="start" name="start">
+                                                    <input type="hidden" id="end" name="end">
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Location -->
+                                            <div class="col-12">
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-semibold">
+                                                        <i class="ri-map-pin-line me-2"></i>Location
+                                                    </label>
+                                                    <input type="text" class="form-control" name="location" id="event-location" placeholder="Enter location or online meeting link (e.g., Teams call, Zoom link, physical address)">
+                                                    <small class="form-text text-muted">Enter a geographical location or online meeting link</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Description with CKEditor -->
+                                            <div class="col-12">
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-semibold">
+                                                        <i class="ri-file-text-line me-2"></i>Description
+                                                    </label>
+                                                    <textarea class="form-control" name="description" id="event-description" placeholder="Enter meeting description..." rows="4"></textarea>
+                                                    <small class="form-text text-muted">Rich text editor will be initialized here</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Hidden Fields -->
+                                            <input type="hidden" id="eventid" name="eventid" value="" />
+                                            <input type="hidden" name="type" value="Primary" />
+                                            
+                                            <!-- Recurrence Section -->
+                                            <div class="col-12">
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-semibold">
+                                                        <i class="ri-refresh-line me-2"></i>Recurrence
+                                                    </label>
+                                                    <div class="form-check">
+                                                        <input type="checkbox" id="isRepeating" name="repeating" onchange="toggleRecurrenceFields()" class="form-check-input">
+                                                        <label class="form-check-label" for="isRepeating">Repeat this meeting</label>
+                                                    </div>
+                                                    
+                                                    <!-- Recurrence Fields -->
+                                                    <div id="recurrenceFields" style="display: none;" class="mt-3 p-3 bg-light rounded">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <label class="form-label">Frequency</label>
+                                                                <select class="form-select" name="repeat_frequency" id="repeat-frequency" onchange="toggleCustomRecurrence()">
+                                                                    <option value="DAILY">Daily</option>
+                                                                    <option value="WEEKLY">Weekly</option>
+                                                                    <option value="BI_WEEKLY">Bi-Weekly</option>
+                                                                    <option value="MONTHLY">Monthly</option>
+                                                                    <option value="ANNUALLY">Annually</option>
+                                                                    <option value="CUSTOM">Custom</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label">Every</label>
+                                                                <input type="number" class="form-control" name="repeat_interval" id="repeat-interval" placeholder="1" value="1" min="1">
+                                                                <small class="form-text text-muted">Number of intervals</small>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Custom Recurrence Options -->
+                                                        <div id="customRecurrenceOptions" style="display: none;" class="mt-3">
+                                                            <label class="form-label">Repeat on specific days</label>
+                                                            <select class="form-select" name="repeat_by_weekdays" id="repeat_by_weekdays" multiple>
+                                                                <option value="0">Monday</option>
+                                                                <option value="1">Tuesday</option>
+                                                                <option value="2">Wednesday</option>
+                                                                <option value="3">Thursday</option>
+                                                                <option value="4">Friday</option>
+                                                                <option value="5">Saturday</option>
+                                                                <option value="6">Sunday</option>
+                                                            </select>
+                                                            <small class="form-text text-muted">Select specific days for custom recurrence</small>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <!--end row-->
-                                            <div class="hstack gap-2 justify-content-end">
-                                                <button type="button" class="btn btn-soft-danger" id="btn-delete-event"><i class="ri-close-line align-bottom"></i> Delete</button>
-                                                <button type="submit" class="btn btn-success" id="btn-save-event">Add Event</button>
+                                            
+                                            <!-- Action Buttons -->
+                                            <div class="col-12">
+                                                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                                    <button type="button" class="btn btn-soft-danger" id="btn-delete-event">
+                                                        <i class="ri-delete-bin-line me-1"></i>Delete
+                                                    </button>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                                        <button type="submit" class="btn btn-primary" id="btn-save-event">
+                                                            <i class="ri-send-plane-line me-1"></i>Send
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
+                                        </div>
                                     </form>
-                                    </div>
                                 </div>
-                                <!-- end modal-content-->
                             </div>
-                            <!-- end modal dialog-->
                         </div>
-                        <!-- end modal-->
-                        <!-- end modal-->
                     </div>
                 </div>
                 <!-- end row-->
@@ -309,7 +373,7 @@
 
     <script>            
         // Retrieve and parse the JSON data
-        const events = JSON.parse(document.getElementById('events').textContent);
+        const events = JSON.parse(document.getElementById('events').textContent || '[]');
         console.log(events)
     </script>
     
@@ -318,5 +382,325 @@
     <script src="{% static 'js/pages/calendar.init.js'%}" type="module"></script>
 
     <script src="{% static 'libs/@ckeditor/ckeditor5-build-classic/build/ckeditor.js'%}"></script> 
-
+    
+    <!-- Flatpickr CSS and JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    
+    <script>
+        // Initialize Flatpickr for date pickers and time picker event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Flatpickr for date pickers only
+            // Start Date Picker
+            const startDatePicker = flatpickr("#start_date", {
+                dateFormat: "Y-m-d",
+                allowInput: false,
+                clickOpens: true,
+                onChange: function(selectedDates, dateStr) {
+                    document.getElementById('start_date').value = dateStr;
+                    updateDateTimeFields();
+                }
+            });
+            
+            // End Date Picker
+            const endDatePicker = flatpickr("#end_date", {
+                dateFormat: "Y-m-d",
+                allowInput: false,
+                clickOpens: true,
+                onChange: function(selectedDates, dateStr) {
+                    document.getElementById('end_date').value = dateStr;
+                    updateDateTimeFields();
+                }
+            });
+            
+            // Add event listeners for time picker dropdowns
+            document.getElementById('timepicker1').addEventListener('change', updateDateTimeFields);
+            document.getElementById('timepicker2').addEventListener('change', updateDateTimeFields);
+            
+            // Function to update hidden start/end fields
+            function updateDateTimeFields() {
+                const startDate = document.getElementById('start_date').value;
+                const endDate = document.getElementById('end_date').value;
+                const startTime = document.getElementById('timepicker1').value;
+                const endTime = document.getElementById('timepicker2').value;
+                
+                if (startDate && startTime) {
+                    const startDateTime = startDate + ' ' + startTime + ':00';
+                    document.getElementById('start').value = startDateTime;
+                }
+                
+                if (endDate && endTime) {
+                    const endDateTime = endDate + ' ' + endTime + ':00';
+                    document.getElementById('end').value = endDateTime;
+                }
+            }
+        });
+    </script>
+    
+    <style>
+        /* Custom styles for the meeting-style form */
+        .modal-xl {
+            max-width: 900px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 0.375rem;
+            border: 1px solid #dee2e6;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .form-control-lg {
+            font-size: 1.1rem;
+            padding: 0.75rem 1rem;
+        }
+        
+        /* Invite field styling */
+        #mandatory-invites, #optional-invites {
+            min-height: 80px;
+        }
+        
+        /* Choices.js styling for attendee dropdowns */
+        .choices__inner {
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            min-height: 80px;
+            padding: 0.5rem 0.75rem;
+        }
+        
+        .choices__list--multiple .choices__item {
+            background-color: #0d6efd;
+            border: 1px solid #0d6efd;
+            border-radius: 0.25rem;
+            color: #fff;
+            padding: 0.25rem 0.5rem;
+            margin: 0.125rem;
+            font-size: 0.875rem;
+        }
+        
+        .choices__list--multiple .choices__item .choices__button {
+            border-left: 1px solid rgba(255, 255, 255, 0.3);
+            margin-left: 0.5rem;
+            padding-left: 0.5rem;
+        }
+        
+        .choices__list--dropdown {
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            z-index: 1050;
+        }
+        
+        .choices__list--dropdown .choices__item {
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+        }
+        
+        .choices__list--dropdown .choices__item--selectable {
+            background-color: #fff;
+        }
+        
+        .choices__list--dropdown .choices__item--selectable:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .choices__list--dropdown .choices__item--selectable.is-highlighted {
+            background-color: #e7f1ff;
+            color: #0d6efd;
+        }
+        
+        /* Additional attendee dropdown styling */
+        .attendee-choices .choices__inner {
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            min-height: 80px;
+            padding: 0.5rem 0.75rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        
+        .attendee-choices .choices__inner:hover {
+            border-color: #86b7fe;
+        }
+        
+        .attendee-choices.is-focused .choices__inner {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .attendee-choices .choices__input {
+            background: transparent;
+            border: none;
+            outline: none;
+            box-shadow: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.875rem;
+        }
+        
+        .attendee-choices .choices__input::placeholder {
+            color: #6c757d;
+            opacity: 0.7;
+        }
+        
+        /* Side-by-side attendee layout styling */
+        .row .col-md-6:first-child {
+            padding-right: 10px;
+        }
+        
+        .row .col-md-6:last-child {
+            padding-left: 10px;
+        }
+        
+        /* Compact dropdown styling for side-by-side layout */
+        .attendee-choices .choices__list--multiple .choices__item {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.4rem;
+            margin: 0.1rem;
+        }
+        
+        /* Recurrence section styling */
+        #recurrenceFields {
+            background-color: #f8f9fa;
+            border-radius: 0.375rem;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            border: 1px solid #e9ecef;
+        }
+        
+        #customRecurrenceOptions {
+            background-color: #e9ecef;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            border: 1px solid #dee2e6;
+        }
+        
+        /* CKEditor styling */
+        .ck-editor__editable {
+            min-height: 150px;
+            max-height: 300px;
+        }
+        
+        .ck.ck-editor__main > .ck-editor__editable:not(.ck-focused) {
+            border-color: #dee2e6;
+        }
+        
+        .ck.ck-editor__main > .ck-editor__editable.ck-focused {
+            border-color: #86b7fe;
+        }
+        
+        /* Form section spacing */
+        .event-form > .col-12 {
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Button styling */
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+        
+        /* Icon styling */
+        .form-label i {
+            color: #6c757d;
+        }
+        
+        /* Required field indicator */
+        .required-asterix {
+            color: #dc3545;
+        }
+        
+        /* Form validation styling */
+        .form-control.is-invalid {
+            border-color: #dc3545;
+        }
+        
+        .form-control.is-valid {
+            border-color: #198754;
+        }
+        
+        /* Modal header styling */
+        .modal-header.bg-soft-info {
+            background-color: #e7f1ff !important;
+            border-bottom: 1px solid #b3d9ff;
+        }
+        
+        /* Border top for action buttons */
+        .border-top {
+            border-top: 1px solid #dee2e6 !important;
+        }
+        
+        /* Bootstrap color overrides to ensure proper styling */
+        .bg-soft-success {
+            background-color: #d1e7dd !important;
+        }
+        
+        .bg-soft-info {
+            background-color: #d1ecf1 !important;
+        }
+        
+        .bg-soft-warning {
+            background-color: #fff3cd !important;
+        }
+        
+        .bg-soft-danger {
+            background-color: #f8d7da !important;
+        }
+        
+        .text-success {
+            color: #198754 !important;
+        }
+        
+        .text-info {
+            color: #0dcaf0 !important;
+        }
+        
+        .text-warning {
+            color: #ffc107 !important;
+        }
+        
+        .text-danger {
+            color: #dc3545 !important;
+        }
+        
+        /* Calendar styling */
+        .fc-event {
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .fc-event:hover {
+            opacity: 0.8;
+        }
+        
+        /* External events styling */
+        .external-event {
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+    </style>
     {% endblock extra_js %}

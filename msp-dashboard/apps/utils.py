@@ -33,98 +33,133 @@ def get_tenant_company_name():
 
 def tenant_ticket_directory_path(instance, filename):
     """
-    Upload path for ticket files: ./media/<company_name>/tickets/<ticket_name>/<filename>
+    Upload path for ticket files: ./media/<schema>/tickets/<ticket_name>/<filename>
     """
-    company_name = get_tenant_company_name()
     ticket_name = sanitize_filename(instance.name)
-    return f"{company_name}/tickets/{ticket_name}/{filename}"
+    
+    # Always use the current schema for the upload path
+    from django.db import connection
+    current_schema = connection.settings_dict.get("SCHEMA", "public")
+    
+    return f"tickets/{ticket_name}/{filename}"
 
 
 def tenant_ticket_files_directory_path(instance, filename):
     """
-    Upload path for ticket file attachments: ./media/<company_name>/tickets/<ticket_name>/<filename>
+    Upload path for ticket file attachments: ./media/<schema>/tickets/<ticket_name>/<filename>
     """
-    company_name = get_tenant_company_name()
     ticket_name = sanitize_filename(instance.ticket.name)
-    return f"{company_name}/tickets/{ticket_name}/{filename}"
+    
+    # Always use the current schema for the upload path
+    from django.db import connection
+    current_schema = connection.settings_dict.get("SCHEMA", "public")
+    
+    return f"tickets/{ticket_name}/{filename}"
 
 
 def tenant_project_directory_path(instance, filename):
     """
-    Upload path for project files: ./media/<company_name>/projects/<project_name>/<filename>
+    Upload path for project files: ./media/<schema>/projects/<project_name>/<filename>
     """
-    company_name = get_tenant_company_name()
     project_name = sanitize_filename(instance.name)
-    return f"{company_name}/projects/{project_name}/{filename}"
+    
+    # Always use the current schema for the upload path
+    from django.db import connection
+    current_schema = connection.settings_dict.get("SCHEMA", "public")
+    
+    return f"projects/{project_name}/{filename}"
 
 
 def tenant_project_files_directory_path(instance, filename):
     """
-    Upload path for project file attachments: ./media/<company_name>/projects/<project_name>/<filename>
+    Upload path for project file attachments: ./media/<schema>/projects/<project_name>/<filename>
     """
-    company_name = get_tenant_company_name()
     project_name = sanitize_filename(instance.project.name)
-    return f"{company_name}/projects/{project_name}/{filename}"
+    
+    # Always use the current schema for the upload path
+    from django.db import connection
+    current_schema = connection.settings_dict.get("SCHEMA", "public")
+    
+    return f"projects/{project_name}/{filename}"
 
 
 def tenant_client_directory_path(instance, filename):
     """
-    Upload path for client files: ./media/<company_name>/clients/<client_name>/<filename>
+    Upload path for client files: ./media/<schema>/clients/<client_name>/<filename>
     """
-    company_name = get_tenant_company_name()
     client_name = sanitize_filename(instance.name)
-    return f"{company_name}/clients/{client_name}/{filename}"
+    
+    # Always use the current schema for the upload path
+    from django.db import connection
+    current_schema = connection.settings_dict.get("SCHEMA", "public")
+    
+    return f"clients/{client_name}/{filename}"
 
 
 def tenant_client_files_directory_path(instance, filename):
     """
-    Upload path for client file attachments: ./media/<company_name>/clients/<client_name>/<filename>
+    Upload path for client file attachments: ./media/<schema>/clients/<client_name>/<filename>
     """
-    company_name = get_tenant_company_name()
     client_name = sanitize_filename(instance.client.name)
-    return f"{company_name}/clients/{client_name}/{filename}"
+    
+    # Always use the current schema for the upload path
+    from django.db import connection
+    current_schema = connection.settings_dict.get("SCHEMA", "public")
+    
+    return f"clients/{client_name}/{filename}"
 
 
 def tenant_lead_directory_path(instance, filename):
     """
-    Upload path for lead files: ./media/<company_name>/leads/<lead_name>/<filename>
+    Upload path for lead files: ./media/<schema>/leads/<lead_name>/<filename>
     """
-    company_name = get_tenant_company_name()
     lead_name = sanitize_filename(instance.name)
-    return f"{company_name}/leads/{lead_name}/{filename}"
+    
+    # Always use the current schema for the upload path
+    from django.db import connection
+    current_schema = connection.settings_dict.get("SCHEMA", "public")
+    
+    return f"leads/{lead_name}/{filename}"
 
 
 def tenant_lead_files_directory_path(instance, filename):
     """
-    Upload path for lead file attachments: ./media/<company_name>/leads/<lead_name>/<filename>
+    Upload path for lead file attachments: ./media/<schema>/leads/<lead_name>/<filename>
     """
-    company_name = get_tenant_company_name()
     lead_name = sanitize_filename(instance.lead.name)
-    return f"{company_name}/leads/{lead_name}/{filename}"
+    
+    # Always use the current schema for the upload path
+    from django.db import connection
+    current_schema = connection.settings_dict.get("SCHEMA", "public")
+    
+    return f"leads/{lead_name}/{filename}"
 
 
 def tenant_sales_directory_path(instance, filename):
     """
-    Upload path for sales files: ./media/<company_name>/sales/<sales_name>/<filename>
+    Upload path for sales files: ./media/<schema>/sales/<sales_name>/<filename>
     """
-    company_name = get_tenant_company_name()
     sales_name = sanitize_filename(instance.name)
-    return f"{company_name}/sales/{sales_name}/{filename}"
+    
+    # Always use the current schema for the upload path
+    from django.db import connection
+    current_schema = connection.settings_dict.get("SCHEMA", "public")
+    
+    return f"sales/{sales_name}/{filename}"
 
 
 def create_tenant_directories():
     """
     Create the base directory structure for the current tenant
     """
-    company_name = get_tenant_company_name()
-    base_path = os.path.join(settings.MEDIA_ROOT, company_name)
+    # Always use the current schema directory (no company name subdirectory)
+    from django.db import connection
+    current_schema = connection.settings_dict.get("SCHEMA", "public")
     
-    # Create main company directory
-    os.makedirs(base_path, exist_ok=True)
-    
-    # Create subdirectories for each entity type
+    # Create subdirectories directly under the schema directory
     subdirs = ['tickets', 'projects', 'clients', 'leads', 'sales']
     for subdir in subdirs:
-        os.makedirs(os.path.join(base_path, subdir), exist_ok=True)
+        subdir_path = os.path.join(settings.MEDIA_ROOT, current_schema, subdir)
+        os.makedirs(subdir_path, exist_ok=True)
     
-    return base_path 
+    return os.path.join(settings.MEDIA_ROOT, current_schema) 

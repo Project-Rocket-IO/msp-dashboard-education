@@ -1,6 +1,7 @@
 from django.shortcuts import redirect, render, reverse
 from django.http import HttpResponse, Http404
 from django.db import connection
+from django.conf import settings
 from apps.models import FileInfo
 from apps.forms import *
 from django.contrib import messages
@@ -107,37 +108,130 @@ def get_files_from_directory_recursive(directory_path, extensions=[]):
     return files
 
 
-def generate_nested_directory(root_path, path):
+def generate_nested_directory(root_path, path, current_user=None):
     directories = []
 
+    # Check if the path exists and is accessible
+    if not os.path.exists(path) or not os.path.isdir(path):
+        return directories
+
     schema = connection.settings_dict["SCHEMA"]
-    for name in os.listdir(path):
-        inner_path = os.path.join(path, name)
-        if os.path.isdir(inner_path):
-            # Users can only view the filesystem of their own tenant
-            if (schema not in path) and (name != schema):
-                continue
+    
+    try:
+        for name in os.listdir(path):
+            inner_path = os.path.join(path, name)
+            if os.path.isdir(inner_path):
+                # Users can only view the filesystem of their own tenant
+                if (schema not in path) and (name != schema):
+                    continue
+                    
+                # If current_user is provided, only show their directory
+                if current_user and name.startswith('user_') and name != f"user_{current_user.pk}":
+                    continue
 
-            unique_id = str(uuid.uuid4())
-            nested_path = os.path.join(path, name)
-            nested_directories = generate_nested_directory(root_path, nested_path)
+                unique_id = str(uuid.uuid4())
+                nested_path = os.path.join(path, name)
+                
+                try:
+                    nested_directories = generate_nested_directory(root_path, nested_path, current_user)
+                except (FileNotFoundError, OSError, PermissionError):
+                    # If we can't access a subdirectory, skip it
+                    nested_directories = []
 
-            # Folder Size
-            folder_size: int = get_path_size(inner_path)
-            if folder_size < KB_MULTIPLIER:
-                folder_size = ""
-            else:
-                folder_size: str = format_size(folder_size)
+                # Folder Size
+                try:
+                    folder_size: int = get_path_size(inner_path)
+                    if folder_size < KB_MULTIPLIER:
+                        folder_size = ""
+                    else:
+                        folder_size: str = format_size(folder_size)
+                except (FileNotFoundError, OSError, PermissionError):
+                    folder_size = ""
 
-            directories.append(
-                {
-                    "id": unique_id,
+                # Change user_<number> to username if it's a user directory
+                display_name = name
+                if current_user and name.startswith('user_') and name == f"user_{current_user.pk}":
+                    display_name = current_user.username if hasattr(current_user, 'username') else current_user.email
+
+                directories.append(
+                    {
+                        "id": unique_id,
+                        "name": display_name,
+                        "path": os.path.relpath(nested_path, root_path),
+                        "directories": nested_directories,
+                        "space": folder_size,
+                    }
+                )
+    except (FileNotFoundError, OSError, PermissionError) as e:
+        # If we can't access the directory at all, return empty list
+        print(f"Error accessing directory {path}: {e}")
+        return directories
+        
+    return directories
+
+
+def generate_schema_directory_tree(media_path, schema):
+    """
+    Generate a clean directory tree for the current schema only
+    This will be used for the sidebar regardless of current location
+    """
+    schema_path = os.path.join(media_path, schema)
+    if not os.path.exists(schema_path):
+        return []
+    
+    directories = []
+    
+    # Create the main schema directory entry
+    unique_id = str(uuid.uuid4())
+    
+    # Generate a clean, organized structure for the schema
+    try:
+        # Get all items in the schema directory
+        schema_items = []
+        for name in os.listdir(schema_path):
+            item_path = os.path.join(schema_path, name)
+            if os.path.isdir(item_path):
+                # Create a clean directory structure
+                item_id = str(uuid.uuid4())
+                
+                # Get subdirectories recursively but limit depth for cleaner display
+                subdirs = []
+                try:
+                    for subname in os.listdir(item_path):
+                        sub_path = os.path.join(item_path, subname)
+                        if os.path.isdir(sub_path):
+                            subdirs.append({
+                                "id": str(uuid.uuid4()),
+                                "name": subname,
+                                "path": f"{name}/{subname}",  # Remove schema prefix
+                                "directories": [],  # Limit depth to keep it clean
+                                "space": ""
+                            })
+                except (FileNotFoundError, OSError, PermissionError):
+                    subdirs = []
+                
+                schema_items.append({
+                    "id": item_id,
                     "name": name,
-                    "path": os.path.relpath(nested_path, root_path),
-                    "directories": nested_directories,
-                    "space": folder_size,
-                }
-            )
+                    "path": name,  # Remove schema prefix - just show the directory name
+                    "directories": subdirs,
+                    "space": ""
+                })
+        
+        # Sort items for better organization
+        schema_items.sort(key=lambda x: x["name"])
+        
+    except (FileNotFoundError, OSError, PermissionError):
+        schema_items = []
+    
+    directories.append({
+        "id": unique_id,
+        "name": schema,  # This will show "public" as the main directory
+        "path": "",  # Empty path for root level
+        "directories": schema_items,
+        "space": ""
+    })
+    
     return directories
 
 
@@ -204,6 +298,35 @@ def get_file_size(path):
     return total_size
 
 
+def search_files_recursive(directory_path, search_query):
+    """
+    Search for files recursively in a directory based on filename
+    """
+    search_results = []
+    
+    if not os.path.exists(directory_path):
+        return search_results
+    
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if search_query.lower() in file.lower():
+                file_path = os.path.join(root, file)
+                try:
+                    file_size = get_file_size(file_path)
+                    search_results.append({
+                        "filename": file,
+                        "file_path": file_path,
+                        "relative_path": os.path.relpath(file_path, directory_path),
+                        "size": format_size(file_size),
+                        "modified_time": os.path.getmtime(file_path)
+                    })
+                except Exception as e:
+                    print(f"Error processing file {file_path}: {e}")
+                    continue
+    
+    return search_results
+
+
 def get_files_size(files):
     total_space = 0
     for file in files:
@@ -240,14 +363,46 @@ def format_size(size_in_bytes: int) -> str:
 @has_permission("apps.view_fileinfo")
 def apps_filemanager(request, directory=""):
     media_path = os.path.join(settings.MEDIA_ROOT)
+    schema = connection.settings_dict["SCHEMA"]
+    
     if not directory:
-        directory = connection.settings_dict["SCHEMA"]
-    directory = os.path.join(media_path, directory)
+        # If no directory specified, show the schema root
+        directory = schema
+        requested_path = os.path.join(media_path, directory)
+    else:
+        # If directory is specified, it should be relative to the schema
+        # Check if it's already a full path or just a subdirectory name
+        if directory.startswith(schema + '/'):
+            # It's already a full path like "public/tickets"
+            requested_path = os.path.join(media_path, directory)
+        else:
+            # It's just a subdirectory name like "tickets", so prepend the schema
+            directory = f"{schema}/{directory}"
+            requested_path = os.path.join(media_path, directory)
+    
+    # Check if the requested directory actually exists
+    if not os.path.exists(requested_path):
+        # If the directory doesn't exist, redirect to the overview page
+        messages.error(request, f"Directory '{directory}' does not exist.")
+        return redirect("apps:filemanager.overview")
+    
+    directory = requested_path
 
     schema = connection.settings_dict["SCHEMA"]
-    directories = generate_nested_directory(
-        media_path, directory
-    )  # current path from media_path to directory
+    
+    # Generate static sidebar directory tree for the current schema only
+    sidebar_directories = generate_schema_directory_tree(media_path, schema)
+    
+    # Generate directories for current location (used for breadcrumbs and file display)
+    try:
+        directories = generate_nested_directory(
+            media_path, directory, request.user
+        )  # current path from media_path to directory, pass current user
+    except (FileNotFoundError, OSError) as e:
+        # If there's an error accessing the directory, redirect to overview
+        messages.error(request, f"Error accessing directory: {str(e)}")
+        return redirect("apps:filemanager.overview")
+    
     selected_directory = directory
 
     accumulated_space = ACCUMULATED_SPACE_IN_GB * GB_MULTIPLIER
@@ -277,8 +432,17 @@ def apps_filemanager(request, directory=""):
     breadcrumbs = get_breadcrumbs(request)
     last_directory = breadcrumbs[-1]
 
+    # Handle search functionality
+    search_query = request.GET.get('search', '')
+    search_results = []
+    
+    if search_query:
+        # Search through all files recursively
+        search_results = search_files_recursive(selected_directory_path, search_query)
+    
     context = {
         "directories": directories,
+        "sidebar_directories": sidebar_directories,  # Static sidebar tree
         "files": files,
         "all_files": all_files,
         "subdir_files_count": subdir_files_count,
@@ -287,6 +451,8 @@ def apps_filemanager(request, directory=""):
         "breadcrumbs": breadcrumbs,
         "last_directory": last_directory,
         "company_name": schema,
+        "search_query": search_query,
+        "search_results": search_results,
         "storage_overview": {
             "used_space": format_size(used_space),
             "space_left": format_size(space_left),
