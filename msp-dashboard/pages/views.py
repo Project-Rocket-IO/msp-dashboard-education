@@ -206,10 +206,60 @@ def pages_profile_settings(request):
     from django.conf import settings
     context['settings'] = settings
     
-    # Add groups to context for dynamic role options
+    # Add groups to context for dynamic role options - Only educational roles
     from django.contrib.auth.models import Group
-    available_groups = Group.objects.all().order_by('id')
+    educational_roles = ['Student', 'Faculty/Staff', 'Administration', 'IT Dept', 'Super Admin']
+    available_groups = Group.objects.filter(name__in=educational_roles).order_by('name')
     context['available_groups'] = available_groups
+    
+    # Keep original non_client_users for modals, but create filtered version for display
+    if 'non_client_users' in context:
+        # Store original list for modals
+        context['all_users_for_modals'] = context['non_client_users']
+        # Filter out Student users for display only
+        context['non_client_users'] = [user for user in context['non_client_users'] if not user.groups.filter(name='Student').exists()]
+        
+        # Add assignment information for all users in modals context
+        for user in context['all_users_for_modals']:
+            # Check if the user has an assignment stored in the title field
+            if user.title and user.title.startswith('Assigned to: '):
+                client_name = user.title.replace('Assigned to: ', '')
+                try:
+                    assigned_client = ClientCompany.objects.get(name=client_name)
+                    user.assigned_to_client = assigned_client
+                    print(f"DEBUG: Modal user {user.username} assigned to {assigned_client.name} (ID: {assigned_client.id})")
+                except ClientCompany.DoesNotExist:
+                    user.assigned_to_client = None
+                    print(f"DEBUG: Client company '{client_name}' not found for modal user {user.username}")
+            else:
+                user.assigned_to_client = None
+                print(f"DEBUG: Modal user {user.username} has no assignment (title: '{user.title}')")
+    
+    # Add available client companies for student assignment
+    available_clients = ClientCompany.objects.all().order_by('name')
+    context['available_users'] = available_clients  # Keep the same context key for compatibility
+    
+    # Add student users for the student users table
+    User = get_user_model()
+    student_users = User.objects.filter(groups__name='Student').order_by('first_name', 'username')
+    
+    # Add assignment information for students
+    for student in student_users:
+        # Check if the student has an assignment stored in the title field
+        if student.title and student.title.startswith('Assigned to: '):
+            client_name = student.title.replace('Assigned to: ', '')
+            try:
+                assigned_client = ClientCompany.objects.get(name=client_name)
+                student.assigned_to_client = assigned_client
+                print(f"DEBUG: Student {student.username} assigned to {assigned_client.name} (ID: {assigned_client.id})")
+            except ClientCompany.DoesNotExist:
+                student.assigned_to_client = None
+                print(f"DEBUG: Client company '{client_name}' not found for student {student.username}")
+        else:
+            student.assigned_to_client = None
+            print(f"DEBUG: Student {student.username} has no assignment (title: '{student.title}')")
+    
+    context['student_users'] = student_users
     
 
 
@@ -281,6 +331,40 @@ def pages_profile_settings(request):
                         messages.error(request, f"Role with ID {role_id} not found.")
                         return redirect("pages:pages.profile_settings")
                 
+                # Handle student assignment if role is Student
+                if new_group.name == 'Student':
+                    # Debug: Log all POST data for student assignments
+                    print(f"DEBUG: Processing student assignment for user {target_user.username}")
+                    print(f"DEBUG: POST data keys: {list(request.POST.keys())}")
+                    print(f"DEBUG: assigned_user_id from POST: {request.POST.get('assigned_user_id')}")
+                    print(f"DEBUG: Current user title before change: {target_user.title}")
+                    
+                    assigned_user_id = request.POST.get("assigned_user_id")
+                    print(f"DEBUG: Raw assigned_user_id: '{assigned_user_id}'")
+                    
+                    if assigned_user_id and assigned_user_id.strip():
+                        try:
+                            client_company = ClientCompany.objects.get(id=assigned_user_id)
+                            # Store the assignment in the user's title field
+                            new_title = f"Assigned to: {client_company.name}"
+                            target_user.title = new_title
+                            print(f"DEBUG: Setting new title to: '{new_title}'")
+                            messages.success(request, f"Student assigned to {client_company.name}")
+                        except ClientCompany.DoesNotExist:
+                            messages.warning(request, f"Client company with ID {assigned_user_id} not found.")
+                            # Keep existing assignment if client not found
+                            pass
+                    else:
+                        # Clear assignment if no client selected
+                        target_user.title = ""
+                        print(f"DEBUG: Clearing assignment - no client selected")
+                        messages.info(request, "Student assignment cleared")
+                else:
+                    # Clear assignment if role is not Student
+                    target_user.title = ""
+                    print(f"DEBUG: Clearing assignment - user is no longer a Student")
+                    messages.info(request, "Assignment cleared - user is no longer a Student")
+                
                 target_user.save()
                 messages.success(request, f"User {target_user.username} updated successfully.")
                 
@@ -288,6 +372,10 @@ def pages_profile_settings(request):
                 messages.error(request, f"User with ID {user_id} not found.")
             except Exception as e:
                 messages.error(request, f"Error updating user: {str(e)}")
+                
+        # Redirect after edit_user action to refresh the page
+        if action == "edit_user":
+            return redirect("pages:pages.profile_settings")
                 
         elif action == "delete_user":
             # Handle user deletion
@@ -422,6 +510,10 @@ def pages_profile_settings(request):
                 messages.error(request, f"User with ID {user_id} not found.")
             except Exception as e:
                 messages.error(request, f"Error deleting user: {str(e)}")
+        
+        # Redirect after delete_user action to refresh the page
+        if action == "delete_user":
+            return redirect("pages:pages.profile_settings")
         else:
             # Handle regular profile update
             form = process_profile_update_form(request, user)

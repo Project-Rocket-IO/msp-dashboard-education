@@ -93,8 +93,13 @@ def create_user_billing_session(role_id, user_email, user_name, current_user, fo
         dict: Stripe checkout session data or error
     """
     try:
-        # If it's a client (role_id = 10), no billing needed
-        if role_id == CLIENT_ROLE:
+        # Get the role name to determine if billing is needed
+        role_choices_dict = dict(ROLE_CHOICES)
+        role_name = role_choices_dict.get(role_id, f"Role {role_id}")
+        
+        # Only require billing for Super User, IT Dept, or Administration roles
+        paid_roles = ['Super User', 'IT Dept', 'Administration']
+        if role_name not in paid_roles:
             return {"success": True, "no_billing": True}
         
         # Get the company's subscription tier (not individual user tier)

@@ -5,6 +5,23 @@
 <link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
 <script src="https://js.stripe.com/v3/"></script>
 {% endblock extra_css %}
+
+    <!-- Pass Django groups to JavaScript -->
+    <script>
+        window.availableGroups = [
+            {% for group in available_groups %}
+                { id: {{ group.id }}, name: "{{ group.name }}" },
+            {% endfor %}
+        ];
+        
+        // Pass available client companies for student assignment
+        window.availableUsers = [
+            {% for client in available_users %}
+                { user_id: {{ client.id }}, name: "{{ client.name }}", contact_first: "{{ client.contact_first|default:'' }}", contact_last: "{{ client.contact_last|default:'' }}" },
+            {% endfor %}
+        ];
+    </script>
+
 {% block content %}
             <!-- ============================================================== -->
             <!-- Start right Content here -->
@@ -688,17 +705,17 @@
                                                                         <!--end row-->
                                                                     </div>
                                                                 </div>
-                                                                <div id="client-choice-dropdown-div" class="col-lg-3" style="display: none;">
+                                                                <div id="student-assignment-dropdown-div" class="col-lg-3" style="display: none;">
                                                                     <div class="mb-3">
-                                                                        <label for="client-choice"
-                                                                            class="form-label">Client Choice</label>
+                                                                        <label for="student-assignment"
+                                                                            class="form-label">Assign to User</label>
                                                                         <div class="row">
                                                                             <div class="col-lg-12">
                                                                                 <select class="form-control" data-choices
                                                                                     data-choices-search-true 
-                                                                                    name="client_id">
-                                                                                    {% for client in clients %}
-                                                                                    <option value="{{client.id}}">{{client.name}}</option>
+                                                                                    name="assigned_user_id">
+                                                                                    {% for client in available_users %}
+                                                                                    <option value="{{client.id}}">{{client.name}} ({{client.contact_first}} {{client.contact_last}})</option>
                                                                                     {% endfor %}
                                                                                 </select>
                                                                             </div>
@@ -734,7 +751,7 @@
                                                     <div class="col-lg-6">
                                                         <div class="card">
                                                             <div class="card-header">
-                                                                <h4 class="card-title mb-0">Current Users (Non-Client)</h4>
+                                                                <h4 class="card-title mb-0">Current Users (Non Students)</h4>
                                                             </div>
                                                             <div class="card-body">
                                                                 <div class="table-responsive">
@@ -787,11 +804,11 @@
                                                         </div>
                                                     </div>
                                                     
-                                                    <!-- Client Users Table -->
+                                                                                                        <!-- Student Users Table -->
                                                     <div class="col-lg-6">
                                                         <div class="card">
                                                             <div class="card-header">
-                                                                <h4 class="card-title mb-0">Client Users</h4>
+                                                                <h4 class="card-title mb-0">Student Users</h4>
                                                             </div>
                                                             <div class="card-body">
                                                                 <div class="table-responsive">
@@ -802,12 +819,12 @@
                                                                                 <th>Last Name</th>
                                                                                 <th>Username</th>
                                                                                 <th>Role</th>
-                                                                                <th>Company Name</th>
+                                                                                <th>Assigned To</th>
                                                                                 <th>Actions</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
-                                                                            {% for user in client_users %}
+                                                                            {% for user in student_users %}
                                                                             <tr>
                                                                                 <td>{{ user.first_name|default:"-" }}</td>
                                                                                 <td>{{ user.last_name|default:"-" }}</td>
@@ -815,11 +832,11 @@
                                                                                 <td>
                                                                                     {% if user.groups.all %}
                                                                                         {{ user.groups.first.name }}
-                                                                                    {% else %}
+                                                                                {% else %}
                                                                                         -
-                                                                                    {% endif %}
+                                                                                {% endif %}
                                                                                 </td>
-                                                                                <td>{{ user.client.company.name|default:"-" }}</td>
+                                                                                <td>{{ user.assigned_to_client.name|default:"Not Assigned" }}</td>
                                                                                 <td>
                                                                                     <div class="btn-group" role="group">
                                                                                         <button type="button" class="btn btn-sm btn-outline-primary" 
@@ -836,7 +853,7 @@
                                                                             </tr>
                                                                             {% empty %}
                                                                             <tr>
-                                                                                <td colspan="6" class="text-center text-muted">No client users found</td>
+                                                                                <td colspan="6" class="text-center text-muted">No student users found</td>
                                                                             </tr>
                                                                             {% endfor %}
                                                                         </tbody>
@@ -848,7 +865,7 @@
                                                 </div>
                                                 
                                                 <!-- Edit User Modals -->
-                                                {% for user in non_client_users %}
+                                                {% for user in all_users_for_modals %}
                                                 <div class="modal fade" id="editUserModal{{ user.user_id }}" tabindex="-1" aria-labelledby="editUserModalLabel{{ user.user_id }}" aria-hidden="true">
                                                     <div class="modal-dialog modal-lg">
                                                         <div class="modal-content">
@@ -879,7 +896,7 @@
                                                                         <div class="col-md-6">
                                                                             <div class="mb-3">
                                                                                 <label for="edit_email_{{ user.user_id }}" class="form-label">Email</label>
-                                                                                <input type="email" class="form-control" id="edit_email_{{ user.user_id }}" 
+                                                                                <input type="email" class="form-control" id="edit_first_name_{{ user.user_id }}" 
                                                                                        name="email" value="{{ user.email|default:'' }}">
                                                                             </div>
                                                                         </div>
@@ -892,17 +909,21 @@
                                                                         </div>
                                                                         <div class="col-md-6">
                                                                             <div class="mb-3">
-                                                                                <label for="edit_title_{{ user.user_id }}" class="form-label">Title</label>
-                                                                                <input type="text" class="form-control" id="edit_title_{{ user.user_id }}" 
-                                                                                       name="title" value="{{ user.title|default:'' }}">
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="col-md-6">
-                                                                            <div class="mb-3">
                                                                                 <label for="edit_role_{{ user.user_id }}" class="form-label">Role</label>
                                                                                 <select class="form-control" name="role" id="edit_role_{{ user.user_id }}">
                                                                                     {% for group in available_groups %}
                                                                                         <option value="{{ group.id }}" {% if user.groups.first.id == group.id %}selected{% endif %}>{{ group.name }}</option>
+                                                                                    {% endfor %}
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6" id="edit_assignment_div_{{ user.user_id }}" style="display: none;">
+                                                                            <div class="mb-3">
+                                                                                <label for="edit_assignment_{{ user.user_id }}" class="form-label">User Assignment Choice</label>
+                                                                                <select class="form-control" name="assigned_user_id" id="edit_assignment_{{ user.user_id }}">
+                                                                                    <option value="">Select Assignment</option>
+                                                                                    {% for client in available_users %}
+                                                                                        <option value="{{ client.id }}" {% if user.assigned_to_client.id == client.id %}selected{% endif %}>{{ client.name }} ({{ client.contact_first }} {{ client.contact_last }})</option>
                                                                                     {% endfor %}
                                                                                 </select>
                                                                             </div>
@@ -1184,14 +1205,28 @@
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('user-creation-form');
             const roleSelect = document.getElementById('user-role-choice');
+            const studentAssignmentDiv = document.getElementById('student-assignment-dropdown-div');
             
             if (form && roleSelect) {
+                // Handle role change to show/hide student assignment dropdown
+                roleSelect.addEventListener('change', function() {
+                    const selectedText = this.options[this.selectedIndex].text;
+                    if (studentAssignmentDiv) {
+                        if (selectedText === 'Student') {
+                            studentAssignmentDiv.style.display = 'block';
+                        } else {
+                            studentAssignmentDiv.style.display = 'none';
+                        }
+                    }
+                });
+                
                 form.addEventListener('submit', function(e) {
                     const selectedOption = roleSelect.options[roleSelect.selectedIndex];
                     const roleName = selectedOption ? selectedOption.text : 'User';
                     
-                    // If it's not a client role, show billing info
-                    if (roleName.toLowerCase() !== 'client') {
+                    // Only require billing for Super User, IT Dept, or Administration roles
+                    const paidRoles = ['Super User', 'IT Dept', 'Administration'];
+                    if (paidRoles.includes(roleName)) {
                         const subscriptionTiers = {
                             'starter': { name: 'Starter Tier', price: 35 },
                             'growth': { name: 'Growth Tier', price: 55 },
@@ -1213,6 +1248,10 @@
                             return false;
                         }
                         */
+                    } else {
+                        // Free roles - no billing required
+                        console.log('No billing required for:', roleName);
+                        return true; // Allow form submission
                     }
                 });
             }
@@ -1221,6 +1260,79 @@
 
     <!-- User Management JavaScript -->
     <script>
+        // Function to handle edit modal role changes
+        function handleEditModalRoleChange(modalId) {
+            const roleSelect = document.getElementById('edit_role_' + modalId);
+            const assignmentDiv = document.getElementById('edit_assignment_div_' + modalId);
+            const assignmentSelect = document.getElementById('edit_assignment_' + modalId);
+            
+            if (roleSelect && assignmentDiv && assignmentSelect) {
+                // Initialize visibility based on current role
+                const currentRole = roleSelect.options[roleSelect.selectedIndex].text;
+                console.log('Modal opened for user with role:', currentRole);
+                
+                if (currentRole === 'Student') {
+                    assignmentDiv.style.display = 'block';
+                    assignmentSelect.disabled = false;
+                    // Ensure the field is included in form submission
+                    assignmentSelect.removeAttribute('disabled');
+                    console.log('Assignment field shown for Student role');
+                } else {
+                    assignmentDiv.style.display = 'none';
+                    assignmentSelect.disabled = true;
+                    assignmentSelect.value = '';
+                    console.log('Assignment field hidden for non-Student role');
+                }
+                
+                // Add change listener for future role changes
+                roleSelect.addEventListener('change', function() {
+                    const selectedText = this.options[this.selectedIndex].text;
+                    if (selectedText === 'Student') {
+                        assignmentDiv.style.display = 'block';
+                        assignmentSelect.disabled = false;
+                        // Ensure the field is included in form submission
+                        assignmentSelect.removeAttribute('disabled');
+                    } else {
+                        assignmentDiv.style.display = 'none';
+                        assignmentSelect.disabled = true;
+                        assignmentSelect.value = '';
+                    }
+                });
+            }
+        }
+        
+        // Initialize edit modals when they open
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all edit modals
+            const editModals = document.querySelectorAll('[id^="editUserModal"]');
+            
+            editModals.forEach(function(modal) {
+                modal.addEventListener('shown.bs.modal', function() {
+                    const modalId = this.id.replace('editUserModal', '');
+                    handleEditModalRoleChange(modalId);
+                    
+                    // Add form submission handler to ensure assignment field is processed
+                    const form = this.querySelector('form');
+                    if (form) {
+                        form.addEventListener('submit', function(e) {
+                            const roleSelect = form.querySelector('select[name="role"]');
+                            const assignmentSelect = form.querySelector('select[name="assigned_user_id"]');
+                            
+                            if (roleSelect && assignmentSelect) {
+                                const selectedRole = roleSelect.options[roleSelect.selectedIndex].text;
+                                if (selectedRole === 'Student') {
+                                    // Ensure assignment field is enabled before submission
+                                    assignmentSelect.disabled = false;
+                                    assignmentSelect.removeAttribute('disabled');
+                                    console.log('Form submitted with assignment:', assignmentSelect.value);
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        });
+        
         function deleteUser(userId, username) {
             // Show Bootstrap modal confirmation
             const modal = document.getElementById('deleteUserModal');
