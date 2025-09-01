@@ -155,6 +155,19 @@
                                                 </div>
                                             </div>
                                             
+                                            <!-- Debug: Show technicians count -->
+                                            {% if technicians %}
+                                            <div class="alert alert-info">
+                                                <strong>Debug:</strong> Found {{ technicians|length }} technicians in the system.
+                                                <br>First technician: {{ technicians.0.auth_user.username }} ({{ technicians.0.auth_user.email }})
+                                                <br>Technician IDs: {% for tech in technicians %}{{ tech.id }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                            </div>
+                                            {% else %}
+                                            <div class="alert alert-warning">
+                                                <strong>Debug:</strong> No technicians found in the system.
+                                            </div>
+                                            {% endif %}
+                                            
                                             <!-- Required and Optional Attendees on same row -->
                                             <div class="row">
                                                 <!-- Required Attendees -->
@@ -163,10 +176,9 @@
                                                         <label class="form-label fw-semibold">
                                                             <i class="ri-user-line me-2"></i>Required Attendees
                                                         </label>
-                                                        <select class="form-select" data-choices data-choices-search-false data-choices-removeItem
-                                                            id="choices-lead-input" name="mandatory_invites" multiple>
+                                                        <select class="form-select" id="mandatory-attendees-fresh" name="mandatory_invites" multiple>
                                                             {% for tech in technicians %}
-                                                            <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                            <option value="{{tech.pk}}">{{tech.auth_user.username}}</option>
                                                             {% endfor %} 
                                                         </select>
                                                         <small class="form-text text-muted">Select required meeting participants</small>
@@ -179,10 +191,9 @@
                                                         <label class="form-label fw-semibold">
                                                             <i class="ri-user-line me-2"></i>Optional Attendees
                                                         </label>
-                                                        <select class="form-select" data-choices data-choices-search-false data-choices-removeItem
-                                                            id="choices-lead-input-optional" name="optional_invites" multiple>
+                                                        <select class="form-select" id="optional-attendees-fresh" name="optional_invites" multiple>
                                                             {% for tech in technicians %}
-                                                            <option value="{{tech.id}}">{{tech.auth_user.username}}</option>
+                                                            <option value="{{tech.pk}}">{{tech.auth_user.username}}</option>
                                                             {% endfor %} 
                                                         </select>
                                                         <small class="form-text text-muted">Select optional meeting participants</small>
@@ -200,14 +211,14 @@
                                                         <div class="col-md-6">
                                                             <label class="form-label">Start Date</label>
                                                             <div class="input-group">
-                                                                <input type="text" id="start_date" class="form-control flatpickr flatpickr-input" placeholder="Select start date" readonly required>
+                                                                <input type="text" id="start_date" name="start_date" class="form-control flatpickr flatpickr-input" placeholder="Select start date" readonly required value="{% now 'Y-m-d' %}">
                                                                 <span class="input-group-text"><i class="ri-calendar-event-line"></i></span>
                                                             </div>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <label class="form-label">End Date</label>
                                                             <div class="input-group">
-                                                                <input type="text" id="end_date" class="form-control flatpickr flatpickr-input" placeholder="Select end date" readonly required>
+                                                                <input type="text" id="end_date" name="end_date" class="form-control flatpickr flatpickr-input" placeholder="Select end date" readonly required value="{% now 'Y-m-d' %}">
                                                                 <span class="input-group-text"><i class="ri-calendar-event-line"></i></span>
                                                             </div>
                                                         </div>
@@ -388,10 +399,58 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     
     <script>
-        // Initialize Flatpickr for date pickers and time picker event listeners
+        // Initialize Choices.js for attendee dropdowns AFTER modal opens
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Flatpickr for date pickers only
-            // Start Date Picker
+            console.log('DOM loaded, waiting for modal to open...');
+            
+            // Initialize Choices.js when the modal becomes visible
+            $('#event-modal').on('shown.bs.modal', function () {
+                console.log('Modal opened, initializing Choices.js...');
+                
+                // Check if already initialized to prevent duplicates
+                const mandatoryEl = document.getElementById('mandatory-attendees-fresh');
+                const optionalEl = document.getElementById('optional-attendees-fresh');
+                
+                if (mandatoryEl && optionalEl) {
+                    // Check if Choices.js has already processed these elements
+                    if (mandatoryEl.classList.contains('choices__input') || optionalEl.classList.contains('choices__input')) {
+                        console.log('Choices.js already initialized, skipping...');
+                        return;
+                    }
+                    
+                    console.log('Initializing Choices.js on visible elements...');
+                    
+                    // Initialize Choices.js on mandatory attendees
+                    const mandatoryChoices = new Choices(mandatoryEl, {
+                        removeItemButton: true,
+                        searchEnabled: true,
+                        placeholder: true,
+                        placeholderValue: "Select required attendees",
+                        noResultsText: "No technicians found",
+                        itemSelectText: "Click to select",
+                        shouldSort: false,
+                        position: 'bottom'
+                    });
+                    console.log('Mandatory choices initialized:', mandatoryChoices);
+                    
+                    // Initialize Choices.js on optional attendees
+                    const optionalChoices = new Choices(optionalEl, {
+                        removeItemButton: true,
+                        searchEnabled: true,
+                        placeholder: true,
+                        placeholderValue: "Select optional attendees",
+                        noResultsText: "No technicians found",
+                        itemSelectText: "Click to select",
+                        shouldSort: false,
+                        position: 'bottom'
+                    });
+                    console.log('Optional choices initialized:', optionalChoices);
+                } else {
+                    console.error('Attendee elements not found in modal!');
+                }
+            });
+            
+            // Initialize Flatpickr for date pickers
             const startDatePicker = flatpickr("#start_date", {
                 dateFormat: "Y-m-d",
                 allowInput: false,
@@ -402,7 +461,6 @@
                 }
             });
             
-            // End Date Picker
             const endDatePicker = flatpickr("#end_date", {
                 dateFormat: "Y-m-d",
                 allowInput: false,
@@ -414,8 +472,39 @@
             });
             
             // Add event listeners for time picker dropdowns
-            document.getElementById('timepicker1').addEventListener('change', updateDateTimeFields);
+            document.getElementById('timepicker1').addEventListener('change', function() {
+                updateDateTimeFields();
+                // Auto-set end time to 30 minutes after start time
+                autoSetEndTime();
+            });
             document.getElementById('timepicker2').addEventListener('change', updateDateTimeFields);
+            
+            // Function to automatically set end time 30 minutes after start time
+            function autoSetEndTime() {
+                const startTime = document.getElementById('timepicker1').value;
+                if (startTime) {
+                    const [hours, minutes] = startTime.split(':').map(Number);
+                    let endHours = hours;
+                    let endMinutes = minutes + 30;
+                    
+                    // Handle hour rollover
+                    if (endMinutes >= 60) {
+                        endMinutes -= 60;
+                        endHours += 1;
+                    }
+                    
+                    // Handle day rollover (24-hour format)
+                    if (endHours >= 24) {
+                        endHours = 0;
+                    }
+                    
+                    const endTimeString = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+                    document.getElementById('timepicker2').value = endTimeString;
+                    
+                    // Update the hidden fields
+                    updateDateTimeFields();
+                }
+            }
             
             // Function to update hidden start/end fields
             function updateDateTimeFields() {
@@ -435,6 +524,331 @@
                 }
             }
         });
+        
+        // Custom event click handler for calendar events
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, setting up event handlers...');
+            
+            // Use event delegation to intercept clicks on calendar events
+            function setupEventHandlers() {
+                try {
+                    const calendarEl = document.querySelector('#calendar');
+                    console.log('Calendar element found:', calendarEl);
+                    
+                    if (calendarEl) {
+                        // Method 1: Try to find and override the FullCalendar instance
+                        const fcInstance = calendarEl._fullCalendar;
+                        if (fcInstance) {
+                            console.log('FullCalendar instance found in _fullCalendar');
+                            fcInstance.setOption('eventClick', function(info) {
+                                console.log('Custom event click handler triggered');
+                                showEventDetails(info.event);
+                                info.jsEvent.preventDefault();
+                                return false;
+                            });
+                            console.log('Custom event click handler installed via _fullCalendar');
+                            return true;
+                        }
+                        
+                        // Method 2: Use event delegation to intercept clicks on event elements
+                        console.log('Setting up event delegation for calendar events');
+                        calendarEl.addEventListener('click', function(event) {
+                            // Check if the clicked element is a calendar event
+                            const eventElement = event.target.closest('.fc-event, .fc-event-main, .fc-event-title, .fc-event-time');
+                            if (eventElement) {
+                                console.log('Calendar event clicked via delegation');
+                                event.preventDefault();
+                                event.stopPropagation();
+                                
+                                // Find the event data from the element
+                                const eventId = eventElement.getAttribute('data-event-id') || 
+                                              eventElement.closest('[data-event-id]')?.getAttribute('data-event-id');
+                                
+                                if (eventId) {
+                                    console.log('Found event ID:', eventId);
+                                    // Try to find the event data from the calendar
+                                    const calendarApi = calendarEl._fullCalendar || 
+                                                       calendarEl.querySelector('.fc-view-harness')?._fullCalendar;
+                                    if (calendarApi) {
+                                        const eventData = calendarApi.getEventById(eventId);
+                                        if (eventData) {
+                                            showEventDetails(eventData);
+                                        } else {
+                                            console.log('Event data not found for ID:', eventId);
+                                        }
+                                    }
+                                } else {
+                                    console.log('No event ID found, trying to extract from element');
+                                    // Try to extract event info from the element itself
+                                    const eventTitle = eventElement.textContent || eventElement.title;
+                                    console.log('Event title from element:', eventTitle);
+                                    
+                                    // Try to find the actual event data from the calendar
+                                    const calendarApi = calendarEl._fullCalendar || 
+                                                       calendarEl.querySelector('.fc-view-harness')?._fullCalendar;
+                                    
+                                    if (calendarApi && calendarApi.getEvents) {
+                                        console.log('Found calendar API, getting all events');
+                                        const allEvents = calendarApi.getEvents();
+                                        console.log('All events:', allEvents);
+                                        
+                                        // Find the event by title
+                                        const matchingEvent = allEvents.find(evt => 
+                                            evt.title === eventTitle || 
+                                            evt.title.includes(eventTitle) ||
+                                            eventTitle.includes(evt.title)
+                                        );
+                                        
+                                        if (matchingEvent) {
+                                            console.log('Found matching event:', matchingEvent);
+                                            showEventDetails(matchingEvent);
+                                        } else {
+                                            console.log('No matching event found, using mock');
+                                            // Create a mock event object for now
+                                            const mockEvent = {
+                                                title: eventTitle,
+                                                start: new Date(),
+                                                end: new Date(),
+                                                extendedProps: {}
+                                            };
+                                            showEventDetails(mockEvent);
+                                        }
+                                    } else {
+                                        console.log('No calendar API found, using mock');
+                                        // Create a mock event object for now
+                                        const mockEvent = {
+                                            title: eventTitle,
+                                            start: new Date(),
+                                            end: new Date(),
+                                            extendedProps: {}
+                                        };
+                                        showEventDetails(mockEvent);
+                                    }
+                                }
+                                return false;
+                            }
+                        }, true); // Use capture phase to intercept before FullCalendar
+                        
+                        console.log('Event delegation handler installed');
+                        return true;
+                    }
+                    
+                    console.log('Calendar element not found, will retry...');
+                    return false;
+                } catch (error) {
+                    console.error('Error setting up event handlers:', error);
+                    return false;
+                }
+            }
+            
+            // Try to set up handlers immediately
+            if (!setupEventHandlers()) {
+                // If not ready, retry every second
+                const retryInterval = setInterval(() => {
+                    if (setupEventHandlers()) {
+                        clearInterval(retryInterval);
+                        console.log('Event handlers successfully installed');
+                    }
+                }, 1000);
+                
+                // Stop retrying after 10 seconds
+                setTimeout(() => {
+                    clearInterval(retryInterval);
+                    console.log('Failed to install event handlers after 10 seconds');
+                }, 10000);
+            }
+        });
+        
+        // Function to show event details popup (matching the image design)
+        function showEventDetails(event) {
+            console.log('showEventDetails called with event:', event);
+            console.log('Event title:', event.title);
+            console.log('Event start:', event.start);
+            console.log('Event end:', event.end);
+            console.log('Event extendedProps:', event.extendedProps);
+            console.log('Event location:', event.extendedProps?.location);
+            console.log('Event description:', event.extendedProps?.description);
+            console.log('Event mandatory_invites:', event.extendedProps?.mandatory_invites);
+            console.log('Event optional_invites:', event.extendedProps?.optional_invites);
+            
+            // Create popup HTML matching the dark theme design
+            const popupHTML = `
+                <div class="event-details-popup" style="
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: #1e293b;
+                    border-radius: 12px;
+                    padding: 24px;
+                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                    z-index: 9999;
+                    max-width: 450px;
+                    min-width: 350px;
+                    color: white;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                        <h3 style="margin: 0; color: white; font-weight: 600; font-size: 1.5rem;">${event.title || 'No Title'}</h3>
+                        <button onclick="closeEventPopup()" style="
+                            background: none;
+                            border: none;
+                            font-size: 24px;
+                            cursor: pointer;
+                            color: #94a3b8;
+                            padding: 0;
+                            width: 32px;
+                            height: 32px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">&times;</button>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px; display: flex; align-items: center;">
+                        <i class="ri-calendar-event-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px;"></i>
+                        <span><strong>Date:</strong> ${formatEventDate(event.start, event.end)}</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px; display: flex; align-items: center;">
+                        <i class="ri-time-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px;"></i>
+                        <span><strong>Time:</strong> ${formatEventTime(event.start, event.end)}</span>
+                    </div>
+                    
+                    ${event.extendedProps.location ? `
+                    <div style="margin-bottom: 16px; display: flex; align-items: center;">
+                        <i class="ri-map-pin-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px;"></i>
+                        <span><strong>Location:</strong> ${event.extendedProps.location.includes('http') ? `<a href="${event.extendedProps.location}" target="_blank" style="color: #60a5fa; text-decoration: underline;">${event.extendedProps.location}</a>` : event.extendedProps.location}</span>
+                    </div>
+                    ` : ''}
+                    
+                    ${event.extendedProps.description ? `
+                    <div style="margin-bottom: 16px; display: flex; align-items: flex-start;">
+                        <i class="ri-chat-1-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px; margin-top: 2px;"></i>
+                        <span><strong>Description:</strong> <span style="line-height: 1.5;">${event.extendedProps.description}</span></span>
+                    </div>
+                    ` : ''}
+                    
+                    ${event.extendedProps.mandatory_invites && event.extendedProps.mandatory_invites.length > 0 ? `
+                    <div style="margin-bottom: 16px; display: flex; align-items: flex-start;">
+                        <i class="ri-user-star-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px; margin-top: 2px;"></i>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px;"><strong>Required Attendees:</strong></div>
+                            <div style="color: #cbd5e1;">${formatAttendees(event.extendedProps.mandatory_invites)}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${event.extendedProps.optional_invites && event.extendedProps.optional_invites.length > 0 ? `
+                    <div style="margin-bottom: 16px; display: flex; align-items: flex-start;">
+                        <i class="ri-user-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px; margin-top: 2px;"></i>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px;"><strong>Optional Attendees:</strong></div>
+                            <div style="color: #cbd5e1;">${formatAttendees(event.extendedProps.optional_invites)}</div>
+                    </div>
+                    </div>
+                    ` : ''}
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #374151;">
+                        <button onclick="editEvent('${event.id}')" style="
+                            background: #8b5cf6;
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            padding: 10px 20px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">Edit</button>
+                        
+                        <button onclick="deleteEvent('${event.id}')" style="
+                            background: #ef4444;
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            padding: 10px 20px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            font-size: 14px;
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                        ">
+                            <span style="font-size: 18px;">×</span>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="event-details-overlay" onclick="closeEventPopup()" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 9998;
+                "></div>
+            `;
+            
+            // Add popup to page
+            document.body.insertAdjacentHTML('beforeend', popupHTML);
+        }
+        
+        // Function to close event popup
+        function closeEventPopup() {
+            const popup = document.querySelector('.event-details-popup');
+            const overlay = document.querySelector('.event-details-overlay');
+            if (popup) popup.remove();
+            if (overlay) overlay.remove();
+        }
+        
+        // Helper function to format event date
+        function formatEventDate(start, end) {
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            
+            if (startDate.toDateString() === endDate.toDateString()) {
+                return startDate.toLocaleDateString('en-US', { 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
+            } else {
+                return `${startDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+            }
+        }
+        
+        // Helper function to format event time
+        function formatEventTime(start, end) {
+            const startTime = new Date(start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const endTime = new Date(end).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            return `${startTime} - ${endTime}`;
+        }
+        
+        // Helper function to format attendees
+        function formatAttendees(attendees) {
+            if (!attendees || attendees.length === 0) return 'None';
+            if (Array.isArray(attendees)) {
+                return attendees.map(attendee => 
+                    attendee.username || attendee.email || attendee
+                ).join(', ');
+            }
+            return attendees;
+        }
+        
+        // Placeholder functions for edit and delete
+        function editEvent(eventId) {
+            console.log('Edit event:', eventId);
+            // TODO: Implement edit functionality
+            closeEventPopup();
+        }
+        
+        function deleteEvent(eventId) {
+            console.log('Delete event:', eventId);
+            // TODO: Implement delete functionality
+            closeEventPopup();
+        }
     </script>
     
     <style>

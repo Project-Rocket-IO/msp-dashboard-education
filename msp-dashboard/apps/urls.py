@@ -13,8 +13,6 @@ urlpatterns = [
     path("api/start_timer/<int:pk>", view=api_start_timer, name="api_start_timer"),
     path("api/discard_timer/", view=api_discard_timer, name="api_discard_timer"),
     path("api/stop_timer/<int:pk>", view=api_stop_timer, name="api_stop_timer"),
-    # Calendar
-    path("calendar/", view=apps_calendar_view, name="calendar"),
     # Stripe
     path("stripe/", include("djstripe.urls", namespace="djstripe")),
     # Projects

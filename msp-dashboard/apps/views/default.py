@@ -6,9 +6,6 @@ class AppsView(LoginRequiredMixin, TemplateView):
     pass
 
 
-# Calendar
-apps_calendar_view = AppsView.as_view(template_name="apps/apps-calendar.html")
-
 # Support Tickets
 apps_tickets_list_view = AppsView.as_view(
     template_name="apps/support-tickets/apps-tickets-list.html"

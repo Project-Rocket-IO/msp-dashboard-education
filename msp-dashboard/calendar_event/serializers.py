@@ -77,7 +77,7 @@ class CalendarEventSerializer(serializers.ModelSerializer):
         model = CalendarEvents
         fields = ['id', 'title', 'type', 'description', 'location', 'start', 'end', 'guest_list',
                 'is_creator', 'recurrence', 'guest_emails', 'textColor', 'repeating', 'event_last_date',
-                'dateRange', 'backgroundColor', 'className']
+                'dateRange', 'backgroundColor', 'className', 'mandatory_invites', 'optional_invites']
 
     @staticmethod
     def get_list_fields():
@@ -95,6 +95,12 @@ class CalendarEventSerializer(serializers.ModelSerializer):
     def get_guest_list(self, CalendarEvents):
         # instead of returning list of guest emails, also return their ids
         return [{"email": guest.email, "user_id": str(guest.user_id)} for guest in CalendarEvents.guests.all()] if CalendarEvents.guests else []
+    
+    def get_mandatory_invites(self, CalendarEvents):
+        return [{"username": invite.username, "email": invite.email, "user_id": str(invite.user_id)} for invite in CalendarEvents.mandatory_invites.all()] if CalendarEvents.mandatory_invites else []
+    
+    def get_optional_invites(self, CalendarEvents):
+        return [{"username": invite.username, "email": invite.email, "user_id": str(invite.user_id)} for invite in CalendarEvents.optional_invites.all()] if CalendarEvents.optional_invites else []
 
     def get_textColor(self, CalendarEvents):
         return COLOUR_MAPPING[CalendarEvents.type] if CalendarEvents.type else None

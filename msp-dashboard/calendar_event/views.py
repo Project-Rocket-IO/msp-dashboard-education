@@ -17,7 +17,7 @@ from .serializers import CalendarEventSerializer
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
 
-apps_calendar_view = AppsView.as_view(template_name="apps/apps-calendar.html")
+# apps_calendar_view = AppsView.as_view(template_name="apps/apps-calendar.html")  # REMOVED - conflicts with function view below
 
 
 def parse_datetime(date_str):
@@ -41,13 +41,26 @@ def handle_date(field, post_data):
 
 def handle_calendar_event(post_data):
     # Parse 'start' and 'end' datetime fields
-    start = post_data.pop('start')[0]
-    end = post_data.pop('end')[0]
+    start = post_data.pop('start')[0] if 'start' in post_data else ''
+    end = post_data.pop('end')[0] if 'end' in post_data else ''
 
     if start:
         post_data['start'] = handle_date(start, post_data)
+    elif 'start_date' in post_data and 'start_time' in post_data:
+        # Combine start_date and start_time when start is empty
+        start_date = post_data.get('start_date', '')
+        start_time = post_data.get('start_time', '')
+        if start_date and start_time:
+            post_data['start'] = f"{start_date} {start_time}:00"
+    
     if end:
         post_data['end'] = handle_date(end, post_data)
+    elif 'end_date' in post_data and 'end_time' in post_data:
+        # Combine end_date and end_time when end is empty
+        end_date = post_data.get('end_date', '')
+        end_time = post_data.get('end_time', '')
+        if end_date and end_time:
+            post_data['end'] = f"{end_date} {end_time}:00"
     
     # Check if 'guests' field is in POST data and has empty values
     if 'guests' in post_data:
@@ -92,12 +105,25 @@ def apps_calendar_view_delete(request):
     return redirect("calendar_event:calendar-events")
 
 def apps_calendar_view(request):
-    events = CalendarEvents.objects.filter(creator=request.user)
+    # Get events where user is creator OR attendee (mandatory, optional, or guest)
+    events = CalendarEvents.objects.filter(
+        Q(creator=request.user) |
+        Q(mandatory_invites=request.user) |
+        Q(optional_invites=request.user) |
+        Q(guests=request.user)
+    ).distinct()
+    
     # Get technicians for attendee selection (same as working ticket form)
     technicians = TechnicianUser.objects.all()
+    print(f"DEBUG: Found {technicians.count()} technicians")
+    for tech in technicians[:3]:  # Show first 3 for debugging
+        print(f"  - {tech.pk}: {tech.auth_user.username}")
 
     # Serialize the events data
     events = CalendarEventSerializer(events, many=True, context={'request': request}).data
+    print(f"DEBUG: Found {len(events)} events to display")
+    for event in events[:3]:  # Show first 3 for debugging
+        print(f"  - {event.get('title', 'No title')} on {event.get('start', 'No start')}")
 
     if request.method == 'POST':
         # Preprocess the POST data to remove empty 'guests' field values
@@ -112,6 +138,16 @@ def apps_calendar_view(request):
 
         print(clean_form)
 
+        # Store the invite data before removing it from form validation
+        mandatory_invites_data = clean_form.getlist('mandatory_invites') if 'mandatory_invites' in clean_form else []
+        optional_invites_data = clean_form.getlist('optional_invites') if 'optional_invites' in clean_form else []
+        guests_data = clean_form.getlist('guests') if 'guests' in clean_form else []
+        
+        # Remove these fields from form data to prevent validation errors
+        clean_form.pop('mandatory_invites', None)
+        clean_form.pop('optional_invites', None)
+        clean_form.pop('guests', None)
+
         # If eventid is passed, it means it's a request to update
         instance = CalendarEvents.objects.get(pk=eventid) if eventid else None
         if instance:
@@ -124,15 +160,35 @@ def apps_calendar_view(request):
         if form.is_valid():
             instance = form.save()
             
-            # Handle many-to-many relationships for invites
-            if 'mandatory_invites' in clean_form:
-                instance.mandatory_invites.set(clean_form.getlist('mandatory_invites'))
-            if 'optional_invites' in clean_form:
-                instance.optional_invites.set(clean_form.getlist('optional_invites'))
-            if 'guests' in clean_form:
-                instance.guests.set(clean_form.getlist('guests'))
+            # Handle many-to-many relationships for invites AFTER form is saved
+            if mandatory_invites_data:
+                # Convert technician IDs to MSPAuthUser objects
+                users = []
+                for tech_id in mandatory_invites_data:
+                    try:
+                        tech = TechnicianUser.objects.get(pk=tech_id)
+                        users.append(tech.auth_user)
+                    except TechnicianUser.DoesNotExist:
+                        pass
+                instance.mandatory_invites.set(users)
             
-            print(instance)
+            if optional_invites_data:
+                # Convert technician IDs to MSPAuthUser objects
+                users = []
+                for tech_id in optional_invites_data:
+                    try:
+                        tech = TechnicianUser.objects.get(pk=tech_id)
+                        users.append(tech.auth_user)
+                    except TechnicianUser.DoesNotExist:
+                        pass
+                instance.optional_invites.set(users)
+            
+            if guests_data:
+                instance.guests.set(guests_data)
+            
+            print(f"Event created successfully: {instance.name} on {instance.start} to {instance.end}")
+            print(f"Mandatory invites: {[user.username for user in instance.mandatory_invites.all()]}")
+            print(f"Optional invites: {[user.username for user in instance.optional_invites.all()]}")
             return redirect("calendar_event:calendar-events")
         else:
             print(form.errors)
