@@ -113,17 +113,103 @@ def apps_calendar_view(request):
         Q(guests=request.user)
     ).distinct()
     
+    # Get tickets where user is assigned or has access
+    from apps.models import TicketList
+    tickets = TicketList.objects.filter(
+        due_date__isnull=False
+    ).distinct()
+    
+    print(f"DEBUG: Found {tickets.count()} tickets with due dates")
+    for ticket in tickets[:3]:  # Show first 3 for debugging
+        print(f"  - Ticket {ticket.identifier}: {ticket.name} (Due: {ticket.due_date}, Type: {type(ticket.due_date)})")
+        if ticket.due_date:
+            print(f"    Raw due_date: {ticket.due_date}")
+            print(f"    ISO format: {ticket.due_date.isoformat()}")
+            print(f"    String format: {str(ticket.due_date)}")
+    
+    # Get projects where user is assigned or has access
+    from apps.models import ProjectList
+    projects = ProjectList.objects.filter(
+        due_date__isnull=False
+    ).distinct()
+    
+    print(f"DEBUG: Found {projects.count()} projects with due dates")
+    for project in projects[:3]:  # Show first 3 for debugging
+        print(f"  - Project {project.identifier}: {project.name} (Due: {project.due_date}, Type: {type(project.due_date)})")
+        if project.due_date:
+            print(f"    Raw due_date: {project.due_date}")
+            print(f"    ISO format: {project.due_date.isoformat()}")
+            print(f"    String format: {str(project.due_date)}")
+    
     # Get technicians for attendee selection (same as working ticket form)
     technicians = TechnicianUser.objects.all()
     print(f"DEBUG: Found {technicians.count()} technicians")
     for tech in technicians[:3]:  # Show first 3 for debugging
         print(f"  - {tech.pk}: {tech.auth_user.username}")
+    
+    # Serialize technicians data for JSON template
+    technicians_data = []
+    for tech in technicians:
+        technicians_data.append({
+            'id': tech.pk,
+            'pk': tech.pk,
+            'username': tech.auth_user.username,
+            'email': tech.auth_user.email,
+            'auth_user': {
+                'username': tech.auth_user.username,
+                'email': tech.auth_user.email,
+                'user_id': tech.auth_user.user_id
+            }
+        })
 
     # Serialize the events data
-    events = CalendarEventSerializer(events, many=True, context={'request': request}).data
-    print(f"DEBUG: Found {len(events)} events to display")
-    for event in events[:3]:  # Show first 3 for debugging
-        print(f"  - {event.get('title', 'No title')} on {event.get('start', 'No start')}")
+    events_data = CalendarEventSerializer(events, many=True, context={'request': request}).data
+    
+    # Add event type identifier to events
+    for event in events_data:
+        event['event_type'] = 'event'
+        event['id'] = f"event_{event['id']}"
+    
+    # Serialize tickets for the template
+    for ticket in tickets:
+        ticket_data = {
+            'id': f'ticket_{ticket.identifier}',
+            'title': f'Ticket: {ticket.name}',
+            'type': 'Ticket',
+            'description': ticket.description,
+            'client': ticket.client.name if ticket.client else None,
+            'status': ticket.status,
+            'priority': ticket.priority,
+            'start': ticket.due_date.isoformat() if ticket.due_date else None,
+            'end': ticket.due_date.isoformat() if ticket.due_date else None,
+            'mandatory_invites': [{'user_id': tech.auth_user.user_id, 'username': tech.auth_user.username, 'email': tech.auth_user.email} for tech in ticket.assignment.all()],
+            'optional_invites': [],
+            'event_type': 'ticket'
+        }
+        print(f"DEBUG: Serialized ticket {ticket.identifier}: {ticket_data['title']} (Start: {ticket_data['start']}, End: {ticket_data['end']})")
+        events_data.append(ticket_data)
+    
+    # Serialize projects for the template
+    for project in projects:
+        project_data = {
+            'id': f'project_{project.identifier}',
+            'title': f'Project: {project.name}',
+            'type': 'Project',
+            'description': project.description,
+            'client': project.client.name if project.client else None,
+            'status': project.status,
+            'priority': project.priority,
+            'start': project.due_date.isoformat() if project.due_date else None,
+            'end': project.due_date.isoformat() if project.due_date else None,
+            'mandatory_invites': [{'user_id': tech.auth_user.user_id, 'username': tech.auth_user.username, 'email': tech.auth_user.email} for tech in project.assignment.all()],
+            'optional_invites': [],
+            'event_type': 'project'
+        }
+        events_data.append(project_data)
+    
+    print(f"DEBUG: Found {len(events_data)} total items to display (events: {len(events)}, tickets: {tickets.count()}, projects: {projects.count()})")
+    for item in events_data[:3]:  # Show first 3 for debugging
+        print(f"  - {item.get('title', 'No title')} ({item.get('event_type', 'unknown')}) on {item.get('start', 'No start')}")
 
     if request.method == 'POST':
         # Preprocess the POST data to remove empty 'guests' field values
@@ -193,7 +279,7 @@ def apps_calendar_view(request):
         else:
             print(form.errors)
 
-    return render(request, "apps/apps-calendar.html", context={'events': events, 'technicians': technicians})
+    return render(request, "apps/apps-calendar.html", context={'events': events_data, 'technicians': technicians_data})
 
 def apps_calendar_edit_view(request, pk):
     print("EDIT")

@@ -185,11 +185,108 @@ document.addEventListener("DOMContentLoaded", async () => {
         selectedEvent = info.event;
         showAddNewEventModal(info);
       },
-      events: [], // Start with empty events
+      events: function(fetchInfo, successCallback, failureCallback) {
+        // Get events from Django template
+        const eventsData = JSON.parse(document.getElementById('events')?.textContent || '[]');
+        
+        console.log('DEBUG: Calendar loading events:', eventsData);
+        console.log('DEBUG: Found', eventsData.length, 'total events');
+        
+        // Transform events to FullCalendar format with appropriate colors
+        const transformedEvents = eventsData.map(event => {
+          let backgroundColor = '#3b82f6'; // Default blue for events
+          let borderColor = '#3b82f6';
+          
+          if (event.event_type === 'ticket') {
+            backgroundColor = '#0dcaf0'; // Blue for tickets (matches legend)
+            borderColor = '#0dcaf0';
+            console.log('DEBUG: Processing ticket:', event.title, 'with color:', backgroundColor);
+          } else if (event.event_type === 'project') {
+            backgroundColor = '#ffc107'; // Yellow for projects (matches legend)
+            borderColor = '#ffc107';
+            console.log('DEBUG: Processing project:', event.title, 'with color:', backgroundColor);
+          } else {
+            console.log('DEBUG: Processing event:', event.title, 'with color:', backgroundColor);
+          }
+          
+          // Validate dates
+          if (!event.start) {
+            console.warn('DEBUG: Event missing start date:', event.title);
+            return null;
+          }
+          
+          try {
+            const startDate = new Date(event.start);
+            const endDate = event.end ? new Date(event.end) : startDate;
+            
+            if (isNaN(startDate.getTime())) {
+              console.warn('DEBUG: Invalid start date for event:', event.title, event.start);
+              return null;
+            }
+            
+            return {
+              id: event.id,
+              title: event.title,
+              start: startDate,
+              end: endDate,
+              backgroundColor: backgroundColor,
+              borderColor: borderColor,
+              className: `event-type-${event.event_type}`,
+              textColor: '#ffffff', // Ensure text is white for contrast
+              extendedProps: {
+                location: event.location,
+                description: event.description,
+                mandatory_invites: event.mandatory_invites,
+                optional_invites: event.optional_invites,
+                event_type: event.event_type,
+                client: event.client,
+                status: event.status,
+                priority: event.priority
+              }
+            };
+          } catch (error) {
+            console.error('DEBUG: Error processing event:', event.title, error);
+            return null;
+          }
+        });
+        
+        // Filter out any null events (from invalid dates)
+        const validEvents = transformedEvents.filter(event => event !== null);
+        
+        console.log('DEBUG: Transformed events for calendar:', validEvents);
+        console.log('DEBUG: Valid events count:', validEvents.length);
+        successCallback(validEvents);
+      },
     });
 
-    // Render the calendar view
-    mycalendar.render();
+            // Render the calendar view
+        mycalendar.render();
+        
+        // Debug: Check event classes after rendering
+        setTimeout(() => {
+          const calendarEvents = document.querySelectorAll('.fc-event');
+          console.log('DEBUG: Found', calendarEvents.length, 'calendar events after rendering');
+          calendarEvents.forEach((eventEl, index) => {
+            console.log(`DEBUG: Event ${index + 1}:`, {
+              title: eventEl.textContent,
+              classes: eventEl.className,
+              hasTicketClass: eventEl.classList.contains('event-type-ticket'),
+              hasProjectClass: eventEl.classList.contains('event-type-project'),
+              hasEventClass: eventEl.classList.contains('event-type-event')
+            });
+          });
+        }, 1000);
+        
+        // Populate upcoming events list
+        const eventsData = JSON.parse(document.getElementById('events')?.textContent || '[]');
+        console.log('DEBUG: Events data for upcoming events:', eventsData);
+        console.log('DEBUG: Number of events:', eventsData.length);
+        if (typeof upcomingEvent === 'function') {
+          console.log('DEBUG: Calling upcomingEvent function');
+          upcomingEvent(eventsData);
+        } else {
+          console.warn('DEBUG: upcomingEvent function not found');
+        }
   }
 
   // Event listener for delete button

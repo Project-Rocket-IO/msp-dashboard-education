@@ -151,86 +151,148 @@ function eventTyped() {
 
 // upcoming Event
 function upcomingEvent(a) {
-  a.sort(function (o1, o2) {
+  console.log('DEBUG: upcomingEvent called with data:', a);
+  console.log('DEBUG: Number of events received:', a.length);
+  
+  // Filter out events without valid start dates and only show future events
+  const now = new Date();
+  const validEvents = a.filter(event => {
+    const hasValidStart = event.start && event.start !== "Invalid Date";
+    if (!hasValidStart) return false;
+    
+    try {
+      const eventDate = new Date(event.start);
+      const isFuture = eventDate >= now;
+      console.log('DEBUG: Event', event.title, 'is future:', isFuture, 'event date:', eventDate, 'now:', now);
+      return isFuture;
+    } catch (e) {
+      console.warn('Invalid date for event:', event.title, event.start);
+      return false;
+    }
+  });
+  
+  console.log('DEBUG: Valid future events after filtering:', validEvents.length);
+  
+  validEvents.sort(function (o1, o2) {
     return new Date(o1.start) - new Date(o2.start);
   });
-  document.getElementById("upcoming-event-list").innerHTML = null;
-  Array.from(a).forEach(function (element) {
+  
+  document.getElementById("upcoming-event-list").innerHTML = "";
+  
+  Array.from(validEvents).forEach(function (element) {
     var title = element.title;
-    if (element.end) {
-      endUpdatedDay = new Date(element.end);
-      var updatedDay = endUpdatedDay.setDate(endUpdatedDay.getDate() - 1);
+    var eventType = element.event_type || 'event';
+    var description = element.description ? element.description.substring(0, 50) + (element.description.length > 50 ? '...' : '') : "";
+    
+    // Format the start date
+    var startDate = null;
+    if (element.start) {
+      try {
+        const date = new Date(element.start);
+        if (!isNaN(date.getTime())) {
+          startDate = date.toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          });
+        }
+      } catch (e) {
+        console.warn('Invalid start date:', element.start);
+      }
     }
-    var e_dt = updatedDay ? updatedDay : undefined;
-    if (e_dt == "Invalid Date" || e_dt == undefined) {
-      e_dt = null;
+    
+    // Format the end date
+    var endDate = null;
+    if (element.end && element.end !== element.start) {
+      try {
+        const date = new Date(element.end);
+        if (!isNaN(date.getTime())) {
+          endDate = date.toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          });
+        }
+      } catch (e) {
+        console.warn('Invalid end date:', element.end);
+      }
+    }
+    
+    // Format times
+    var startTime = null;
+    var endTime = null;
+    
+    if (element.start) {
+      try {
+        const date = new Date(element.start);
+        if (!isNaN(date.getTime()) && date.getHours() !== undefined) {
+          startTime = tConvert(getTime(element.start));
+        }
+      } catch (e) {
+        console.warn('Invalid start time:', element.start);
+      }
+    }
+    
+    if (element.end && element.end !== element.start) {
+      try {
+        const date = new Date(element.end);
+        if (!isNaN(date.getTime()) && date.getHours() !== undefined) {
+          endTime = tConvert(getTime(element.end));
+        }
+      } catch (e) {
+        console.warn('Invalid end time:', element.end);
+      }
+    }
+    
+    // Determine color class based on event type
+    var colorClass = 'primary'; // default for events
+    if (eventType === 'ticket') {
+      colorClass = 'info';
+    } else if (eventType === 'project') {
+      colorClass = 'warning';
+    }
+    
+    // Format date range
+    var dateRange = startDate;
+    if (endDate && endDate !== startDate) {
+      dateRange += " to " + endDate;
+    }
+    
+    // Format time range
+    var timeRange = "";
+    if (startTime && endTime && startTime !== endTime) {
+      timeRange = startTime + " to " + endTime;
+    } else if (startTime) {
+      timeRange = startTime;
     } else {
-      const newDate = new Date(e_dt).toLocaleDateString("en", {
-        year: "numeric",
-        month: "numeric",
-        day: "numeric",
-      });
-      e_dt = new Date(newDate)
-        .toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-        .split(" ")
-        .join(" ");
+      timeRange = "All day";
     }
-    var st_date = element.start ? str_dt(element.start) : null;
-    var ed_date = updatedDay ? str_dt(updatedDay) : null;
-    if (st_date === ed_date) {
-      e_dt = null;
-    }
-    var startDate = element.start;
-    if (startDate === "Invalid Date" || startDate === undefined) {
-      startDate = null;
-    } else {
-      const newDate = new Date(startDate).toLocaleDateString("en", {
-        year: "numeric",
-        month: "numeric",
-        day: "numeric",
-      });
-      startDate = new Date(newDate)
-        .toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-        .split(" ")
-        .join(" ");
+    
+    // Add event type prefix to title if not already present
+    var displayTitle = title;
+    if (eventType === 'ticket' && !title.startsWith('Ticket:')) {
+      displayTitle = 'Ticket: ' + title;
+    } else if (eventType === 'project' && !title.startsWith('Project:')) {
+      displayTitle = 'Project: ' + title;
+    } else if (eventType === 'event' && !title.startsWith('Event:')) {
+      displayTitle = 'Event: ' + title;
     }
 
-    var end_dt = e_dt ? " to " + e_dt : "";
-    var category = element.className.split("-");
-    var description = element.description ? element.description : "";
-    var e_time_s = tConvert(getTime(element.start));
-    var e_time_e = tConvert(getTime(updatedDay));
-    if (e_time_s == e_time_e) {
-      var e_time_s = "Full day event";
-      var e_time_e = null;
-    }
-    var e_time_e = e_time_e ? " to " + e_time_e : "";
-
-    u_event =
+    var u_event =
       "<div class='card mb-3'>\
         <div class='card-body'>\
           <div class='d-flex mb-3'>\
             <div class='flex-grow-1'><i class='mdi mdi-checkbox-blank-circle me-2 text-" +
-      category[2] +
+      colorClass +
       "'></i><span class='fw-medium'>" +
-      startDate +
-      end_dt +
+      (dateRange || 'No date') +
       " </span></div>\
     <div class='flex-shrink-0'><small class='badge badge-soft-primary ms-auto'>" +
-      e_time_s +
-      e_time_e +
+      timeRange +
       "</small></div>\
                         </div>\
       <h6 class='card-title fs-16'> " +
-      title +
+      displayTitle +
       "</h6> <p class='text-muted text-truncate-two-lines mb-0'> " +
       description +
       "</p>\
