@@ -93,13 +93,23 @@ def create_user_billing_session(role_id, user_email, user_name, current_user, fo
         dict: Stripe checkout session data or error
     """
     try:
-        # Get the role name to determine if billing is needed
-        role_choices_dict = dict(ROLE_CHOICES)
-        role_name = role_choices_dict.get(role_id, f"Role {role_id}")
+        print(f"DEBUG: create_user_billing_session called with role_id: {role_id}")
         
-        # Only require billing for Super User, IT Dept, or Administration roles
-        paid_roles = ['Super User', 'IT Dept', 'Administration']
-        if role_name not in paid_roles:
+        # Get the role name from the database group
+        from django.contrib.auth.models import Group
+        try:
+            group = Group.objects.get(id=role_id)
+            role_name = group.name
+            print(f"DEBUG: Found group: {role_name}")
+        except Group.DoesNotExist:
+            print(f"DEBUG: Group with ID {role_id} not found")
+            return {"success": False, "error": f"Group with ID {role_id} not found"}
+        
+        # Only require billing for paid roles
+        # Student and Faculty/Staff are free
+        # Administration, IT Dept, and Super User require billing
+        free_roles = ['Student', 'Faculty/Staff']
+        if role_name in free_roles:
             return {"success": True, "no_billing": True}
         
         # Get the company's subscription tier (not individual user tier)
@@ -109,9 +119,7 @@ def create_user_billing_session(role_id, user_email, user_name, current_user, fo
         tier_pricing = SUBSCRIPTION_TIERS.get(subscription_tier, SUBSCRIPTION_TIERS['starter'])
         price = tier_pricing['monthly']  # Use monthly rate for user creation
         
-        # Get role name for the product description
-        role_choices_dict = dict(ROLE_CHOICES)
-        role_name = role_choices_dict.get(role_id, f"Role {role_id}")
+        # role_name is already set from the group lookup above
         
         # Prepare metadata with all form data
         metadata = {
@@ -158,7 +166,7 @@ def create_user_billing_session(role_id, user_email, user_name, current_user, fo
         except Exception as stripe_error:
             return {"success": False, "error": f"Stripe error: {str(stripe_error)}"}
         
-        return {
+        result = {
             "success": True,
             "session_id": checkout_session.id,
             "checkout_url": checkout_session.url,
@@ -167,6 +175,8 @@ def create_user_billing_session(role_id, user_email, user_name, current_user, fo
             "subscription_tier": subscription_tier,
             "tier_name": tier_pricing['name']
         }
+        print(f"DEBUG: Returning billing session result: {result}")
+        return result
         
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -273,21 +283,28 @@ def create_user(form_data: list, current_user=None):
     (first_name, last_name, email, client_id, role, phone, title, password) = form_data
     role_id = int(role)
     
-    print(f"DEBUG: create_user - role_id: {role_id}, CLIENT_ROLE: {CLIENT_ROLE}")
+    print(f"DEBUG: create_user - role_id: {role_id}")
     
-    # Check if billing is required (not a client)
-    # Get the actual Client group ID from the database
+    # Get the group name from the role ID to determine billing requirements
     from django.contrib.auth.models import Group
     try:
-        client_group = Group.objects.get(name='Client')
-        client_group_id = client_group.id
-        print(f"DEBUG: Client group ID from database: {client_group_id}")
+        group = Group.objects.get(id=role_id)
+        group_name = group.name
+        print(f"DEBUG: create_user - group_name: {group_name}")
     except Group.DoesNotExist:
-        client_group_id = CLIENT_ROLE  # Fallback to hardcoded value
-        print(f"DEBUG: Client group not found, using fallback ID: {client_group_id}")
+        return False, f"Group with ID {role_id} not found"
     
-    if role_id != client_group_id:
-        # Create billing session for non-client roles
+    # Check if billing is required based on group name
+    # Student and Faculty/Staff are free, others require billing
+    free_roles = ['Student', 'Faculty/Staff']
+    
+    if group_name in free_roles:
+        # No billing required, create user directly
+        print(f"DEBUG: {group_name} is a free role, creating user without billing")
+        return create_user_without_billing(form_data)
+    else:
+        # Billing required for paid roles
+        print(f"DEBUG: {group_name} requires billing")
         user_name = f"{first_name} {last_name}".strip()
         
         # Prepare form data dict for metadata
@@ -309,9 +326,6 @@ def create_user(form_data: list, current_user=None):
         
         # Return billing information instead of creating user
         return "billing_required", billing_result
-    
-    # For clients, proceed with normal user creation
-    return create_user_without_billing(form_data)
 
 
 def create_user_without_billing(form_data: list):

@@ -88,13 +88,13 @@
                         {% endif %}
 
                         <!-- Invoicing - Available in all tiers -->
-                        {% if perms.apps.view_invoice %}
+                        <!-- {% if perms.apps.view_invoice %}
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{% url 'apps:invoices.connect' %}">
                                 <i class="ri-file-text-line"></i> <span data-key="t-leads">Invoices</span>
                             </a>
                         </li>
-                        {% endif %}
+                        {% endif %} -->
 
                         <!-- Leads - Growth and Innovator tiers only -->
                         {% if perms.apps.view_leadcompany and has_leads_access %}

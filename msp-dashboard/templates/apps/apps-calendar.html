@@ -384,8 +384,8 @@
 
     <script>            
         // Retrieve and parse the JSON data
-        const events = JSON.parse(document.getElementById('events').textContent || '[]');
-        const technicians = JSON.parse(document.getElementById('technicians').textContent || '[]');
+        window.events = JSON.parse(document.getElementById('events').textContent || '[]');
+        window.technicians = JSON.parse(document.getElementById('technicians').textContent || '[]');
     </script>
     
      <!-- Calendar init -->
@@ -401,6 +401,8 @@
     <!-- Flatpickr CSS and JS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    
+    <!-- Calendar initialization is now handled by calendar.init.js -->
     
     <script>
         // Initialize Choices.js for attendee dropdowns AFTER modal opens
@@ -546,894 +548,7 @@
             }
         });
         
-        // Custom event click handler for calendar events
-        document.addEventListener('DOMContentLoaded', function() {
-
-            
-            // Use event delegation to intercept clicks on calendar events
-            function setupEventHandlers() {
-                try {
-                    const calendarEl = document.querySelector('#calendar');
-        
-                    
-                    if (calendarEl) {
-                        // Method 1: Try to find and override the FullCalendar instance
-                        const fcInstance = calendarEl._fullCalendar;
-                        if (fcInstance) {
-                            console.log('FullCalendar instance found in _fullCalendar');
-                            fcInstance.setOption('eventClick', function(info) {
-                                console.log('Custom event click handler triggered');
-                                showEventDetails(info.event);
-                                info.jsEvent.preventDefault();
-                                return false;
-                            });
-                            console.log('Custom event click handler installed via _fullCalendar');
-                            return true;
-                        }
-                        
-                        // Method 2: Use event delegation to intercept clicks on event elements
-
-                        calendarEl.addEventListener('click', function(event) {
-                            // Check if the clicked element is a calendar event
-                            const eventElement = event.target.closest('.fc-event, .fc-event-main, .fc-event-title, .fc-event-time');
-                            if (eventElement) {
-
-                                event.preventDefault();
-                                event.stopPropagation();
-                                
-                                // Find the event data from the element
-                                const eventId = eventElement.getAttribute('data-event-id') || 
-                                              eventElement.closest('[data-event-id]')?.getAttribute('data-event-id');
-                                
-                                if (eventId) {
-                                    console.log('Found event ID:', eventId);
-                                    // Try to find the event data from the loaded events
-                                    const loadedEvents = JSON.parse(document.getElementById('events').textContent || '[]');
-                                    const eventData = loadedEvents.find(evt => evt.id === eventId);
-                                    if (eventData) {
-                                        console.log('Found event data by ID:', eventData);
-                                        showEventDetails(eventData);
-                                    } else {
-                                        console.log('Event data not found for ID:', eventId);
-                                    }
-                                } else {
-
-                                    // Try to extract event info from the element itself
-                                    const eventTitle = eventElement.textContent || eventElement.title;
-
-                                    
-                                    // Try to find the actual event data from the loaded events
-                                    const loadedEvents = JSON.parse(document.getElementById('events').textContent || '[]');
-
-                                    
-                                    // Find the event by title (case-insensitive partial match)
-                                    const matchingEvent = loadedEvents.find(evt => {
-                                        const eventName = evt.name || evt.title || '';
-                                        const elementTitle = eventTitle || '';
-                                        return eventName.toLowerCase().includes(elementTitle.toLowerCase()) ||
-                                               elementTitle.toLowerCase().includes(eventName.toLowerCase());
-                                    });
-                                    
-                                    if (matchingEvent) {
-
-
-                                        
-                                        // Get the technicians data to map attendee IDs to usernames
-                                        const technicians = JSON.parse(document.getElementById('technicians').textContent || '[]');
-                                        
-                                        // Transform the Django event data to match FullCalendar format
-                                        const transformedEvent = {
-                                            id: matchingEvent.id,
-                                            title: matchingEvent.name || matchingEvent.title,
-                                            start: matchingEvent.start,
-                                            end: matchingEvent.end,
-                                            extendedProps: {
-                                                location: matchingEvent.location,
-                                                description: matchingEvent.description,
-                                                mandatory_invites: matchingEvent.mandatory_invites ? 
-                                                    matchingEvent.mandatory_invites.map(attendee => {
-                                                        // Handle both UUID strings and attendee objects
-                                                        const attendeeId = typeof attendee === 'string' ? attendee : attendee.user_id;
-                                                        
-                                                        // Try to find technician by user_id (UUID) or other UUID fields
-                                                        const tech = technicians.find(t => 
-                                                            t.auth_user?.user_id === attendeeId || 
-                                                            t.user_id === attendeeId || 
-                                                            t.id === attendeeId
-                                                        );
-
-                                                        return tech ? { username: tech.username || 'Unknown User', email: tech.email || 'No email' } : { username: 'Unknown User', email: 'No email' };
-                                                    }) : [],
-                                                optional_invites: matchingEvent.optional_invites ? 
-                                                    matchingEvent.optional_invites.map(attendee => {
-                                                        // Handle both UUID strings and attendee objects
-                                                        const attendeeId = typeof attendee === 'string' ? attendee : attendee.user_id;
-                                                        
-                                                        // Try to find technician by user_id (UUID) or other UUID fields
-                                                        const tech = technicians.find(t => 
-                                                            t.auth_user?.user_id === attendeeId || 
-                                                            t.user_id === attendeeId || 
-                                                            t.id === attendeeId
-                                                        );
-
-                                                        return tech ? { username: tech.username || 'Unknown User', email: tech.email || 'No email' } : { username: 'Unknown User', email: 'No email' };
-                                                    }) : [],
-                                                event_type: matchingEvent.event_type,
-                                                client: matchingEvent.client,
-                                                status: matchingEvent.status,
-                                                priority: matchingEvent.priority
-                                            }
-                                        };
-
-                                        showEventDetails(transformedEvent);
-                                    } else {
-                                        console.log('No matching event found in loaded data, using mock');
-                                        // Create a mock event object for now
-                                        const mockEvent = {
-                                            title: eventTitle,
-                                            start: new Date(),
-                                            end: new Date(),
-                                            extendedProps: {}
-                                        };
-                                        showEventDetails(mockEvent);
-                                    }
-                                }
-                                return false;
-                            }
-                        }, true); // Use capture phase to intercept before FullCalendar
-                        
-
-                        return true;
-                    }
-                    
-                    console.log('Calendar element not found, will retry...');
-                    return false;
-                } catch (error) {
-                    console.error('Error setting up event handlers:', error);
-                    return false;
-                }
-            }
-            
-            // Try to set up handlers immediately
-            if (!setupEventHandlers()) {
-                // If not ready, retry every second
-                const retryInterval = setInterval(() => {
-                    if (setupEventHandlers()) {
-                        clearInterval(retryInterval);
-                        console.log('Event handlers successfully installed');
-                    }
-                }, 1000);
-                
-                // Stop retrying after 10 seconds
-                setTimeout(() => {
-                    clearInterval(retryInterval);
-                    console.log('Failed to install event handlers after 10 seconds');
-                }, 10000);
-            }
-        });
-        
-        // Function to show event details popup (matching the image design)
-        function showEventDetails(event) {
-            
-            // Create popup HTML matching the dark theme design
-            const popupHTML = `
-                <div class="event-details-popup" style="
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: #1e293b;
-                    border-radius: 12px;
-                    padding: 24px;
-                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-                    z-index: 9999;
-                    max-width: 800px;
-                    min-width: 600px;
-                    color: white;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                ">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-                        <h3 style="margin: 0; color: white; font-weight: 600; font-size: 1.5rem;">${event.title || 'No Title'}</h3>
-                        <button onclick="closeEventPopup()" style="
-                            background: none;
-                            border: none;
-                            font-size: 24px;
-                            cursor: pointer;
-                            color: #94a3b8;
-                            padding: 0;
-                            width: 32px;
-                            height: 32px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                        ">&times;</button>
-                    </div>
-                    
-                    <div style="margin-bottom: 16px; display: flex; align-items: center;">
-                        <i class="ri-calendar-event-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px;"></i>
-                        <span><strong>Date:</strong> ${formatEventDate(event.start, event.end)}</span>
-                    </div>
-                    
-                    <div style="margin-bottom: 16px; display: flex; align-items: center;">
-                        <i class="ri-time-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px;"></i>
-                        <span><strong>Time:</strong> ${formatEventTime(event.start, event.end)}</span>
-                    </div>
-                    
-                    ${event.extendedProps.location ? `
-                    <div style="margin-bottom: 16px; display: flex; align-items: center;">
-                        <i class="ri-map-pin-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px;"></i>
-                        <span><strong>Location:</strong> ${event.extendedProps.location.includes('http') ? `<a href="${event.extendedProps.location}" target="_blank" style="color: #60a5fa; text-decoration: underline;">${event.extendedProps.location}</a>` : event.extendedProps.location}</span>
-                    </div>
-                    ` : ''}
-                    
-                    ${event.extendedProps.description ? `
-                    <div style="margin-bottom: 16px; display: flex; align-items: flex-start;">
-                        <i class="ri-chat-1-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px; margin-top: 2px;"></i>
-                        <span><strong>Description:</strong> <span style="line-height: 1.5;">${event.extendedProps.description}</span></span>
-                    </div>
-                    ` : ''}
-                    
-                    ${event.extendedProps.client ? `
-                    <div style="margin-bottom: 16px; display: flex; align-items: center;">
-                        <i class="ri-building-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px;"></i>
-                        <span><strong>Client:</strong> ${event.extendedProps.client}</span>
-                    </div>
-                    ` : ''}
-                    
-                    ${event.extendedProps.status ? `
-                    <div style="margin-bottom: 16px; display: flex; align-items: center;">
-                        <i class="ri-information-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px;"></i>
-                        <span><strong>Status:</strong> ${event.extendedProps.status}</span>
-                    </div>
-                    ` : ''}
-                    
-                    ${event.extendedProps.priority ? `
-                    <div style="margin-bottom: 16px; display: flex; align-items: center;">
-                        <i class="ri-flag-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px;"></i>
-                        <span><strong>Priority:</strong> ${event.extendedProps.priority}</span>
-                    </div>
-                    ` : ''}
-                    
-                    ${event.extendedProps.mandatory_invites && event.extendedProps.mandatory_invites.length > 0 ? `
-                    <div style="margin-bottom: 16px; display: flex; align-items: flex-start;">
-                        <i class="ri-user-star-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px; margin-top: 2px;"></i>
-                        <div>
-                            <div style="font-weight: 600; margin-bottom: 4px;"><strong>Required Attendees:</strong></div>
-                            <div style="color: #cbd5e1;">${formatAttendees(event.extendedProps.mandatory_invites)}</div>
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    ${event.extendedProps.optional_invites && event.extendedProps.optional_invites.length > 0 ? `
-                    <div style="margin-bottom: 16px; display: flex; align-items: flex-start;">
-                        <i class="ri-user-line" style="margin-right: 12px; color: #60a5fa; font-size: 18px; margin-top: 2px;"></i>
-                        <div>
-                            <div style="font-weight: 600; margin-bottom: 4px;"><strong>Optional Attendees:</strong></div>
-                            <div style="color: #cbd5e1;">${formatAttendees(event.extendedProps.optional_invites)}</div>
-                    </div>
-                    </div>
-                    ` : ''}
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #374151;">
-                        <button onclick="editEvent('${event.id}')" style="
-                            background: #8b5cf6;
-                            color: white;
-                            border: none;
-                            border-radius: 8px;
-                            padding: 10px 20px;
-                            font-weight: 500;
-                            cursor: pointer;
-                            font-size: 14px;
-                        ">Edit</button>
-                        
-                        <button onclick="deleteEvent('${event.id}')" style="
-                            background: #ef4444;
-                            color: white;
-                            border: none;
-                            border-radius: 8px;
-                            padding: 10px 20px;
-                            font-weight: 500;
-                            cursor: pointer;
-                            font-size: 14px;
-                            display: flex;
-                            align-items: center;
-                            gap: 6px;
-                        ">
-                            <span style="font-size: 18px;">×</span>
-                            Delete
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="event-details-overlay" onclick="closeEventPopup()" style="
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.7);
-                    z-index: 9998;
-                "></div>
-            `;
-            
-            // Add popup to page
-            document.body.insertAdjacentHTML('beforeend', popupHTML);
-        }
-        
-        // Function to close event popup
-        function closeEventPopup() {
-            const popup = document.querySelector('.event-details-popup');
-            const overlay = document.querySelector('.event-details-overlay');
-            if (popup) popup.remove();
-            if (overlay) overlay.remove();
-        }
-        
-        // Helper function to format event date
-        function formatEventDate(start, end) {
-            const startDate = new Date(start);
-            const endDate = new Date(end);
-            
-            if (startDate.toDateString() === endDate.toDateString()) {
-                return startDate.toLocaleDateString('en-US', { 
-                    day: 'numeric', 
-                    month: 'long', 
-                    year: 'numeric' 
-                });
-            } else {
-                return `${startDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-            }
-        }
-        
-        // Helper function to format event time
-        function formatEventTime(start, end) {
-            const startTime = new Date(start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const endTime = new Date(end).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            return `${startTime} - ${endTime}`;
-        }
-        
-        // Helper function to format attendees
-        function formatAttendees(attendees) {
-            if (!attendees || attendees.length === 0) return 'None';
-            if (Array.isArray(attendees)) {
-                return attendees.map(attendee => 
-                    attendee.username || attendee.email || attendee
-                ).join(', ');
-            }
-            return attendees;
-        }
-        
-        // Helper function to generate technician options for edit form
-        function getTechnicianOptions(selectedAttendees) {
-            const technicians = JSON.parse(document.getElementById('technicians').textContent);
-            let options = '';
-            
-            console.log('getTechnicianOptions received selectedAttendees:', selectedAttendees);
-            console.log('Available technicians:', technicians);
-            
-            if (!selectedAttendees || !Array.isArray(selectedAttendees)) {
-                console.log('No selected attendees or invalid format, showing all technicians as unselected');
-                technicians.forEach(tech => {
-                    const techId = tech.auth_user?.user_id || tech.user_id || tech.id;
-                    options += `<option value="${techId}">${tech.username} (${tech.email})</option>`;
-                });
-                return options;
-            }
-            
-            // Create a set of selected attendee UUIDs for efficient lookup
-            const selectedUUIDsSet = new Set();
-            selectedAttendees.forEach(attendee => {
-                if (attendee && attendee.user_id) {
-                    selectedUUIDsSet.add(attendee.user_id);
-                }
-            });
-            
-            console.log('Selected UUIDs set:', selectedUUIDsSet);
-            
-            technicians.forEach(tech => {
-                const techId = tech.auth_user?.user_id || tech.user_id || tech.id;
-                const isSelected = selectedUUIDsSet.has(techId);
-                console.log(`Tech ${tech.username} (${techId}) - Selected: ${isSelected}`);
-                options += `<option value="${techId}" ${isSelected ? 'selected' : ''}>${tech.username} (${tech.email})</option>`;
-            });
-            
-            console.log('Generated options HTML:', options);
-            return options;
-        }
-        
-        // Edit event functionality - transforms modal to editable form
-        function editEvent(eventId) {
-            console.log('Edit event:', eventId);
-            
-            // Find the current event data
-            const events = JSON.parse(document.getElementById('events').textContent);
-            const event = events.find(e => e.id == eventId);
-            
-            if (!event) {
-                console.error('Event not found:', eventId);
-                return;
-            }
-            
-            // Debug: Log current event data to ensure it's populated
-            console.log('Event data for edit:', event);
-            console.log('Event extendedProps:', event.extendedProps);
-            console.log('Event description:', event.description);
-            console.log('Event location:', event.location);
-            console.log('Event mandatory_invites:', event.mandatory_invites);
-            console.log('Event optional_invites:', event.optional_invites);
-            console.log('Event mandatory_invites (extendedProps):', event.extendedProps?.mandatory_invites);
-            console.log('Event optional_invites (extendedProps):', event.extendedProps?.optional_invites);
-            
-            // Check if this is a ticket - if so, redirect to ticket edit page
-            if (event.event_type === 'ticket') {
-                // Extract ticket ID from the event ID (format: ticket_{identifier})
-                const ticketId = eventId.replace('ticket_', '');
-                console.log('Redirecting to ticket edit page for ticket ID:', ticketId);
-                window.location.href = `/apps/support-tickets/edit/${ticketId}`;
-                return;
-            }
-            
-            // Check if this is a project - if so, redirect to project edit page
-            if (event.event_type === 'project') {
-                // Extract project ID from the event ID (format: project_{identifier})
-                const projectId = eventId.replace('project_', '');
-                console.log('Redirecting to project edit page for project ID:', projectId);
-                window.location.href = `/apps/projects/edit/${projectId}`;
-                return;
-            }
-            
-            // Transform the popup to editable form for regular events
-            const popup = document.querySelector('.event-details-popup');
-            if (!popup) return;
-            
-            // Create editable form HTML matching the Create Event form style - WIDER LAYOUT
-            const editFormHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
-                    <h3 style="margin: 0; color: white; font-weight: 600; font-size: 1.5rem;">Edit Event</h3>
-                    <button onclick="closeEventPopup()" style="
-                        background: none;
-                        border: none;
-                        font-size: 24px;
-                        cursor: pointer;
-                        color: #94a3b8;
-                        padding: 0;
-                        width: 32px;
-                        height: 32px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    ">&times;</button>
-                </div>
-                
-                <form id="editEventForm" style="color: white;">
-                    <!-- Meeting Title Section -->
-                    <div style="margin-bottom: 24px;">
-                        <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                            <i class="ri-edit-line" style="margin-right: 8px; color: #60a5fa; font-size: 18px;"></i>
-                            <label style="font-weight: 600; color: #60a5fa; margin: 0;">Meeting Title</label>
-                        </div>
-                        <input type="text" id="editEventName" value="${event.title || ''}" placeholder="Enter meeting title" style="
-                            width: 100%;
-                            padding: 12px 16px;
-                            border: 1px solid #374151;
-                            border-radius: 8px;
-                            background: #1f2937;
-                            color: white;
-                            font-size: 16px;
-                            transition: border-color 0.2s;
-                        " required>
-                    </div>
-                    
-                    <!-- Date and Time Section - 4 columns in one row -->
-                    <div style="margin-bottom: 24px;">
-                        <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                            <i class="ri-calendar-event-line" style="margin-right: 8px; color: #60a5fa; font-size: 18px;"></i>
-                            <label style="font-weight: 600; color: #60a5fa; margin: 0;">Date and Time</label>
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: #cbd5e1; font-size: 14px;">Start Date</label>
-                                <input type="date" id="editEventDate" value="${new Date(event.start).toISOString().split('T')[0]}" style="
-                                    width: 100%;
-                                    padding: 10px 12px;
-                                    border: 1px solid #374151;
-                                    border-radius: 6px;
-                                    background: #1f2937;
-                                    color: white;
-                                    font-size: 14px;
-                                " required>
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: #cbd5e1; font-size: 14px;">End Date</label>
-                                <input type="date" id="editEventEndDate" value="${new Date(event.end).toISOString().split('T')[0]}" style="
-                                    width: 100%;
-                                    padding: 10px 12px;
-                                    border: 1px solid #374151;
-                                    border-radius: 6px;
-                                    background: #1f2937;
-                                    color: white;
-                                    font-size: 14px;
-                                " required>
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: #cbd5e1; font-size: 14px;">Start Time</label>
-                                <input type="time" id="editStartTime" value="${new Date(event.start).toTimeString().slice(0, 5)}" style="
-                                    width: 100%;
-                                    padding: 10px 12px;
-                                    border: 1px solid #374151;
-                                    border-radius: 6px;
-                                    background: #1f2937;
-                                    color: white;
-                                    font-size: 14px;
-                                " required>
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: #cbd5e1; font-size: 14px;">End Time</label>
-                                <input type="time" id="editEndTime" value="${new Date(event.end).toTimeString().slice(0, 5)}" style="
-                                    width: 100%;
-                                    padding: 10px 12px;
-                                    border: 1px solid #374151;
-                                    border-radius: 6px;
-                                    background: #1f2937;
-                                    color: white;
-                                    font-size: 14px;
-                                " required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Location and Description Section - 2 columns side by side -->
-                    <div style="margin-bottom: 24px;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                            <!-- Location Section -->
-                            <div>
-                                <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                                    <i class="ri-map-pin-line" style="margin-right: 8px; color: #60a5fa; font-size: 18px;"></i>
-                                    <label style="font-weight: 600; color: #60a5fa; margin: 0;">Location</label>
-                                </div>
-                                                            <input type="text" id="editEventLocation" value="${event.location || ''}" placeholder="Enter meeting location or online meeting link" style="
-                                width: 100%;
-                                padding: 12px 16px;
-                                border: 1px solid #374151;
-                                border-radius: 8px;
-                                background: #1f2937;
-                                color: white;
-                                font-size: 16px;
-                            ">
-                            </div>
-                            
-                            <!-- Description Section -->
-                            <div>
-                                <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                                    <i class="ri-chat-1-line" style="margin-right: 8px; color: #60a5fa; font-size: 18px;"></i>
-                                    <label style="font-weight: 600; color: #60a5fa; margin: 0;">Description</label>
-                                </div>
-                                <textarea id="editEventDescription" rows="3" placeholder="Enter meeting description" style="
-                                    width: 100%;
-                                    padding: 12px 16px;
-                                    border: 1px solid #374151;
-                                    border-radius: 8px;
-                                    background: #1f2937;
-                                    color: white;
-                                    font-size: 16px;
-                                    resize: vertical;
-                                    min-height: 80px;
-                                ">${event.description || ''}</textarea>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Required and Optional Attendees Section - 2 columns side by side -->
-                    <div style="margin-bottom: 24px;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                            <!-- Required Attendees Section -->
-                            <div>
-                                <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                                    <i class="ri-user-star-line" style="margin-right: 8px; color: #60a5fa; font-size: 18px;"></i>
-                                    <label style="font-weight: 600; color: #60a5fa; margin: 0;">Required Attendees</label>
-                                </div>
-                                <select id="editRequiredAttendees" multiple style="
-                                    width: 100%;
-                                    padding: 12px 16px;
-                                    border: 1px solid #374151;
-                                    border-radius: 8px;
-                                    background: #1f2937;
-                                    color: white;
-                                    font-size: 16px;
-                                    min-height: 120px;
-                                ">
-                                    ${getTechnicianOptions(event.mandatory_invites || [])}
-                                </select>
-                                <div style="margin-top: 8px; color: #cbd5e1; font-size: 14px;">Select required meeting participants</div>
-                            </div>
-                            
-                            <!-- Optional Attendees Section -->
-                            <div>
-                                <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                                    <i class="ri-user-line" style="margin-right: 8px; color: #60a5fa; font-size: 18px;"></i>
-                                    <label style="font-weight: 600; color: #60a5fa; margin: 0;">Optional Attendees</label>
-                                </div>
-                                <select id="editOptionalAttendees" multiple style="
-                                    width: 100%;
-                                    padding: 12px 16px;
-                                    border: 1px solid #374151;
-                                    border-radius: 8px;
-                                    background: #1f2937;
-                                    color: white;
-                                    font-size: 16px;
-                                    min-height: 120px;
-                                ">
-                                    ${getTechnicianOptions(event.optional_invites || [])}
-                                </select>
-                                <div style="margin-top: 8px; color: #cbd5e1; font-size: 14px;">Select optional meeting participants</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Action Buttons -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #374151;">
-                        <button type="button" onclick="cancelEdit()" style="
-                            background: #6b7280;
-                            color: white;
-                            border: none;
-                            border-radius: 8px;
-                            padding: 12px 24px;
-                            font-weight: 500;
-                            cursor: pointer;
-                            font-size: 14px;
-                            transition: background-color 0.2s;
-                        ">Cancel</button>
-                        
-                        <button type="button" onclick="saveEventChanges('${eventId}')" style="
-                            background: #10b981;
-                            color: white;
-                            border: none;
-                            border-radius: 8px;
-                            padding: 12px 24px;
-                            font-weight: 500;
-                            cursor: pointer;
-                            font-size: 14px;
-                            transition: background-color 0.2s;
-                        ">Save Changes</button>
-                    </div>
-                </form>
-            `;
-            
-            // Replace popup content with edit form
-            popup.innerHTML = editFormHTML;
-            
-            // Initialize Choices.js for the attendee dropdowns
-            initializeChoicesForEditForm();
-        }
-        
-        // Function to initialize Choices.js for the edit form
-        function initializeChoicesForEditForm() {
-            const mandatoryEl = document.getElementById('editRequiredAttendees');
-            const optionalEl = document.getElementById('editOptionalAttendees');
-            
-            if (mandatoryEl && optionalEl) {
-                // Initialize Choices.js on mandatory attendees
-                const mandatoryChoices = new Choices(mandatoryEl, {
-                    removeItemButton: true,
-                    searchEnabled: true,
-                    placeholder: true,
-                    placeholderValue: "Select required attendees",
-                    noResultsText: "No technicians found",
-                    itemSelectText: "Click to select",
-                    shouldSort: false,
-                    position: 'bottom',
-                    maxItemCount: -1,
-                    searchResultLimit: 10
-                });
-                
-                // Initialize Choices.js on optional attendees
-                const optionalChoices = new Choices(optionalEl, {
-                    removeItemButton: true,
-                    searchEnabled: true,
-                    placeholder: true,
-                    placeholderValue: "Select optional attendees",
-                    noResultsText: "No technicians found",
-                    itemSelectText: "Click to select",
-                    shouldSort: false,
-                    position: 'bottom',
-                    maxItemCount: -1,
-                    searchResultLimit: 10
-                });
-                
-                // Store Choices instances on the elements for later use
-                mandatoryEl.choices = mandatoryChoices;
-                optionalEl.choices = optionalChoices;
-                
-                console.log('Choices.js initialized for edit form');
-                console.log('Mandatory element:', mandatoryEl);
-                console.log('Optional element:', optionalEl);
-            } else {
-                console.error('Attendee elements not found in edit form!');
-            }
-        }
-        
-        // Save event changes
-        function saveEventChanges(eventId) {
-            const eventName = document.getElementById('editEventName').value;
-            const startDate = document.getElementById('editEventDate').value;
-            const endDate = document.getElementById('editEventEndDate').value;
-            const startTime = document.getElementById('editStartTime').value;
-            const endTime = document.getElementById('editEndTime').value;
-            const location = document.getElementById('editEventLocation').value;
-            const description = document.getElementById('editEventDescription').value;
-            
-            // Get selected attendees from Choices.js
-            const requiredAttendees = [];
-            const optionalAttendees = [];
-            
-            // Get values from Choices.js instances
-            const requiredEl = document.getElementById('editRequiredAttendees');
-            const optionalEl = document.getElementById('editOptionalAttendees');
-            
-            if (requiredEl && requiredEl.choices) {
-                requiredAttendees.push(...requiredEl.choices.getValue().map(item => item.value));
-            }
-            
-            if (optionalEl && optionalEl.choices) {
-                optionalAttendees.push(...optionalEl.choices.getValue().map(item => item.value));
-            }
-            
-            if (!eventName || !startDate || !endDate || !startTime || !endTime) {
-                alert('Please fill in all required fields');
-                return;
-            }
-            
-            // TODO: Send update to backend
-            console.log('Saving changes for event:', eventId, {
-                name: eventName,
-                startDate: startDate,
-                endDate: endDate,
-                startTime: startTime,
-                endTime: endTime,
-                location: location,
-                description: description,
-                requiredAttendees: requiredAttendees,
-                optionalAttendees: optionalAttendees
-            });
-            
-            // For now, just show success message and close
-            alert('Event updated successfully!');
-            closeEventPopup();
-        }
-        
-        // Cancel edit and restore original view
-        function cancelEdit() {
-            // Re-show the event details (this would need to be implemented to restore the original view)
-            closeEventPopup();
-        }
-        
-        // Delete event functionality with custom confirmation modal
-        function deleteEvent(eventId) {
-            console.log('Delete event:', eventId);
-            
-            // Find the current event data
-            const events = JSON.parse(document.getElementById('events').textContent);
-            const event = events.find(e => e.id == eventId);
-            
-            if (!event) {
-                console.error('Event not found:', eventId);
-                return;
-            }
-            
-            // Create custom delete confirmation modal
-            const deleteModalHTML = `
-                <div class="delete-confirmation-modal" style="
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: white;
-                    border-radius: 12px;
-                    padding: 32px;
-                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-                    z-index: 10000;
-                    max-width: 400px;
-                    min-width: 350px;
-                    text-align: center;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                ">
-                    <button onclick="closeDeleteModal()" style="
-                        position: absolute;
-                        top: 16px;
-                        right: 16px;
-                        background: none;
-                        border: none;
-                        font-size: 20px;
-                        cursor: pointer;
-                        color: #6b7280;
-                        padding: 0;
-                        width: 24px;
-                        height: 24px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    ">&times;</button>
-                    
-                    <div style="margin-bottom: 24px;">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto;">
-                            <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M10 11v6M14 11v6" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    
-                    <h3 style="
-                        margin: 0 0 16px 0;
-                        color: #374151;
-                        font-weight: 700;
-                        font-size: 1.5rem;
-                    ">Are you Sure ?</h3>
-                    
-                    <p style="
-                        margin: 0 0 32px 0;
-                        color: #6b7280;
-                        font-size: 1rem;
-                        line-height: 1.5;
-                    ">Are you Sure You want to Delete this Event: <strong>${event.title}</strong> ?</p>
-                    
-                    <div style="display: flex; gap: 16px; justify-content: center;">
-                        <button onclick="closeDeleteModal()" style="
-                            background: #f3f4f6;
-                            color: #374151;
-                            border: none;
-                            border-radius: 8px;
-                            padding: 12px 24px;
-                            font-weight: 500;
-                            cursor: pointer;
-                            font-size: 14px;
-                            min-width: 100px;
-                        ">Close</button>
-                        
-                        <button onclick="confirmDeleteEvent('${eventId}')" style="
-                            background: #f97316;
-                            color: white;
-                            border: none;
-                            border-radius: 8px;
-                            padding: 12px 24px;
-                            font-weight: 500;
-                            cursor: pointer;
-                            font-size: 14px;
-                            min-width: 100px;
-                        ">Yes, Delete It!</button>
-                    </div>
-                </div>
-                
-                <div class="delete-confirmation-overlay" onclick="closeDeleteModal()" style="
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.5);
-                    z-index: 9999;
-                "></div>
-            `;
-            
-            // Add delete confirmation modal to page
-            document.body.insertAdjacentHTML('beforeend', deleteModalHTML);
-        }
-        
-        // Close delete confirmation modal
-        function closeDeleteModal() {
-            const modal = document.querySelector('.delete-confirmation-modal');
-            const overlay = document.querySelector('.delete-confirmation-overlay');
-            if (modal) modal.remove();
-            if (overlay) overlay.remove();
-        }
-        
-        // Confirm and proceed with deletion
-        function confirmDeleteEvent(eventId) {
-            console.log('Confirming deletion of event:', eventId);
-            
-            // TODO: Send delete request to backend
-            // For now, just close both modals without showing alert
-            closeDeleteModal();
-            closeEventPopup();
-        }
+        // All calendar functionality is now handled by calendar.init.js
     </script>
     
     <style>
@@ -1453,291 +568,18 @@
             border: 1px solid #dee2e6;
             padding: 0.5rem 0.75rem;
             font-size: 0.875rem;
+            line-height: 1.5;
         }
         
         .form-control:focus, .form-select:focus {
             border-color: #86b7fe;
+            outline: 0;
             box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
         }
         
-        .form-control-lg {
-            font-size: 1.1rem;
-            padding: 0.75rem 1rem;
-        }
-        
-        /* Invite field styling */
-        #mandatory-invites, #optional-invites {
-            min-height: 80px;
-        }
-        
-        /* Choices.js styling for attendee dropdowns */
-        .choices__inner {
-            background-color: #fff;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            min-height: 80px;
-            padding: 0.5rem 0.75rem;
-        }
-        
-        .choices__list--multiple .choices__item {
-            background-color: #0d6efd;
-            border: 1px solid #0d6efd;
-            border-radius: 0.25rem;
-            color: #fff;
-            padding: 0.25rem 0.5rem;
-            margin: 0.125rem;
-            font-size: 0.875rem;
-        }
-        
-        .choices__list--multiple .choices__item .choices__button {
-            border-left: 1px solid rgba(255, 255, 255, 0.3);
-            margin-left: 0.5rem;
-            padding-left: 0.5rem;
-        }
-        
-        .choices__list--dropdown {
-            background-color: #fff;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            z-index: 9999;
-            min-width: 100% !important;
-            width: auto !important;
-            overflow: visible !important;
-        }
-        
-        .choices__list--dropdown .choices__item {
-            padding: 0.5rem 0.75rem;
-            cursor: pointer;
-            white-space: nowrap !important;
-            overflow: visible !important;
-            text-overflow: clip !important;
-            width: 100% !important;
-            min-width: 100% !important;
-        }
-        
-        /* Ensure dropdown container has proper width */
-        .choices__list--dropdown .choices__list {
-            width: 100% !important;
-            min-width: 100% !important;
-        }
-        
-        /* Fix dropdown positioning and width */
-        .choices__list--dropdown.choices__list--dropdown {
-            min-width: 100% !important;
-            width: auto !important;
-            left: 0 !important;
-            right: 0 !important;
-        }
-        
-        /* Ensure dropdown is not clipped by modal */
-        .modal-content {
-            overflow: visible !important;
-        }
-        
-        .modal-body {
-            overflow: visible !important;
-        }
-        
-        /* Fix Choices.js container width issues */
-        .choices {
-            width: 100% !important;
-            min-width: 100% !important;
-        }
-        
-        .choices__inner {
-            width: 100% !important;
-            min-width: 100% !important;
-        }
-        
-        /* Ensure dropdown items are fully visible */
-        .choices__list--dropdown .choices__item--selectable {
-            width: 100% !important;
-            min-width: 100% !important;
-            padding-left: 0.75rem !important;
-            padding-right: 0.75rem !important;
-        }
-        
-        .choices__list--dropdown .choices__item--selectable {
-            background-color: #fff;
-        }
-        
-        .choices__list--dropdown .choices__item--selectable:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .choices__list--dropdown .choices__item--selectable.is-highlighted {
-            background-color: #e7f1ff;
-            color: #0d6efd;
-        }
-        
-        /* Additional attendee dropdown styling */
-        .attendee-choices .choices__inner {
-            background-color: #fff;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            min-height: 80px;
-            padding: 0.5rem 0.75rem;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-        
-        .attendee-choices .choices__inner:hover {
-            border-color: #86b7fe;
-        }
-        
-        .attendee-choices.is-focused .choices__inner {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-        
-        .attendee-choices .choices__input {
-            background: transparent;
-            border: none;
-            outline: none;
-            box-shadow: none;
-            padding: 0;
-            margin: 0;
-            font-size: 0.875rem;
-        }
-        
-        .attendee-choices .choices__input::placeholder {
-            color: #6c757d;
-            opacity: 0.7;
-        }
-        
-        /* Side-by-side attendee layout styling */
-        .row .col-md-6:first-child {
-            padding-right: 10px;
-        }
-        
-        .row .col-md-6:last-child {
-            padding-left: 10px;
-        }
-        
-        /* Compact dropdown styling for side-by-side layout */
-        .attendee-choices .choices__list--multiple .choices__item {
-            font-size: 0.8rem;
-            padding: 0.2rem 0.4rem;
-            margin: 0.1rem;
-        }
-        
-        /* Recurrence section styling */
-        #recurrenceFields {
-            background-color: #f8f9fa;
-            border-radius: 0.375rem;
-            padding: 1.5rem;
-            margin-top: 1rem;
-            border: 1px solid #e9ecef;
-        }
-        
-        #customRecurrenceOptions {
-            background-color: #e9ecef;
-            border-radius: 0.375rem;
-            padding: 1rem;
-            margin-top: 1rem;
-            border: 1px solid #dee2e6;
-        }
-        
-        /* CKEditor styling */
-        .ck-editor__editable {
-            min-height: 150px;
-            max-height: 300px;
-        }
-        
-        .ck.ck-editor__main > .ck-editor__editable:not(.ck-focused) {
-            border-color: #dee2e6;
-        }
-        
-        .ck.ck-editor__main > .ck-editor__editable.ck-focused {
-            border-color: #86b7fe;
-        }
-        
-        /* Form section spacing */
-        .event-form > .col-12 {
-            margin-bottom: 1.5rem;
-        }
-        
-        /* Button styling */
         .btn-primary {
             background-color: #0d6efd;
             border-color: #0d6efd;
-        }
-        
-        /* Fix Choices.js dropdown styling to match Create Event form (Image 1) */
-        .choices__list--dropdown {
-            background-color: #1e293b !important;
-            border: 1px solid #374151 !important;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
-            z-index: 10000 !important;
-            border-radius: 8px !important;
-        }
-        
-        .choices__list--dropdown .choices__item {
-            color: white !important;
-            background-color: transparent !important;
-            padding: 8px 12px !important;
-        }
-        
-        .choices__list--dropdown .choices__item--selectable:hover {
-            background-color: #3b82f6 !important;
-            color: white !important;
-        }
-        
-        .choices__list--dropdown .choices__item--selectable.is-highlighted {
-            background-color: #3b82f6 !important;
-            color: white !important;
-        }
-        
-        /* Ensure selected items are visible and styled properly */
-        .choices__inner {
-            background-color: #fff !important;
-            border: 1px solid #dee2e6 !important;
-            min-height: 80px !important;
-            border-radius: 6px !important;
-        }
-        
-        .choices__list--multiple .choices__item {
-            background-color: #0d6efd !important;
-            border: 1px solid #0d6efd !important;
-            color: white !important;
-            margin: 2px !important;
-            padding: 4px 8px !important;
-            border-radius: 4px !important;
-        }
-        
-        .choices__list--multiple .choices__item .choices__button {
-            border-left: 1px solid rgba(255, 255, 255, 0.3) !important;
-            margin-left: 8px !important;
-            padding-left: 8px !important;
-        }
-        
-        /* Create Event form dropdowns - WHITE background with dark text */
-        .modal .choices__list--dropdown {
-            background-color: #ffffff !important;
-            border: 1px solid #dee2e6 !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-        }
-        
-        .modal .choices__list--dropdown .choices__item {
-            color: #333333 !important;
-            background-color: transparent !important;
-        }
-        
-        .modal .choices__list--dropdown .choices__item--selectable:hover {
-            background-color: #f8f9fa !important;
-            color: #333333 !important;
-        }
-        
-        .modal .choices__list--dropdown .choices__item--selectable.is-highlighted {
-            background-color: #e9ecef !important;
-            color: #333333 !important;
-        }
-        
-        /* Create Event form input fields - white background */
-        .modal .choices__inner {
-            background-color: #ffffff !important;
-            border: 1px solid #dee2e6 !important;
-            color: #333333 !important;
         }
         
         .btn-primary:hover {
@@ -1745,145 +587,122 @@
             border-color: #0a58ca;
         }
         
-        /* Icon styling */
-        .form-label i {
-            color: #6c757d;
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
         }
         
-        /* Required field indicator */
-        .required-asterix {
-            color: #dc3545;
+        .btn-secondary:hover {
+            background-color: #5c636a;
+            border-color: #565e64;
         }
         
-        /* Form validation styling */
-        .form-control.is-invalid {
-            border-color: #dc3545;
-        }
-        
-        .form-control.is-valid {
-            border-color: #198754;
-        }
-        
-        /* Modal header styling */
-        .modal-header.bg-soft-info {
-            background-color: #e7f1ff !important;
-            border-bottom: 1px solid #b3d9ff;
-        }
-        
-        /* Border top for action buttons */
-        .border-top {
-            border-top: 1px solid #dee2e6 !important;
-        }
-        
-        /* Bootstrap color overrides to ensure proper styling */
-        .bg-soft-success {
-            background-color: #d1e7dd !important;
-        }
-        
-        .bg-soft-info {
-            background-color: #d1ecf1 !important;
-        }
-        
-        .bg-soft-warning {
-            background-color: #fff3cd !important;
-        }
-        
-        .bg-soft-danger {
-            background-color: #f8d7da !important;
-        }
-        
-        .text-success {
-            color: #198754 !important;
-        }
-        
-        .text-info {
-            color: #0dcaf0 !important;
-        }
-        
-        .text-warning {
-            color: #ffc107 !important;
-        }
-        
-        .text-danger {
-            color: #dc3545 !important;
-        }
-        
-        /* Calendar styling */
-        .fc-event {
+        .card {
             border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            padding: 0.25rem 0.5rem;
-            margin-bottom: 0.5rem;
-            cursor: pointer;
+            border-radius: 0.375rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
         }
         
-        .fc-event:hover {
-            opacity: 0.8;
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0;
         }
         
-        /* Custom event colors for different types - Force colors with !important */
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.375rem;
+        }
+        
+        .badge-soft-primary {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+        
+        .badge-soft-info {
+            color: #0dcaf0;
+            background-color: rgba(13, 202, 240, 0.1);
+        }
+        
+        .badge-soft-warning {
+            color: #ffc107;
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+        
+        .text-truncate-two-lines {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .fc-event {
+            border: none !important;
+            border-radius: 0.25rem !important;
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.75rem !important;
+            font-weight: 500 !important;
+        }
+        
+        .fc-event.event-type-event {
+            background-color: #0d6efd !important;
+            color: white !important;
+        }
+        
         .fc-event.event-type-ticket {
             background-color: #0dcaf0 !important;
-            border-color: #0dcaf0 !important;
             color: white !important;
         }
         
         .fc-event.event-type-project {
             background-color: #ffc107 !important;
-            border-color: #ffc107 !important;
-            color: white !important;
+            color: #000 !important;
         }
         
-        .fc-event.event-type-event {
-            background-color: #3b82f6 !important;
-            border-color: #3b82f6 !important;
-            color: white !important;
+        .fc-event-main {
+            color: inherit !important;
         }
         
-        /* Override FullCalendar default colors */
-        .fc-event.event-type-ticket .fc-event-main {
-            background-color: #0dcaf0 !important;
-            border-color: #0dcaf0 !important;
+        .fc-event-title {
+            color: inherit !important;
+            font-weight: 500 !important;
         }
         
-        .fc-event.event-type-project .fc-event-main {
-            background-color: #ffc107 !important;
-            border-color: #ffc107 !important;
+        .fc-event-time {
+            color: inherit !important;
+            opacity: 0.8 !important;
         }
         
-        .fc-event.event-type-event .fc-event-main {
-            background-color: #3b82f6 !important;
-            border-color: #3b82f6 !important;
+        .choices__list--dropdown {
+            z-index: 9999;
         }
         
-        /* Additional color overrides for FullCalendar */
-        .fc-event.event-type-ticket,
-        .fc-event.event-type-ticket .fc-event-title,
-        .fc-event.event-type-ticket .fc-event-time {
-            background-color: #0dcaf0 !important;
-            border-color: #0dcaf0 !important;
-            color: white !important;
+        .choices__list--single {
+            padding: 0.5rem 0.75rem;
         }
         
-        .fc-event.event-type-project,
-        .fc-event.event-type-project .fc-event-title,
-        .fc-event.event-type-project .fc-event-time {
-            background-color: #ffc107 !important;
-            border-color: #ffc107 !important;
-            color: white !important;
+        .choices__item--selectable {
+            padding: 0.5rem 0.75rem;
         }
         
-        .fc-event.event-type-event,
-        .fc-event.event-type-event .fc-event-title,
-        .fc-event.event-type-event .fc-event-time {
-            background-color: #3b82f6 !important;
-            border-color: #3b82f6 !important;
-            color: white !important;
+        .choices__item--selectable.is-highlighted {
+            background-color: #e9ecef;
         }
         
-        /* External events styling */
-        .external-event {
-            padding: 0.5rem 1rem;
+        .choices__item--choice {
+            padding: 0.5rem 0.75rem;
             margin-bottom: 0.5rem;
             border-radius: 0.25rem;
             cursor: pointer;

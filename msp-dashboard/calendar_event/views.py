@@ -169,6 +169,15 @@ def apps_calendar_view(request):
     for event in events_data:
         event['event_type'] = 'event'
         event['id'] = f"event_{event['id']}"
+        event['className'] = 'event-type-event'
+        # Determine if this is an all-day event (date only, no time)
+        event['allDay'] = True  # Events are typically all-day by default
+        # Ensure extendedProps exists for events
+        if 'extendedProps' not in event:
+            event['extendedProps'] = {}
+        event['extendedProps']['event_type'] = 'event'
+        event['extendedProps']['model'] = 'event'
+        event['extendedProps']['model_id'] = event['id'].replace('event_', '')
     
     # Serialize tickets for the template
     for ticket in tickets:
@@ -182,9 +191,25 @@ def apps_calendar_view(request):
             'priority': ticket.priority,
             'start': ticket.due_date.isoformat() if ticket.due_date else None,
             'end': ticket.due_date.isoformat() if ticket.due_date else None,
+            'allDay': True,  # Tickets are date-only (all-day events)
+            'create_date': ticket.create_date.isoformat() if ticket.create_date else None,
+            'project': ticket.project.name if ticket.project else None,
             'mandatory_invites': [{'user_id': tech.auth_user.user_id, 'username': tech.auth_user.username, 'email': tech.auth_user.email} for tech in ticket.assignment.all()],
             'optional_invites': [],
-            'event_type': 'ticket'
+            'event_type': 'ticket',
+            'className': 'event-type-ticket',
+            'extendedProps': {
+                'event_type': 'ticket',
+                'model': 'ticket',
+                'model_id': ticket.identifier,
+                'status': ticket.status,
+                'priority': ticket.priority,
+                'description': ticket.description,
+                'create_date': ticket.create_date.isoformat() if ticket.create_date else None,
+                'project': ticket.project.name if ticket.project else None,
+                'mandatory_invites': [{'user_id': tech.auth_user.user_id, 'username': tech.auth_user.username, 'email': tech.auth_user.email} for tech in ticket.assignment.all()],
+                'optional_invites': []
+            }
         }
         print(f"DEBUG: Serialized ticket {ticket.identifier}: {ticket_data['title']} (Start: {ticket_data['start']}, End: {ticket_data['end']})")
         events_data.append(ticket_data)
@@ -201,9 +226,23 @@ def apps_calendar_view(request):
             'priority': project.priority,
             'start': project.due_date.isoformat() if project.due_date else None,
             'end': project.due_date.isoformat() if project.due_date else None,
+            'allDay': True,  # Projects are date-only (all-day events)
+            'create_date': project.create_date.isoformat() if project.create_date else None,
             'mandatory_invites': [{'user_id': tech.auth_user.user_id, 'username': tech.auth_user.username, 'email': tech.auth_user.email} for tech in project.assignment.all()],
             'optional_invites': [],
-            'event_type': 'project'
+            'event_type': 'project',
+            'className': 'event-type-project',
+            'extendedProps': {
+                'event_type': 'project',
+                'model': 'project',
+                'model_id': project.identifier,
+                'status': project.status,
+                'priority': project.priority,
+                'description': project.description,
+                'create_date': project.create_date.isoformat() if project.create_date else None,
+                'mandatory_invites': [{'user_id': tech.auth_user.user_id, 'username': tech.auth_user.username, 'email': tech.auth_user.email} for tech in project.assignment.all()],
+                'optional_invites': []
+            }
         }
         events_data.append(project_data)
     

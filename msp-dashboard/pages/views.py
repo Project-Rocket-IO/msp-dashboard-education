@@ -165,9 +165,12 @@ def pages_create_account(request):
         if isinstance(result, tuple) and result[0] == "billing_required":
             # Billing is required - redirect to Stripe checkout
             billing_sessions = result[1]
+            print(f"DEBUG: Billing sessions received: {billing_sessions}")
             if len(billing_sessions) == 1:
                 # Single user - redirect to Stripe
                 session_data = billing_sessions[0]
+                print(f"DEBUG: Session data: {session_data}")
+                print(f"DEBUG: Checkout URL: {session_data.get('checkout_url', 'NOT FOUND')}")
                 return redirect(session_data["checkout_url"])
             else:
                 # Multiple users - we'll need to handle this differently
@@ -380,13 +383,25 @@ def pages_profile_settings(request):
         elif action == "delete_user":
             # Handle user deletion
             user_id = request.POST.get("user_id")
+            print(f"DEBUG: Delete user action - user_id from POST: {user_id}")
+            print(f"DEBUG: Current user (request.user): {request.user.username} (ID: {request.user.user_id})")
+            print(f"DEBUG: User ID type: {type(user_id)}")
+            
             try:
                 User = get_user_model()
                 target_user = User.objects.get(user_id=user_id)
                 username = target_user.username
                 
-                # Prevent self-deletion
-                if target_user == user:
+                # Prevent self-deletion - use user_id comparison for reliability
+                print(f"DEBUG: Comparing users for deletion:")
+                print(f"DEBUG: Current user (request.user): {request.user.username} (ID: {request.user.user_id})")
+                print(f"DEBUG: Target user to delete: {target_user.username} (ID: {target_user.user_id})")
+                print(f"DEBUG: Are they the same? {target_user == request.user}")
+                print(f"DEBUG: Same ID? {target_user.user_id == request.user.user_id}")
+                print(f"DEBUG: Same object? {target_user is request.user}")
+                
+                # Use user_id comparison for more reliable self-deletion check
+                if target_user.user_id == request.user.user_id:
                     messages.error(request, "You cannot delete your own account.")
                     return redirect("pages:pages.profile_settings")
                 
