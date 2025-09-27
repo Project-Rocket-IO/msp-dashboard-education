@@ -1,19 +1,506 @@
-import*as dateUtils from"./dateUtils.init.js";
+import * as dateUtils from "./dateUtils.init.js";
 
-/**
- * Show details of a clicked event in the modal.
- * This acts as a safe wrapper so eventClick never errors.
- * @param {Object} eventData - event object (from window.events or from FullCalendar)
- */
-window.showEventDetails = function(eventData) {
-  if (!eventData) {
-    console.warn("showEventDetails called with no eventData");
-    return;
-  }
-  // Use your existing function to populate modal fields
-  populateEventDetails(eventData);
-  // Open modal in "view" mode
-  showEventModal(eventData);
+// Global variables
+var modalTitle, formEvent, formDeleteEvent, forms, selectedEvent, addEvent, Draggable, externalEventContainerEl, calendarEl, eventCategoryChoice = null;
+
+// Utility functions
+function getInitialView() {
+    return window.innerWidth >= 768 && window.innerWidth < 1200 ? "timeGridWeek" : window.innerWidth <= 768 ? "listMonth" : "dayGridMonth";
 }
 
-var modalTitle,formEvent,formDeleteEvent,forms,selectedEvent,addEvent,Draggable,externalEventContainerEl,calendarEl,eventCategoryChoice=null,date_range=null,T_check=null;function populateEventDetails(e){document.getElementById("event-title").value=e.title,document.getElementById("event-location").value=e.extendedProps.location||"No Location",document.getElementById("event-description").value=e.extendedProps.description||"No Description",document.getElementById("eventid").value=e.id,eventCategoryChoice&&eventCategoryChoice.destroy(),e.extendedProps.type&&(eventCategoryChoice=new Choices("#event-category",{searchEnabled:!1})).setChoiceByValue(e.extendedProps.type);for(var t=document.getElementById("event-guests").options,n=e.extendedProps.guest_list.map(e=>e.user_id),d=0;d<t.length;d++)n.includes(t[d].value)&&(t[d].selected=!0)}function showAddNewEventModal(e){document.getElementById("form-event").reset(),document.getElementById("btn-delete-event").setAttribute("hidden",!0),addEvent.show(),formEvent.classList.remove("was-validated"),formEvent.reset(),selectedEvent=null,modalTitle.innerText="Add Event",document.getElementById("edit-event-btn").setAttribute("data-id","new-event"),document.getElementById("edit-event-btn").click(),document.getElementById("edit-event-btn").setAttribute("hidden",!0)}function getInitialView(){return 768<=window.innerWidth&&window.innerWidth<1200?"timeGridWeek":window.innerWidth<=768?"listMonth":"dayGridMonth"}timepicker1.addEventListener("change",()=>{var{start:e,end:t}=dateUtils.calculateStartEnd(start_date,timepicker1,timepicker2);document.getElementById("start").value=e,document.getElementById("end").value=t}),timepicker2.addEventListener("change",()=>{var{start:e,end:t}=dateUtils.calculateStartEnd(start_date,timepicker1,timepicker2);document.getElementById("start").value=e,document.getElementById("end").value=t}),start_date.addEventListener("change",()=>{var{start:e,end:t}=dateUtils.calculateStartEnd(start_date,timepicker1,timepicker2);document.getElementById("start").value=e,document.getElementById("end").value=t}),document.addEventListener("DOMContentLoaded",async()=>{addEvent=new bootstrap.Modal(document.getElementById("event-modal"),{keyboard:!1}),document.getElementById("event-modal"),modalTitle=document.getElementById("modal-title"),formEvent=document.getElementById("form-event"),formDeleteEvent=document.getElementById("form-delete-event"),forms=document.getElementsByClassName("needs-validation"),selectedEvent=null,flatPickrInit(),Draggable=FullCalendar.Draggable,externalEventContainerEl=document.getElementById("external-events"),calendarEl=document.getElementById("calendar"),new Draggable(externalEventContainerEl,{itemSelector:".external-event",eventData:function(e){return{id:Math.floor(11e3*Math.random()),title:e.innerText,allDay:!0,start:new Date,className:e.getAttribute("data-class")}}}),eventCategoryChoice=new Choices("#event-category",{searchEnabled:!1});var n=new FullCalendar.Calendar(calendarEl,{timeZone:"local",editable:!0,droppable:!0,selectable:!0,navLinks:!0,initialView:getInitialView(),themeSystem:"bootstrap",headerToolbar:{left:"prev,next today",center:"title",right:"dayGridMonth,timeGridWeek,timeGridDay,listMonth"},windowResize:function(e){var t=getInitialView();n.changeView(t)},eventResize:function(t){console.log("Event resize",t);var e=window.events.findIndex(function(e){return e.id==t.event.id});window.events[e]&&(window.events[e].title=t.event.title,window.events[e].start=t.event.start,window.events[e].end=t.event.end||null,window.events[e].allDay=t.event.allDay,window.events[e].className=t.event.classNames[0],window.events[e].description=t.event._def.extendedProps.description||"",window.events[e].location=t.event._def.extendedProps.location||""),upcomingEvent(window.events)},eventClick:function(e){console.log("FullCalendar eventClick triggered");console.log("Event data from FullCalendar:",e.event);console.log("Event ID from FullCalendar:",e.event.id);console.log("Event title from FullCalendar:",e.event.title);var t=window.events.find(function(t){return t.id===e.event.id});console.log("Looking for original event with ID:",e.event.id);console.log("Available event IDs:",window.events.map(function(t){return t.id}));console.log("Original event found:",t);if(t){console.log("Using original event data for modal");var n=t.extendedProps;if(n&&n.model){if("ticket"===n.model){showTicketModal(t);return}if("project"===n.model){showProjectModal(t);return}}showEventModal(t)}else{console.log("Original event not found, using FullCalendar data");var r={id:e.event.id,title:e.event.title,start:e.event.start,end:e.event.end,event_type:e.event.extendedProps?.event_type||"event",extendedProps:e.event.extendedProps};showEventModal(r)}e.jsEvent.preventDefault();return!1},dateClick:function(e){showAddNewEventModal(e)},eventReceive:function(e){e={id:parseInt(e.event.id),title:e.event.title,start:e.event.start,allDay:e.event.allDay,guests_list:e.event.guest_list,className:e.event.classNames[0]};window.events.push(e),upcomingEvent(window.events)},eventDrop:function(t){var e=window.events.findIndex(function(e){return e.id==t.event.id});window.events[e]&&(window.events[e].title=t.event.title,window.events[e].start=t.event.start,window.events[e].end=t.event.end||null,window.events[e].allDay=t.event.allDay,window.events[e].className=t.event.classNames[0],window.events[e].description=t.event._def.extendedProps.description||"",window.events[e].location=t.event._def.extendedProps.location||""),upcomingEvent(window.events)},events:window.events});n.render(),upcomingEvent(window.events);const eventsData=JSON.parse(document.getElementById('events')?.textContent||'[]');console.log('DEBUG: Events data for upcoming events:',eventsData),console.log('DEBUG: Number of events:',eventsData.length),typeof upcomingEvent==='function'?(console.log('DEBUG: Calling upcomingEvent function'),upcomingEvent(eventsData)):console.warn('DEBUG: upcomingEvent function not found'),document.getElementById("btn-delete-event").addEventListener("click",function(e){selectedEvent&&(document.getElementById("delete-event-id").value=selectedEvent.id,formDeleteEvent.submit())}),document.getElementById("btn-new-event").addEventListener("click",function(e){flatpicekrValueClear(),flatPickrInit(),showAddNewEventModal(),document.getElementById("edit-event-btn").setAttribute("data-id","new-event"),document.getElementById("edit-event-btn").click(),document.getElementById("edit-event-btn").setAttribute("hidden",!0)})});function showTicketModal(ticket){var ticketName=ticket.title.replace("Ticket: ",""),dueDate=ticket.start?new Date(ticket.start).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"No due date",createDate=ticket.extendedProps?.create_date?new Date(ticket.extendedProps.create_date).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"No create date",assignments=ticket.extendedProps?.mandatory_invites?.map(function(t){return t.username}).join(", ")||"No assignments",project=ticket.extendedProps?.project||"No project",status=ticket.extendedProps?.status||"No status",priority=ticket.extendedProps?.priority||"No priority",description=ticket.extendedProps?.description||"Nothing since there is none";var modalHtml='<div class="modal fade" id="ticket-modal" tabindex="-1" aria-labelledby="ticket-modal-label" aria-hidden="true">        <div class="modal-dialog modal-lg">            <div class="modal-content">                <div class="modal-header">                    <h5 class="modal-title" id="ticket-modal-label">'+ticketName+'</h5>                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>                </div>                <div class="modal-body">                    <div class="row">                        <div class="col-md-6">                            <p><strong>Due Date:</strong> '+dueDate+'</p>                            <p><strong>Create Date:</strong> '+createDate+'</p>                            <p><strong>Assignment:</strong> '+assignments+'</p>                            <p><strong>Project:</strong> '+project+'</p>                        </div>                        <div class="col-md-6">                            <p><strong>Status:</strong> '+status+'</p>                            <p><strong>Priority:</strong> '+priority+'</p>                        </div>                    </div>                    <div class="row">                        <div class="col-12">                            <p><strong>Description:</strong></p>                            <p>'+description+'</p>                        </div>                    </div>                </div>                <div class="modal-footer">                    <button type="button" class="btn btn-primary" onclick="editTicket('+ticket.extendedProps.model_id+')">Edit</button>                    <button type="button" class="btn btn-secondary" onclick="viewTicket('+ticket.extendedProps.model_id+')">View</button>                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>                </div>            </div>        </div>    </div>';document.body.insertAdjacentHTML("beforeend",modalHtml);var modal=new bootstrap.Modal(document.getElementById("ticket-modal"));modal.show();document.getElementById("ticket-modal").addEventListener("hidden.bs.modal",function(){document.getElementById("ticket-modal").remove()})}function showProjectModal(project){var projectName=project.title.replace("Project: ",""),dueDate=project.start?new Date(project.start).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"No due date",createDate=project.extendedProps?.create_date?new Date(project.extendedProps.create_date).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"No create date",assignments=project.extendedProps?.mandatory_invites?.map(function(t){return t.username}).join(", ")||"No assignments",status=project.extendedProps?.status||"No status",priority=project.extendedProps?.priority||"No priority",description=project.extendedProps?.description||"Nothing since there is none";var modalHtml='<div class="modal fade" id="project-modal" tabindex="-1" aria-labelledby="project-modal-label" aria-hidden="true">        <div class="modal-dialog modal-lg">            <div class="modal-content">                <div class="modal-header">                    <h5 class="modal-title" id="project-modal-label">'+projectName+'</h5>                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>                </div>                <div class="modal-body">                    <div class="row">                        <div class="col-md-6">                            <p><strong>Due Date:</strong> '+dueDate+'</p>                            <p><strong>Create Date:</strong> '+createDate+'</p>                            <p><strong>Assignments:</strong> '+assignments+'</p>                        </div>                        <div class="col-md-6">                            <p><strong>Status:</strong> '+status+'</p>                            <p><strong>Priority:</strong> '+priority+'</p>                        </div>                    </div>                    <div class="row">                        <div class="col-12">                            <p><strong>Description:</strong></p>                            <p>'+description+'</p>                        </div>                    </div>                </div>                <div class="modal-footer">                    <button type="button" class="btn btn-primary" onclick="editProject('+project.extendedProps.model_id+')">Edit</button>                    <button type="button" class="btn btn-secondary" onclick="viewProject('+project.extendedProps.model_id+')">View</button>                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>                </div>            </div>        </div>    </div>';document.body.insertAdjacentHTML("beforeend",modalHtml);var modal=new bootstrap.Modal(document.getElementById("project-modal"));modal.show();document.getElementById("project-modal").addEventListener("hidden.bs.modal",function(){document.getElementById("project-modal").remove()})}function showEventModal(event){selectedEvent=event,document.getElementById("edit-event-btn").removeAttribute("hidden"),document.getElementById("btn-save-event").setAttribute("hidden",!0),document.getElementById("edit-event-btn").setAttribute("data-id","edit-event"),document.getElementById("edit-event-btn").innerHTML="Edit",eventClicked(),flatPickrInit(),flatpicekrValueClear(),addEvent.show(),formEvent.reset(),populateEventDetails(selectedEvent);function t(e){var t=""+((e=new Date(e)).getMonth()+1),n=""+e.getDate();return[e.getFullYear(),t=t.length<2?"0"+t:t,n=n.length<2?"0"+n:n].join("-")}var e=selectedEvent.start,n=selectedEvent.end,d=null==n?str_dt(e):str_dt(e)+" to "+str_dt(n),e=null==n?t(e):t(e)+" to "+t(n),n=(flatpickr(start_date,{defaultDate:e,altInput:!0,altFormat:"j F Y",dateFormat:"Y-m-d",mode:"range",onChange:function(e,t,n){1<t.split("to").length?document.getElementById("event-time").setAttribute("hidden",!0):(document.getElementById("timepicker1").parentNode.classList.remove("d-none"),document.getElementById("timepicker1").classList.replace("d-none","d-block"),document.getElementById("timepicker2").parentNode.classList.remove("d-none"),document.getElementById("timepicker2").classList.replace("d-none","d-block"),document.getElementById("event-time").removeAttribute("hidden"))}}),document.getElementById("event-start-date-tag").innerHTML=d,getTime(selectedEvent.start)),e=getTime(selectedEvent.end),d={enableTime:!0,noCalendar:!0,dateFormat:"H:i"};n==e?(document.getElementById("event-time").setAttribute("hidden",!0),flatpickr(document.getElementById("timepicker1"),d),flatpickr(document.getElementById("timepicker2"),d)):(document.getElementById("event-time").removeAttribute("hidden"),flatpickr(document.getElementById("timepicker1"),{...d,defaultDate:n}),flatpickr(document.getElementById("timepicker2"),{...d,defaultDate:e}),document.getElementById("event-timepicker1-tag").innerHTML=tConvert(n),document.getElementById("event-timepicker2-tag").innerHTML=tConvert(e)),modalTitle.innerText=selectedEvent.title,document.getElementById("btn-delete-event").removeAttribute("hidden")}window.editTicket=function(ticketId){window.location.href="/apps/support-tickets/edit/"+ticketId};window.viewTicket=function(ticketId){window.location.href="/apps/support-tickets/details/"+ticketId};window.editProject=function(projectId){window.location.href="/apps/projects/edit/"+projectId};window.viewProject=function(projectId){window.location.href="/apps/projects/details/"+projectId}
+// Flatpickr functions
+window.flatPickrInit = function() {
+    console.log("flatPickrInit called");
+};
+
+window.flatpicekrValueClear = function() {
+    console.log("flatpicekrValueClear called");
+};
+
+// Event form functions
+window.eventClicked = function() {
+    console.log("eventClicked called");
+};
+
+window.eventTyped = function() {
+    console.log("eventTyped called");
+    const formEvent = document.getElementById("form-event");
+    if (formEvent) {
+        formEvent.classList.remove("view-event");
+    }
+    
+    // Show form fields
+    const titleField = document.getElementById("event-title");
+    if (titleField) {
+        titleField.classList.replace("d-none", "d-block");
+    }
+    
+    const categoryField = document.getElementById("event-category");
+    if (categoryField) {
+        categoryField.classList.replace("d-none", "d-block");
+    }
+    
+    const locationField = document.getElementById("event-location");
+    if (locationField) {
+        locationField.classList.replace("d-none", "d-block");
+    }
+    
+    const descriptionField = document.getElementById("event-description");
+    if (descriptionField) {
+        descriptionField.classList.replace("d-none", "d-block");
+    }
+    
+    // Hide read-only tags
+    const startDateTag = document.getElementById("event-start-date-tag");
+    if (startDateTag) {
+        startDateTag.classList.replace("d-block", "d-none");
+    }
+    
+    const locationTag = document.getElementById("event-location-tag");
+    if (locationTag) {
+        locationTag.classList.replace("d-block", "d-none");
+    }
+    
+    const descriptionTag = document.getElementById("event-description-tag");
+    if (descriptionTag) {
+        descriptionTag.classList.replace("d-block", "d-none");
+    }
+    
+    // Show save button
+    const saveBtn = document.getElementById("btn-save-event");
+    if (saveBtn) {
+        saveBtn.removeAttribute("hidden");
+    }
+};
+
+// Event details population
+function populateEventDetails(event) {
+    console.log("populateEventDetails called with:", event);
+    
+    const titleField = document.getElementById("event-title");
+    if (titleField) {
+        titleField.value = event.title || "";
+    }
+    
+    const locationField = document.getElementById("event-location");
+    if (locationField) {
+        locationField.value = event.extendedProps?.location || "No Location";
+    }
+    
+    const descriptionField = document.getElementById("event-description");
+    if (descriptionField) {
+        descriptionField.value = event.extendedProps?.description || "No Description";
+    }
+    
+    const eventIdField = document.getElementById("eventid");
+    if (eventIdField) {
+        eventIdField.value = event.id || "";
+    }
+    
+    if (eventCategoryChoice) {
+        eventCategoryChoice.destroy();
+    }
+    
+    if (event.extendedProps?.type) {
+        eventCategoryChoice = new Choices("#event-category", { searchEnabled: false });
+        eventCategoryChoice.setChoiceByValue(event.extendedProps.type);
+    }
+    
+    // Handle guest list
+    const guestSelect = document.getElementById("event-guests");
+    if (guestSelect && event.extendedProps?.guest_list) {
+        const guestIds = event.extendedProps.guest_list.map(guest => guest.user_id);
+        for (let i = 0; i < guestSelect.options.length; i++) {
+            guestSelect.options[i].selected = guestIds.includes(guestSelect.options[i].value);
+        }
+    }
+}
+
+// Modal functions
+function showAddNewEventModal() {
+    console.log("showAddNewEventModal called");
+    if (addEvent) {
+        addEvent.show();
+    }
+}
+
+function showEventModal(event) {
+    console.log("showEventModal called with:", event);
+    selectedEvent = event;
+    
+    const editBtn = document.getElementById("edit-event-btn");
+    if (editBtn) {
+        editBtn.removeAttribute("hidden");
+        editBtn.setAttribute("data-id", "edit-event");
+        editBtn.innerHTML = "Edit";
+    }
+    
+    const saveBtn = document.getElementById("btn-save-event");
+    if (saveBtn) {
+        saveBtn.removeAttribute("hidden");
+        saveBtn.innerHTML = "Update Event";
+    }
+    
+    eventTyped();
+    flatPickrInit();
+    flatpicekrValueClear();
+    
+    if (addEvent) {
+        addEvent.show();
+    }
+    
+    if (formEvent) {
+        formEvent.reset();
+    }
+    
+    populateEventDetails(selectedEvent);
+    
+    if (modalTitle) {
+        modalTitle.innerText = selectedEvent.title || "Event Details";
+    }
+    
+    const deleteBtn = document.getElementById("btn-delete-event");
+    if (deleteBtn) {
+        deleteBtn.removeAttribute("hidden");
+    }
+}
+
+// Ticket modal
+function showTicketModal(ticket) {
+    console.log("showTicketModal called with:", ticket);
+    const ticketName = ticket.title.replace("Ticket: ", "");
+    const dueDate = ticket.start ? new Date(ticket.start).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No due date";
+    const createDate = ticket.extendedProps?.create_date ? new Date(ticket.extendedProps.create_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No create date";
+    const assignments = ticket.extendedProps?.mandatory_invites?.map(tech => tech.username).join(", ") || "No assignments";
+    const project = ticket.extendedProps?.project || "No project";
+    const status = ticket.extendedProps?.status || "No status";
+    const priority = ticket.extendedProps?.priority || "No priority";
+    const description = ticket.extendedProps?.description || "Nothing since there is none";
+    
+    const modalHtml = `
+        <div class="modal fade" id="ticket-modal" tabindex="-1" aria-labelledby="ticket-modal-label" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="ticket-modal-label">${ticketName}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Due Date:</strong> ${dueDate}</p>
+                                <p><strong>Create Date:</strong> ${createDate}</p>
+                                <p><strong>Assignment:</strong> ${assignments}</p>
+                                <p><strong>Project:</strong> ${project}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Status:</strong> ${status}</p>
+                                <p><strong>Priority:</strong> ${priority}</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <p><strong>Description:</strong></p>
+                                <p>${description}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="editTicket(${ticket.extendedProps.model_id})">Edit</button>
+                        <button type="button" class="btn btn-secondary" onclick="viewTicket(${ticket.extendedProps.model_id})">View</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML("beforeend", modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById("ticket-modal"));
+    modal.show();
+    
+    document.getElementById("ticket-modal").addEventListener("hidden.bs.modal", function() {
+        document.getElementById("ticket-modal").remove();
+    });
+}
+
+// Project modal
+function showProjectModal(project) {
+    console.log("showProjectModal called with:", project);
+    const projectName = project.title.replace("Project: ", "");
+    const dueDate = project.start ? new Date(project.start).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No due date";
+    const createDate = project.extendedProps?.create_date ? new Date(project.extendedProps.create_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No create date";
+    const assignments = project.extendedProps?.mandatory_invites?.map(tech => tech.username).join(", ") || "No assignments";
+    const status = project.extendedProps?.status || "No status";
+    const priority = project.extendedProps?.priority || "No priority";
+    const description = project.extendedProps?.description || "Nothing since there is none";
+    
+    const modalHtml = `
+        <div class="modal fade" id="project-modal" tabindex="-1" aria-labelledby="project-modal-label" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="project-modal-label">${projectName}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Due Date:</strong> ${dueDate}</p>
+                                <p><strong>Create Date:</strong> ${createDate}</p>
+                                <p><strong>Assignments:</strong> ${assignments}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Status:</strong> ${status}</p>
+                                <p><strong>Priority:</strong> ${priority}</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <p><strong>Description:</strong></p>
+                                <p>${description}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="editProject(${project.extendedProps.model_id})">Edit</button>
+                        <button type="button" class="btn btn-secondary" onclick="viewProject(${project.extendedProps.model_id})">View</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML("beforeend", modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById("project-modal"));
+    modal.show();
+    
+    document.getElementById("project-modal").addEventListener("hidden.bs.modal", function() {
+        document.getElementById("project-modal").remove();
+    });
+}
+
+// Upcoming events function
+function upcomingEvent(events) {
+    console.log('upcomingEvent called with:', events);
+    
+    const now = new Date();
+    const validEvents = events.filter(event => {
+        const hasValidStart = event.start && event.start !== "Invalid Date";
+        if (!hasValidStart) return false;
+        
+        try {
+            const eventDate = new Date(event.start);
+            const isFuture = eventDate >= now;
+            return isFuture;
+        } catch (e) {
+            console.warn('Invalid date for event:', event.title, event.start);
+            return false;
+        }
+    });
+    
+    validEvents.sort(function(event1, event2) {
+        return new Date(event1.start) - new Date(event2.start);
+    });
+    
+    const upcomingList = document.getElementById("upcoming-event-list");
+    if (upcomingList) {
+        upcomingList.innerHTML = "";
+        
+        validEvents.forEach(function(element) {
+            const title = element.title;
+            const eventType = element.event_type || 'event';
+            const description = element.description ? element.description.substring(0, 50) + (element.description.length > 50 ? '...' : '') : "";
+            
+            let startDate = null;
+            if (element.start) {
+                try {
+                    const date = new Date(element.start);
+                    if (!isNaN(date.getTime())) {
+                        startDate = date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+                    }
+                } catch (e) {
+                    console.warn('Invalid start date:', element.start);
+                }
+            }
+            
+            let colorClass = 'primary';
+            if (eventType === 'ticket') colorClass = 'info';
+            else if (eventType === 'project') colorClass = 'warning';
+            
+            let displayTitle = title;
+            if (eventType === 'ticket' && !title.startsWith('Ticket:')) {
+                displayTitle = 'Ticket: ' + title;
+            } else if (eventType === 'project' && !title.startsWith('Project:')) {
+                displayTitle = 'Project: ' + title;
+            } else if (eventType === 'event' && !title.startsWith('Event:')) {
+                displayTitle = 'Event: ' + title;
+            }
+            
+            const eventHtml = `
+                <div class='card mb-3'>
+                    <div class='card-body'>
+                        <div class='d-flex mb-3'>
+                            <div class='flex-grow-1'>
+                                <i class='mdi mdi-checkbox-blank-circle me-2 text-${colorClass}'></i>
+                                <span class='fw-medium'>${startDate || 'No date'}</span>
+                            </div>
+                        </div>
+                        <h6 class='card-title fs-16'>${displayTitle}</h6>
+                        <p class='text-muted text-truncate-two-lines mb-0'>${description}</p>
+                    </div>
+                </div>
+            `;
+            
+            upcomingList.innerHTML += eventHtml;
+        });
+    }
+}
+
+// Navigation functions
+window.editTicket = function(ticketId) {
+    window.location.href = "/apps/support-tickets/edit/" + ticketId;
+};
+
+window.viewTicket = function(ticketId) {
+    window.location.href = "/apps/support-tickets/details/" + ticketId;
+};
+
+window.editProject = function(projectId) {
+    window.location.href = "/apps/projects/edit/" + projectId;
+};
+
+window.viewProject = function(projectId) {
+    window.location.href = "/apps/projects/overview/" + projectId;
+};
+
+// Main initialization
+document.addEventListener("DOMContentLoaded", async function() {
+    console.log("Calendar initialization starting...");
+    
+    // Initialize modal
+    addEvent = new bootstrap.Modal(document.getElementById("event-modal"), { keyboard: false });
+    modalTitle = document.getElementById("modal-title");
+    formEvent = document.getElementById("form-event");
+    formDeleteEvent = document.getElementById("form-delete-event");
+    forms = document.getElementsByClassName("needs-validation");
+    selectedEvent = null;
+    
+    console.log("Modal initialized");
+    
+    // Initialize Draggable
+    Draggable = FullCalendar.Draggable;
+    externalEventContainerEl = document.getElementById("external-events");
+    calendarEl = document.getElementById("calendar");
+    
+    new Draggable(externalEventContainerEl, {
+        itemSelector: ".external-event",
+        eventData: function(element) {
+            return {
+                id: Math.floor(Math.random() * 11000),
+                title: element.innerText,
+                allDay: true,
+                start: new Date(),
+                className: element.getAttribute("data-class")
+            };
+        }
+    });
+    
+    console.log("Draggable initialized");
+    
+    // Initialize event category choice
+    eventCategoryChoice = new Choices("#event-category", { searchEnabled: false });
+    console.log("Event category choice initialized");
+    
+    // Initialize FullCalendar
+    console.log("Initializing FullCalendar with events:", window.events);
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        timeZone: "local",
+        editable: true,
+        droppable: true,
+        selectable: true,
+        navLinks: true,
+        initialView: getInitialView(),
+        themeSystem: "bootstrap",
+        headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay,listMonth"
+        },
+        windowResize: function() {
+            const view = getInitialView();
+            calendar.changeView(view);
+        },
+        eventClick: function(info) {
+            console.log("FullCalendar eventClick triggered");
+            console.log("Event data from FullCalendar:", info.event);
+            console.log("Event ID from FullCalendar:", info.event.id);
+            console.log("Event title from FullCalendar:", info.event.title);
+            
+            const originalEvent = window.events.find(function(event) {
+                return event.id === info.event.id;
+            });
+            
+            console.log("Looking for original event with ID:", info.event.id);
+            console.log("Available event IDs:", window.events.map(function(event) {
+                return event.id;
+            }));
+            console.log("Original event found:", originalEvent);
+            
+            if (originalEvent) {
+                console.log("Using original event data for modal");
+                const extendedProps = originalEvent.extendedProps;
+                if (extendedProps && extendedProps.model) {
+                    if (extendedProps.model === "ticket") {
+                        showTicketModal(originalEvent);
+                        return;
+                    }
+                    if (extendedProps.model === "project") {
+                        showProjectModal(originalEvent);
+                        return;
+                    }
+                }
+                showEventModal(originalEvent);
+            } else {
+                console.log("Original event not found, using FullCalendar data");
+                const fallbackEvent = {
+                    id: info.event.id,
+                    title: info.event.title,
+                    start: info.event.start,
+                    end: info.event.end,
+                    event_type: info.event.extendedProps?.event_type || "event",
+                    extendedProps: info.event.extendedProps
+                };
+                showEventModal(fallbackEvent);
+            }
+            
+            info.jsEvent.preventDefault();
+            return false;
+        },
+        dateClick: function(info) {
+            showAddNewEventModal(info);
+        },
+        events: window.events
+    });
+    
+    calendar.render();
+    console.log("FullCalendar rendered");
+    
+    // Load and display upcoming events
+    upcomingEvent(window.events);
+    console.log("Upcoming events populated");
+    
+    // Event listeners
+    document.getElementById("btn-new-event").addEventListener("click", function(e) {
+        console.log("Create New Event button clicked");
+        showAddNewEventModal();
+    });
+    
+    console.log("Calendar initialization complete!");
+});
+
+// Wrapper function for event details
+window.showEventDetails = function(eventData) {
+    console.log("showEventDetails called with:", eventData);
+};
