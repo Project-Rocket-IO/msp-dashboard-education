@@ -100,6 +100,11 @@ def handle_repeated_events(post_data):
 def apps_calendar_view_delete(request):
     if request.POST:
         eventid = request.POST.get('delete-event-id')
+        
+        # Handle prefixed event IDs (e.g., "event_11" -> "11")
+        if eventid and eventid.startswith('event_'):
+            eventid = eventid.replace('event_', '')
+        
         CalendarEvents.objects.get(pk=eventid).delete()
         # messages.suce
     return redirect("calendar_event:calendar-events")
@@ -274,6 +279,19 @@ def apps_calendar_view(request):
         clean_form.pop('guests', None)
 
         # If eventid is passed, it means it's a request to update
+        # Handle prefixed event IDs (e.g., "event_11" -> "11")
+        if eventid:
+            if eventid.startswith('event_'):
+                eventid = eventid.replace('event_', '')
+            elif eventid.startswith('ticket_'):
+                # Tickets are not calendar events, so we can't update them here
+                print(f"Warning: Attempted to update ticket {eventid} as calendar event")
+                return redirect("calendar_event:calendar-events")
+            elif eventid.startswith('project_'):
+                # Projects are not calendar events, so we can't update them here
+                print(f"Warning: Attempted to update project {eventid} as calendar event")
+                return redirect("calendar_event:calendar-events")
+        
         instance = CalendarEvents.objects.get(pk=eventid) if eventid else None
         if instance:
             if not clean_form.get('start'): 

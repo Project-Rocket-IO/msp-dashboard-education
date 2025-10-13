@@ -77,6 +77,7 @@ window.eventTyped = function() {
 function populateEventDetails(event) {
     console.log("populateEventDetails called with:", event);
     
+    // Populate basic fields
     const titleField = document.getElementById("event-title");
     if (titleField) {
         titleField.value = event.title || "";
@@ -84,12 +85,12 @@ function populateEventDetails(event) {
     
     const locationField = document.getElementById("event-location");
     if (locationField) {
-        locationField.value = event.extendedProps?.location || "No Location";
+        locationField.value = event.extendedProps?.location || "";
     }
     
     const descriptionField = document.getElementById("event-description");
     if (descriptionField) {
-        descriptionField.value = event.extendedProps?.description || "No Description";
+        descriptionField.value = event.extendedProps?.description || "";
     }
     
     const eventIdField = document.getElementById("eventid");
@@ -97,21 +98,79 @@ function populateEventDetails(event) {
         eventIdField.value = event.id || "";
     }
     
-    if (eventCategoryChoice) {
-        eventCategoryChoice.destroy();
+    // Populate date fields
+    if (event.start) {
+        const startDate = new Date(event.start);
+        const startDateField = document.getElementById("start_date");
+        if (startDateField) {
+            startDateField.value = startDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+        }
     }
     
-    if (event.extendedProps?.type) {
-        eventCategoryChoice = new Choices("#event-category", { searchEnabled: false });
-        eventCategoryChoice.setChoiceByValue(event.extendedProps.type);
+    if (event.end) {
+        const endDate = new Date(event.end);
+        const endDateField = document.getElementById("end_date");
+        if (endDateField) {
+            endDateField.value = endDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+        }
     }
     
-    // Handle guest list
-    const guestSelect = document.getElementById("event-guests");
-    if (guestSelect && event.extendedProps?.guest_list) {
-        const guestIds = event.extendedProps.guest_list.map(guest => guest.user_id);
-        for (let i = 0; i < guestSelect.options.length; i++) {
-            guestSelect.options[i].selected = guestIds.includes(guestSelect.options[i].value);
+    // Populate time fields
+    if (event.start) {
+        const startDate = new Date(event.start);
+        const startTime = startDate.toTimeString().slice(0, 5); // HH:MM format
+        const startTimeField = document.getElementById("timepicker1");
+        if (startTimeField) {
+            startTimeField.value = startTime;
+        }
+    }
+    
+    if (event.end) {
+        const endDate = new Date(event.end);
+        const endTime = endDate.toTimeString().slice(0, 5); // HH:MM format
+        const endTimeField = document.getElementById("timepicker2");
+        if (endTimeField) {
+            endTimeField.value = endTime;
+        }
+    }
+    
+    // Update hidden datetime fields
+    updateDateTimeFields();
+    
+    // Handle mandatory attendees
+    const mandatoryAttendeesField = document.getElementById("mandatory-attendees-fresh");
+    if (mandatoryAttendeesField && event.extendedProps?.mandatory_invites) {
+        const attendeeIds = event.extendedProps.mandatory_invites.map(tech => tech.user_id || tech.id);
+        for (let i = 0; i < mandatoryAttendeesField.options.length; i++) {
+            mandatoryAttendeesField.options[i].selected = attendeeIds.includes(parseInt(mandatoryAttendeesField.options[i].value));
+        }
+    }
+    
+    // Handle optional attendees
+    const optionalAttendeesField = document.getElementById("optional-attendees-fresh");
+    if (optionalAttendeesField && event.extendedProps?.optional_invites) {
+        const attendeeIds = event.extendedProps.optional_invites.map(tech => tech.user_id || tech.id);
+        for (let i = 0; i < optionalAttendeesField.options.length; i++) {
+            optionalAttendeesField.options[i].selected = attendeeIds.includes(parseInt(optionalAttendeesField.options[i].value));
+        }
+    }
+    
+    // Handle recurrence fields
+    if (event.extendedProps?.repeating) {
+        const isRepeatingCheckbox = document.getElementById("isRepeating");
+        if (isRepeatingCheckbox) {
+            isRepeatingCheckbox.checked = true;
+            toggleRecurrenceFields();
+        }
+        
+        const repeatFrequencyField = document.getElementById("repeat-frequency");
+        if (repeatFrequencyField && event.extendedProps?.repeat_frequency) {
+            repeatFrequencyField.value = event.extendedProps.repeat_frequency;
+        }
+        
+        const repeatIntervalField = document.getElementById("repeat-interval");
+        if (repeatIntervalField && event.extendedProps?.repeat_interval) {
+            repeatIntervalField.value = event.extendedProps.repeat_interval;
         }
     }
 }
@@ -119,15 +178,117 @@ function populateEventDetails(event) {
 // Modal functions
 function showAddNewEventModal() {
     console.log("showAddNewEventModal called");
+    
+    // Reset form for new event
+    if (formEvent) {
+        formEvent.reset();
+    }
+    
+    // Update modal title for new event
+    if (modalTitle) {
+        modalTitle.innerText = "New Meeting";
+    }
+    
+    // Hide edit-specific elements for new event
+    const editBtn = document.getElementById("edit-event-btn");
+    if (editBtn) {
+        editBtn.setAttribute("hidden", "true");
+    }
+    
+    const saveBtn = document.getElementById("btn-save-event");
+    if (saveBtn) {
+        saveBtn.removeAttribute("hidden");
+        saveBtn.innerHTML = "Send";
+    }
+    
+    const deleteBtn = document.getElementById("btn-delete-event");
+    if (deleteBtn) {
+        deleteBtn.setAttribute("hidden", "true");
+    }
+    
+    // Clear the event ID field for new events
+    const eventIdField = document.getElementById("eventid");
+    if (eventIdField) {
+        eventIdField.value = "";
+    }
+    
+    // Show the modal
     if (addEvent) {
         addEvent.show();
     }
+}
+
+// Event details modal (similar to ticket/project modals)
+function showEventDetailsModal(event) {
+    console.log("showEventDetailsModal called with:", event);
+    
+    const eventName = event.title || "Untitled Event";
+    const startDate = event.start ? new Date(event.start).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No start date";
+    const endDate = event.end ? new Date(event.end).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No end date";
+    const location = event.extendedProps?.location || "No location";
+    const description = event.extendedProps?.description || "No description";
+    const eventType = event.extendedProps?.type || "Event";
+    
+    const modalHtml = `
+        <div class="modal fade" id="event-details-modal" tabindex="-1" aria-labelledby="event-details-modal-label" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="event-details-modal-label">${eventName}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Start Date:</strong> ${startDate}</p>
+                                <p><strong>End Date:</strong> ${endDate}</p>
+                                <p><strong>Location:</strong> ${location}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Type:</strong> ${eventType}</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <p><strong>Description:</strong></p>
+                                <p>${description}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="editEvent('${event.id}')">Edit</button>
+                        <button type="button" class="btn btn-danger" onclick="deleteEvent('${event.id}', '${eventName}')">Delete</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML("beforeend", modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById("event-details-modal"));
+    modal.show();
+    
+    document.getElementById("event-details-modal").addEventListener("hidden.bs.modal", function() {
+        document.getElementById("event-details-modal").remove();
+    });
 }
 
 function showEventModal(event) {
     console.log("showEventModal called with:", event);
     selectedEvent = event;
     
+    // Reset form first
+    if (formEvent) {
+        formEvent.reset();
+    }
+    
+    // Update modal title
+    if (modalTitle) {
+        modalTitle.innerText = selectedEvent.title || "Edit Event";
+    }
+    
+    // Show edit-specific elements
     const editBtn = document.getElementById("edit-event-btn");
     if (editBtn) {
         editBtn.removeAttribute("hidden");
@@ -141,27 +302,24 @@ function showEventModal(event) {
         saveBtn.innerHTML = "Update Event";
     }
     
-    eventTyped();
-    flatPickrInit();
-    flatpicekrValueClear();
-    
-    if (addEvent) {
-        addEvent.show();
-    }
-    
-    if (formEvent) {
-        formEvent.reset();
-    }
-    
-    populateEventDetails(selectedEvent);
-    
-    if (modalTitle) {
-        modalTitle.innerText = selectedEvent.title || "Event Details";
-    }
-    
     const deleteBtn = document.getElementById("btn-delete-event");
     if (deleteBtn) {
         deleteBtn.removeAttribute("hidden");
+    }
+    
+    // Enable form editing mode
+    eventTyped();
+    
+    // Initialize date/time pickers
+    flatPickrInit();
+    flatpicekrValueClear();
+    
+    // Populate form with event data
+    populateEventDetails(selectedEvent);
+    
+    // Show the modal
+    if (addEvent) {
+        addEvent.show();
     }
 }
 
@@ -358,6 +516,107 @@ function upcomingEvent(events) {
     }
 }
 
+// Event functions
+window.editEvent = function(eventId) {
+    console.log("editEvent called with ID:", eventId);
+    
+    // Close the details modal first
+    const detailsModal = document.getElementById("event-details-modal");
+    if (detailsModal) {
+        const modal = bootstrap.Modal.getInstance(detailsModal);
+        if (modal) {
+            modal.hide();
+        }
+        // Remove the modal from DOM after a short delay to ensure it's closed
+        setTimeout(() => {
+            if (detailsModal && detailsModal.parentNode) {
+                detailsModal.remove();
+            }
+        }, 300);
+    }
+    
+    // Find the event in window.events
+    const event = window.events.find(e => e.id === eventId);
+    if (event) {
+        // Add a small delay to ensure the details modal is fully closed
+        setTimeout(() => {
+            showEventModal(event);
+        }, 350);
+    } else {
+        console.error("Event not found with ID:", eventId);
+    }
+};
+
+window.deleteEvent = function(eventId, eventName) {
+    console.log("deleteEvent called with ID:", eventId, "Name:", eventName);
+    
+    const confirmationModalHtml = `
+        <div class="modal fade" id="delete-confirmation-modal" tabindex="-1" aria-labelledby="delete-confirmation-modal-label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="delete-confirmation-modal-label">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete event <strong>"${eventName}"</strong>?</p>
+                        <p class="text-muted">This action cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" onclick="confirmDeleteEvent('${eventId}')">Yes, Delete</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML("beforeend", confirmationModalHtml);
+    const modal = new bootstrap.Modal(document.getElementById("delete-confirmation-modal"));
+    modal.show();
+    
+    document.getElementById("delete-confirmation-modal").addEventListener("hidden.bs.modal", function() {
+        document.getElementById("delete-confirmation-modal").remove();
+    });
+};
+
+window.confirmDeleteEvent = function(eventId) {
+    console.log("confirmDeleteEvent called with ID:", eventId);
+    
+    // Remove from window.events array
+    const eventIndex = window.events.findIndex(e => e.id === eventId);
+    if (eventIndex !== -1) {
+        window.events.splice(eventIndex, 1);
+        console.log("Event removed from window.events");
+    }
+    
+    // Here you would typically make an AJAX call to delete from the server
+    // For now, we'll just refresh the calendar
+    if (window.calendar) {
+        window.calendar.refetchEvents();
+    }
+    
+    // Close the confirmation modal
+    const confirmationModal = document.getElementById("delete-confirmation-modal");
+    if (confirmationModal) {
+        const modal = bootstrap.Modal.getInstance(confirmationModal);
+        if (modal) {
+            modal.hide();
+        }
+    }
+    
+    // Close the details modal
+    const detailsModal = document.getElementById("event-details-modal");
+    if (detailsModal) {
+        const modal = bootstrap.Modal.getInstance(detailsModal);
+        if (modal) {
+            modal.hide();
+        }
+    }
+    
+    console.log("Event deleted successfully");
+};
+
 // Navigation functions
 window.editTicket = function(ticketId) {
     window.location.href = "/apps/support-tickets/edit/" + ticketId;
@@ -461,7 +720,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                         return;
                     }
                 }
-                showEventModal(originalEvent);
+                showEventDetailsModal(originalEvent);
             } else {
                 console.log("Original event not found, using FullCalendar data");
                 const fallbackEvent = {
@@ -472,7 +731,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     event_type: info.event.extendedProps?.event_type || "event",
                     extendedProps: info.event.extendedProps
                 };
-                showEventModal(fallbackEvent);
+                showEventDetailsModal(fallbackEvent);
             }
             
             info.jsEvent.preventDefault();
@@ -487,6 +746,9 @@ document.addEventListener("DOMContentLoaded", async function() {
     calendar.render();
     console.log("FullCalendar rendered");
     
+    // Store calendar instance globally for access by other functions
+    window.calendar = calendar;
+    
     // Load and display upcoming events
     upcomingEvent(window.events);
     console.log("Upcoming events populated");
@@ -499,6 +761,58 @@ document.addEventListener("DOMContentLoaded", async function() {
     
     console.log("Calendar initialization complete!");
 });
+
+// Helper function to update hidden datetime fields
+function updateDateTimeFields() {
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    const startTime = document.getElementById('timepicker1');
+    const endTime = document.getElementById('timepicker2');
+    
+    if (startDate && startTime && startDate.value && startTime.value) {
+        const startDateTime = startDate.value + ' ' + startTime.value + ':00';
+        const startField = document.getElementById('start');
+        if (startField) {
+            startField.value = startDateTime;
+        }
+    }
+    
+    if (endDate && endTime && endDate.value && endTime.value) {
+        const endDateTime = endDate.value + ' ' + endTime.value + ':00';
+        const endField = document.getElementById('end');
+        if (endField) {
+            endField.value = endDateTime;
+        }
+    }
+}
+
+// Helper function to toggle recurrence fields
+window.toggleRecurrenceFields = function() {
+    const isRepeating = document.getElementById('isRepeating');
+    const recurrenceFields = document.getElementById('recurrenceFields');
+    
+    if (isRepeating && recurrenceFields) {
+        if (isRepeating.checked) {
+            recurrenceFields.style.display = 'block';
+        } else {
+            recurrenceFields.style.display = 'none';
+        }
+    }
+}
+
+// Helper function to toggle custom recurrence options
+window.toggleCustomRecurrence = function() {
+    const repeatFrequency = document.getElementById('repeat-frequency');
+    const customRecurrenceOptions = document.getElementById('customRecurrenceOptions');
+    
+    if (repeatFrequency && customRecurrenceOptions) {
+        if (repeatFrequency.value === 'CUSTOM') {
+            customRecurrenceOptions.style.display = 'block';
+        } else {
+            customRecurrenceOptions.style.display = 'none';
+        }
+    }
+}
 
 // Wrapper function for event details
 window.showEventDetails = function(eventData) {
