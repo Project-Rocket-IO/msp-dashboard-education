@@ -22,10 +22,20 @@ class AppsView(LoginRequiredMixin,TemplateView):
 
 def parse_datetime(date_str):
     try:
-        # Remove the timezone description (e.g., "(Pakistan Standard Time)")
-        clean_date_str = date_str.split(' (')[0]
-        dt = datetime.strptime(clean_date_str, '%a %b %d %Y %H:%M:%S %Z%z')
-        return dt.isoformat()
+        # First try to parse as ISO format (from JavaScript)
+        if 'T' in date_str and date_str.endswith('Z'):
+            # ISO format with Z timezone
+            dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+            return dt.isoformat()
+        elif 'T' in date_str:
+            # ISO format without Z
+            dt = datetime.fromisoformat(date_str)
+            return dt.isoformat()
+        else:
+            # Try the old format for backward compatibility
+            clean_date_str = date_str.split(' (')[0]
+            dt = datetime.strptime(clean_date_str, '%a %b %d %Y %H:%M:%S %Z%z')
+            return dt.isoformat()
     except ValueError as e:
         print(f"Error parsing date: {e}")
         return None
@@ -78,20 +88,147 @@ def handle_calendar_event(post_data):
     return post_data
 
 def handle_repeated_events(post_data):
-     # Extract the repeat settings if this is a repeating event
+    """Handle creating multiple recurring events based on recurrence settings"""
     try:
+        # Check if this is a repeating event
+        if not post_data.get('repeating'):
+            return post_data
+            
+        # Get recurrence settings
+        repeat_frequency = post_data.get('repeat_frequency', 'WEEKLY')
+        repeat_interval = int(post_data.get('repeat_interval', 1))
+        repeat_ends = post_data.get('repeat_ends', 'never')
+        repeat_end_date = post_data.get('repeat_end_date')
+        repeat_by_weekdays = post_data.get('repeat_by_weekdays', '')
         
-        # Map days to integers based on your WEEKDAY_CHOICES
-        # Convert the days to integers and save to post_data
-        repeat_by_weekdays = [WEEKDAY_CHOICES[day] for day in post_data.getlist('repeat_by_weekdays') if day in WEEKDAY_CHOICES]
-        post_data.setlist('repeat_by_weekdays', repeat_by_weekdays)
-
-        # If you have a complex recurrence pattern, set `recurrence` accordingly
-        # This depends on how you want to handle recurrence logic; you can use a library
-        # or custom logic to generate recurrence rules and save them in the `RecurrenceField`.
-        # For simplicity, we're not setting `recurrence` here.
-    
-    except (ValueError, KeyError) as e:
+        # Parse the start date to determine the base event date
+        start_date_str = post_data.get('start')
+        if not start_date_str:
+            return post_data
+            
+        try:
+            base_start_date = datetime.fromisoformat(start_date_str.replace('Z', '+00:00'))
+        except:
+            base_start_date = datetime.fromisoformat(start_date_str)
+            
+        # Parse the end date
+        end_date_str = post_data.get('end')
+        if not end_date_str:
+            return post_data
+            
+        try:
+            base_end_date = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+        except:
+            base_end_date = datetime.fromisoformat(end_date_str)
+            
+        # Calculate the time difference for the event duration
+        event_duration = base_end_date - base_start_date
+        
+        # Determine end date for recurrence
+        if repeat_ends == 'on' and repeat_end_date:
+            try:
+                recurrence_end = datetime.strptime(repeat_end_date, '%Y-%m-%d')
+            except:
+                recurrence_end = None
+        else:
+            recurrence_end = None
+            
+        # Generate recurring events
+        events_to_create = []
+        current_date = base_start_date
+        
+        # For weekly recurrence with specific days
+        if repeat_frequency == 'WEEKLY' and repeat_by_weekdays:
+            selected_days = [int(day) for day in repeat_by_weekdays.split(',') if day.strip()]
+            
+            # Find the first occurrence of each selected day
+            for day_of_week in selected_days:
+                # Calculate days until the next occurrence of this day
+                days_ahead = day_of_week - current_date.weekday()
+                if days_ahead <= 0:  # Target day already happened this week
+                    days_ahead += 7
+                    
+                next_date = current_date + timedelta(days=days_ahead)
+                
+                # Generate events for this day
+                while next_date <= (recurrence_end or datetime.now() + timedelta(days=365)):
+                    if recurrence_end and next_date > recurrence_end:
+                        break
+                        
+                    # Create event for this date
+                    event_start = next_date
+                    event_end = event_start + event_duration
+                    
+                    events_to_create.append({
+                        'start': event_start.isoformat(),
+                        'end': event_end.isoformat(),
+                        'title': post_data.get('name', ''),
+                        'location': post_data.get('location', ''),
+                        'description': post_data.get('description', ''),
+                        'type': post_data.get('type', 'Primary'),
+                        'mandatory_invites': post_data.getlist('mandatory_invites'),
+                        'optional_invites': post_data.getlist('optional_invites'),
+                    })
+                    
+                    # Move to next occurrence (weekly)
+                    next_date += timedelta(weeks=repeat_interval)
+                    
+        # For daily recurrence
+        elif repeat_frequency == 'DAILY':
+            next_date = current_date + timedelta(days=repeat_interval)
+            
+            while next_date <= (recurrence_end or datetime.now() + timedelta(days=365)):
+                if recurrence_end and next_date > recurrence_end:
+                    break
+                    
+                # Create event for this date
+                event_start = next_date
+                event_end = event_start + event_duration
+                
+                events_to_create.append({
+                    'start': event_start.isoformat(),
+                    'end': event_end.isoformat(),
+                    'title': post_data.get('name', ''),
+                    'location': post_data.get('location', ''),
+                    'description': post_data.get('description', ''),
+                    'type': post_data.get('type', 'Primary'),
+                    'mandatory_invites': post_data.getlist('mandatory_invites'),
+                    'optional_invites': post_data.getlist('optional_invites'),
+                })
+                
+                # Move to next occurrence
+                next_date += timedelta(days=repeat_interval)
+                
+        # For monthly recurrence
+        elif repeat_frequency == 'MONTHLY':
+            next_date = current_date + timedelta(days=30 * repeat_interval)
+            
+            while next_date <= (recurrence_end or datetime.now() + timedelta(days=365)):
+                if recurrence_end and next_date > recurrence_end:
+                    break
+                    
+                # Create event for this date
+                event_start = next_date
+                event_end = event_start + event_duration
+                
+                events_to_create.append({
+                    'start': event_start.isoformat(),
+                    'end': event_end.isoformat(),
+                    'title': post_data.get('name', ''),
+                    'location': post_data.get('location', ''),
+                    'description': post_data.get('description', ''),
+                    'type': post_data.get('type', 'Primary'),
+                    'mandatory_invites': post_data.getlist('mandatory_invites'),
+                    'optional_invites': post_data.getlist('optional_invites'),
+                })
+                
+                # Move to next occurrence (approximate monthly)
+                next_date += timedelta(days=30 * repeat_interval)
+        
+        # Store the events to create in the post_data
+        post_data['recurring_events'] = events_to_create
+        
+    except (ValueError, KeyError, TypeError) as e:
         print("Error parsing repeat settings:", e)
 
     return post_data
@@ -175,8 +312,30 @@ def apps_calendar_view(request):
         event['event_type'] = 'event'
         event['id'] = f"event_{event['id']}"
         event['className'] = 'event-type-event'
-        # Determine if this is an all-day event (date only, no time)
-        event['allDay'] = True  # Events are typically all-day by default
+        
+        # Determine if this is an all-day event based on start/end times
+        start_time = event.get('start')
+        end_time = event.get('end')
+        
+        # Check if start and end times have time components (not just dates)
+        is_all_day = True
+        if start_time and end_time:
+            try:
+                # Parse the datetime strings to check if they have time components
+                from datetime import datetime
+                start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                end_dt = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+                
+                # If start time is not midnight (00:00:00) or end time is not midnight, it's not all-day
+                if (start_dt.hour != 0 or start_dt.minute != 0 or start_dt.second != 0 or 
+                    end_dt.hour != 0 or end_dt.minute != 0 or end_dt.second != 0):
+                    is_all_day = False
+            except:
+                # If parsing fails, assume it's all-day
+                is_all_day = True
+        
+        event['allDay'] = is_all_day
+        
         # Ensure extendedProps exists for events
         if 'extendedProps' not in event:
             event['extendedProps'] = {}
@@ -265,6 +424,9 @@ def apps_calendar_view(request):
         print("\n\n")
         #? Clean Submitted form, calculation and more
         clean_form = handle_calendar_event(clean_form)
+        
+        # Handle recurring events
+        clean_form = handle_repeated_events(clean_form)
 
         print(clean_form)
 
@@ -332,6 +494,51 @@ def apps_calendar_view(request):
             print(f"Event created successfully: {instance.name} on {instance.start} to {instance.end}")
             print(f"Mandatory invites: {[user.username for user in instance.mandatory_invites.all()]}")
             print(f"Optional invites: {[user.username for user in instance.optional_invites.all()]}")
+            
+            # Create recurring events if they exist
+            recurring_events = clean_form.get('recurring_events', [])
+            if recurring_events:
+                print(f"Creating {len(recurring_events)} recurring events...")
+                for event_data in recurring_events:
+                    # Create a new event for each recurring occurrence
+                    recurring_event = CalendarEvents.objects.create(
+                        name=event_data['title'],
+                        start=event_data['start'],
+                        end=event_data['end'],
+                        location=event_data.get('location', ''),
+                        description=event_data.get('description', ''),
+                        type=event_data.get('type', 'Primary'),
+                        creator=request.user
+                    )
+                    
+                    # Set the same attendees for recurring events
+                    if mandatory_invites_data:
+                        users = []
+                        for tech_id in mandatory_invites_data:
+                            try:
+                                tech = TechnicianUser.objects.get(pk=tech_id)
+                                users.append(tech.auth_user)
+                            except TechnicianUser.DoesNotExist:
+                                pass
+                        recurring_event.mandatory_invites.set(users)
+                    
+                    if optional_invites_data:
+                        users = []
+                        for tech_id in optional_invites_data:
+                            try:
+                                tech = TechnicianUser.objects.get(pk=tech_id)
+                                users.append(tech.auth_user)
+                            except TechnicianUser.DoesNotExist:
+                                pass
+                        recurring_event.optional_invites.set(users)
+                    
+                    if guests_data:
+                        recurring_event.guests.set(guests_data)
+                    
+                    print(f"Created recurring event: {recurring_event.name} on {recurring_event.start}")
+                
+                print(f"Successfully created {len(recurring_events)} recurring events")
+            
             return redirect("calendar_event:calendar-events")
         else:
             print(form.errors)

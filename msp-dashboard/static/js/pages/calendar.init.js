@@ -176,8 +176,8 @@ function populateEventDetails(event) {
 }
 
 // Modal functions
-function showAddNewEventModal() {
-    console.log("showAddNewEventModal called");
+function showAddNewEventModal(clickedDateInfo) {
+    console.log("showAddNewEventModal called", clickedDateInfo);
     
     // Reset form for new event
     if (formEvent) {
@@ -212,6 +212,26 @@ function showAddNewEventModal() {
         eventIdField.value = "";
     }
     
+    // If a specific date was clicked, populate start and end dates
+    if (clickedDateInfo && clickedDateInfo.date) {
+        const clickedDate = new Date(clickedDateInfo.date);
+        const dateString = clickedDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        // Set start date
+        const startDateField = document.getElementById("start_date");
+        if (startDateField) {
+            startDateField.value = dateString;
+        }
+        
+        // Set end date
+        const endDateField = document.getElementById("end_date");
+        if (endDateField) {
+            endDateField.value = dateString;
+        }
+        
+        console.log("Set start and end dates to:", dateString);
+    }
+    
     // Show the modal
     if (addEvent) {
         addEvent.show();
@@ -225,6 +245,39 @@ function showEventDetailsModal(event) {
     const eventName = event.title || "Untitled Event";
     const startDate = event.start ? new Date(event.start).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No start date";
     const endDate = event.end ? new Date(event.end).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No end date";
+    
+    // Format start and end times
+    let startTime = "All Day";
+    let endTime = "All Day";
+    
+    if (event.start) {
+        const startDateTime = new Date(event.start);
+        const startHour = startDateTime.getHours();
+        const startMinute = startDateTime.getMinutes();
+        
+        // Check if it's not midnight (all-day event)
+        if (startHour !== 0 || startMinute !== 0) {
+            const startPeriod = startHour >= 12 ? 'PM' : 'AM';
+            const startDisplayHour = startHour === 0 ? 12 : (startHour > 12 ? startHour - 12 : startHour);
+            const startDisplayMinute = startMinute.toString().padStart(2, '0');
+            startTime = `${startDisplayHour}:${startDisplayMinute} ${startPeriod}`;
+        }
+    }
+    
+    if (event.end) {
+        const endDateTime = new Date(event.end);
+        const endHour = endDateTime.getHours();
+        const endMinute = endDateTime.getMinutes();
+        
+        // Check if it's not midnight (all-day event)
+        if (endHour !== 0 || endMinute !== 0) {
+            const endPeriod = endHour >= 12 ? 'PM' : 'AM';
+            const endDisplayHour = endHour === 0 ? 12 : (endHour > 12 ? endHour - 12 : endHour);
+            const endDisplayMinute = endMinute.toString().padStart(2, '0');
+            endTime = `${endDisplayHour}:${endDisplayMinute} ${endPeriod}`;
+        }
+    }
+    
     const location = event.extendedProps?.location || "No location";
     const description = event.extendedProps?.description || "No description";
     const eventType = event.extendedProps?.type || "Event";
@@ -242,6 +295,8 @@ function showEventDetailsModal(event) {
                             <div class="col-md-6">
                                 <p><strong>Start Date:</strong> ${startDate}</p>
                                 <p><strong>End Date:</strong> ${endDate}</p>
+                                <p><strong>Start Time:</strong> ${startTime}</p>
+                                <p><strong>End Time:</strong> ${endTime}</p>
                                 <p><strong>Location:</strong> ${location}</p>
                             </div>
                             <div class="col-md-6">
@@ -770,18 +825,20 @@ function updateDateTimeFields() {
     const endTime = document.getElementById('timepicker2');
     
     if (startDate && startTime && startDate.value && startTime.value) {
-        const startDateTime = startDate.value + ' ' + startTime.value + ':00';
+        // Create a proper datetime string with timezone
+        const startDateTime = new Date(startDate.value + 'T' + startTime.value + ':00');
         const startField = document.getElementById('start');
         if (startField) {
-            startField.value = startDateTime;
+            startField.value = startDateTime.toISOString();
         }
     }
     
     if (endDate && endTime && endDate.value && endTime.value) {
-        const endDateTime = endDate.value + ' ' + endTime.value + ':00';
+        // Create a proper datetime string with timezone
+        const endDateTime = new Date(endDate.value + 'T' + endTime.value + ':00');
         const endField = document.getElementById('end');
         if (endField) {
-            endField.value = endDateTime;
+            endField.value = endDateTime.toISOString();
         }
     }
 }
@@ -803,13 +860,13 @@ window.toggleRecurrenceFields = function() {
 // Helper function to toggle custom recurrence options
 window.toggleCustomRecurrence = function() {
     const repeatFrequency = document.getElementById('repeat-frequency');
-    const customRecurrenceOptions = document.getElementById('customRecurrenceOptions');
+    const weeklyRecurrenceOptions = document.getElementById('weeklyRecurrenceOptions');
     
-    if (repeatFrequency && customRecurrenceOptions) {
-        if (repeatFrequency.value === 'CUSTOM') {
-            customRecurrenceOptions.style.display = 'block';
+    if (repeatFrequency && weeklyRecurrenceOptions) {
+        if (repeatFrequency.value === 'WEEKLY') {
+            weeklyRecurrenceOptions.style.display = 'block';
         } else {
-            customRecurrenceOptions.style.display = 'none';
+            weeklyRecurrenceOptions.style.display = 'none';
         }
     }
 }
