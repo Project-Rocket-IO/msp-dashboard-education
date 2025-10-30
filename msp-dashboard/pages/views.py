@@ -211,7 +211,7 @@ def pages_profile_settings(request):
     
     # Add groups to context for dynamic role options - Only educational roles
     from django.contrib.auth.models import Group
-    educational_roles = ['Student', 'Faculty/Staff', 'Administration', 'IT Dept', 'Super Admin']
+    educational_roles = ['Student', 'Faculty/Staff', 'Administrator', 'IT Dept']
     available_groups = Group.objects.filter(name__in=educational_roles).order_by('name')
     context['available_groups'] = available_groups
     
