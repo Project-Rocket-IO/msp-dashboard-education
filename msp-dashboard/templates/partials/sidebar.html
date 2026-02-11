@@ -97,51 +97,51 @@
                         {% endif %} -->
 
                         <!-- Leads - Growth and Innovator tiers only -->
-                        {% if perms.apps.view_leadcompany and has_leads_access %}
+                        <!-- {% if perms.apps.view_leadcompany and has_leads_access %}
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{% url 'apps:leads' %}">
                                 <i class="ri-guide-fill"></i> <span data-key="t-leads">Leads</span>
                             </a>
                         </li>
-                        {% endif %}
+                        {% endif %} -->
 
                         <!-- Sales - Growth and Innovator tiers only -->
-                        {% if perms.apps.view_salesrequests and has_sales_access %}
+                        <!-- {% if perms.apps.view_salesrequests and has_sales_access %}
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{% url 'apps:sales.deals' %}">
                                 <i class="ri-money-dollar-circle-line"></i> <span data-key="t-leads">Sales</span>
                             </a>
                         </li>
-                        {% endif %}
+                        {% endif %} -->
 
                         <li class="menu-title"><span data-key="t-home">Settings</span></li>
 
                         <!-- File System - Available in all tiers -->
-                        {% if perms.apps.view_fileinfo and has_file_system_access %}
+                        <!-- {% if perms.apps.view_fileinfo and has_file_system_access %}
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{% url 'apps:filemanager.overview' %}">
                                 <i class="ri-folders-line"></i> <span data-key="t-chatsessions">File System</span>
                             </a>
                         </li>
-                        {% endif %}
+                        {% endif %} -->
 
                         <!-- Help Center - Available in all tiers -->
-                        {% if has_help_center_access %}
+                        <!-- {% if has_help_center_access %}
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{% url 'pages:pages.help_center' %}">
                                 <i class="ri-customer-service-2-line"></i> <span data-key="t-helpcenter">Help Center</span>
                             </a>
                         </li>
-                        {% endif %}
+                        {% endif %} -->
 
                         <!-- Billing - Available in all tiers -->
-                        {% if perms.djstripe.view_subscription and has_billing_access %}
+                        <!-- {% if perms.djstripe.view_subscription and has_billing_access %}
                         <li class="nav-item">
                             <a class="nav-link menu-link " href="{% url 'payments:payments.payments' %}">
                                 <i class="lab la-stripe"></i> <span data-key="t-billing">Billing</span>
                             </a>
                         </li>
-                        {% endif %}
+                        {% endif %} -->
 
                         <!-- Profile Settings - Available in all tiers -->
                         {% if has_profile_settings_access %}

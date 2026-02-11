@@ -34,6 +34,7 @@ def apps_technician_labor_view(request, pk):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.ticket = ticket
+            obj.submitted_by = current_user
             obj.save()
             messages.success(request, "Time Posted Successfully!")
             # return redirect("apps:tickets.list")

@@ -7,6 +7,7 @@ from django.db.models import Prefetch
 from apps.models import ProjectComment, ProjectFiles, PROJECT_STATUS
 
 from apps.forms import *
+from apps.utils import user_can_see_private_comments
 from django.contrib import messages
 from rbac.decorators import has_permission
 from rbac.utils import paginate_queryset
@@ -161,13 +162,11 @@ def apps_projects_overview_view(request, pk):
     all_comments = ProjectComment.objects.filter(project_id=projects).order_by('date_added')
     all_replies = ProjectCommentReplies.objects.filter(project_id=projects).order_by('date_added')
     
-    # Filter comments and replies based on user role
-    # If user is a client, only show public comments and replies
-    if request.user.groups.filter(name='Client').exists():
+    # Only IT Dept, Administrator, Super User (and superuser) see private comments/replies
+    if not user_can_see_private_comments(request.user):
         comments = all_comments.filter(private=False)
         replies = all_replies.filter(private=False)
     else:
-        # Non-client users can see all comments and replies
         comments = all_comments
         replies = all_replies
     
@@ -371,13 +370,11 @@ def apps_projects_replies_view(request, pk):
     all_comments = ProjectComment.objects.filter(project_id=projects).order_by('date_added')
     all_replies = ProjectCommentReplies.objects.filter(project_id=projects).order_by('date_added')
     
-    # Filter comments and replies based on user role
-    # If user is a client, only show public comments and replies
-    if request.user.groups.filter(name='Client').exists():
+    # Only IT Dept, Administrator, Super User (and superuser) see private comments/replies
+    if not user_can_see_private_comments(request.user):
         comments = all_comments.filter(private=False)
         replies = all_replies.filter(private=False)
     else:
-        # Non-client users can see all comments and replies
         comments = all_comments
         replies = all_replies
     

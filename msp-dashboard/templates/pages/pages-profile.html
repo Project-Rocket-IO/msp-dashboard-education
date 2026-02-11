@@ -88,8 +88,12 @@
                                     <!-- Tab panes -->
                                     <div class="tab-content pt-4 text-muted">
                                         <div class="tab-pane active" id="overview-tab" role="tabpanel">
-                                            <div class="row">
-                                                <div class="col-xxl-6">
+                                            <div class="row g-3 align-items-stretch">
+
+                                                <!-- LEFT COLUMN -->
+                                                <div class="col-12 col-lg-6 d-flex flex-column">
+
+                                                    <!-- User Information -->
                                                     <div class="card">
                                                         <div class="card-body">
                                                             <h5 class="card-title mb-3">User Information</h5>
@@ -115,35 +119,230 @@
                                                                     </tbody>
                                                                 </table>
                                                             </div>
-                                                        </div><!-- end card body -->
-                                                    </div><!-- end card -->
-                                                </div><!--end col-->
-                                                <div class="col-xxl-6">
-                                                            <div class="card">
-                                                                <div class="card-header align-items-center d-flex">
-                                                                    <h4 class="card-title mb-0  me-2">Recent Activity</h4>
-                                                                    <div class="flex-shrink-0 ms-auto">
-                                                                        <ul class="nav justify-content-end nav-tabs-custom rounded card-header-tabs border-bottom-0" role="tablist">
-                                                                            <li class="nav-item">
-                                                                                <a class="nav-link active" data-bs-toggle="tab" href="#today" role="tab">
-                                                                                    Today 
-                                                                                </a>
-                                                                            </li>
-                                                                            <li class="nav-item">
-                                                                                <a class="nav-link" data-bs-toggle="tab" href="#weekly" role="tab">
-                                                                                    Weekly 
-                                                                                </a>
-                                                                            </li>
-                                                                            <li class="nav-item">
-                                                                                <a class="nav-link" data-bs-toggle="tab" href="#monthly" role="tab">
-                                                                                    Monthly   
-                                                                                </a>
-                                                                            </li>
-                                                                        </ul>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Tickets -->
+                                                    <div class="card mt-3">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title mb-3">Tickets</h5>
+                                                            <div class="swiper project-swiper">
+                                                                <div class="d-flex justify-content-end gap-2 mb-2">
+                                                                    <div class="slider-button-prev">
+                                                                        <div class="avatar-title fs-18 rounded px-1">
+                                                                            <i class="ri-arrow-left-s-line"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="slider-button-next">
+                                                                        <div class="avatar-title fs-18 rounded px-1">
+                                                                            <i class="ri-arrow-right-s-line"></i>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                                <div class="card-body">
-                                                                    <div class="tab-content text-muted">
+                                                                <div class="swiper-wrapper">
+                                                                    {% if tickets %}
+                                                                        {% for ticket in tickets %}
+                                                                    <div class="swiper-slide" style="width: 320px;">
+                                                                        <div class="card profile-project-card shadow-none profile-project-{% if ticket.status == 'New' %}success{% elif ticket.status == 'In Progress' %}warning{% elif ticket.status == 'Completed' %}info{% else %}danger{% endif %} mb-0" style="width: 320px;">
+                                                                            <div class="card-body p-4">
+                                                                                <div class="d-flex">
+                                                                                    <div class="flex-grow-1 text-muted overflow-hidden">
+                                                                                        <h5 class="fs-14 text-truncate mb-1">
+                                                                                            <a href="{% url 'apps:tickets.details' ticket.pk %}" class="text-dark">{{ ticket.name }}</a>
+                                                                                        </h5>
+                                                                                        <p class="text-muted text-truncate mb-0">
+                                                                                            Last Update : <span class="fw-semibold text-dark">{{ ticket.updated_at|timesince }} ago</span>
+                                                                                        </p>
+                                                                                    </div>
+                                                                                    <div class="flex-shrink-0 ms-2">
+                                                                                        <div class="badge badge-soft-{% if ticket.status == 'New' %}success{% elif ticket.status == 'In Progress' %}warning{% elif ticket.status == 'Completed' %}info{% else %}danger{% endif %} fs-10">
+                                                                                            {{ ticket.status }}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="d-flex mt-4">
+                                                                                    <div class="flex-grow-1">
+                                                                                        <div class="d-flex align-items-center gap-2">
+                                                                                            <div>
+                                                                                                <h5 class="fs-12 text-muted mb-0">Assigned To :</h5>
+                                                                                            </div>
+                                                                                            <div class="avatar-group">
+                                                                                                {% if ticket.assignment.all %}
+                                                                                                    {% for tech in ticket.assignment.all %}
+                                                                                                    <div class="avatar-group-item" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ tech.auth_user.username|default:tech.auth_user.first_name|default:'Unknown User' }}">
+                                                                                                        <div class="avatar-xs">
+                                                                                                            {% if tech.auth_user.picture %}
+                                                                                                                <img src="{{ tech.auth_user.picture.url }}" alt="{{ tech.auth_user.username|default:'User' }}" class="rounded-circle img-fluid" />
+                                                                                                            {% else %}
+                                                                                                                <div class="avatar-title rounded-circle bg-light text-primary">
+                                                                                                                    {% if tech.auth_user.first_name and tech.auth_user.last_name %}
+                                                                                                                        {{ tech.auth_user.first_name|first|upper }}{{ tech.auth_user.last_name|first|upper }}
+                                                                                                                    {% elif tech.auth_user.username %}
+                                                                                                                        {{ tech.auth_user.username|first|upper }}
+                                                                                                                    {% else %}
+                                                                                                                        U
+                                                                                                                    {% endif %}
+                                                                                                                </div>
+                                                                                                            {% endif %}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    {% endfor %}
+                                                                                                {% else %}
+                                                                                                    <div class="avatar-group-item">
+                                                                                                        <div class="avatar-xs">
+                                                                                                            <div class="avatar-title rounded-circle bg-light text-muted">?</div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                {% endif %}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                        {% endfor %}
+                                                                    {% else %}
+                                                                    <div class="swiper-slide" style="width: 320px;">
+                                                                        <div class="card profile-project-card shadow-none profile-project-light mb-0" style="width: 320px;">
+                                                                            <div class="card-body p-4 text-center">
+                                                                                <div class="text-muted">
+                                                                                    <i class="ri-ticket-line fs-48 mb-3"></i>
+                                                                                    <h6 class="mb-2">No Tickets Assigned</h6>
+                                                                                    <p class="mb-0">This user has no tickets assigned to them.</p>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Projects -->
+                                                    <div class="card mt-3 profile-overview-swiper-section">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title mb-3">Projects</h5>
+                                                            <div class="swiper project-swiper">
+                                                                <div class="d-flex justify-content-end gap-2 mb-2">
+                                                                    <div class="slider-button-prev">
+                                                                        <div class="avatar-title fs-18 rounded px-1">
+                                                                            <i class="ri-arrow-left-s-line"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="slider-button-next">
+                                                                        <div class="avatar-title fs-18 rounded px-1">
+                                                                            <i class="ri-arrow-right-s-line"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="swiper-wrapper">
+                                                                    {% if projects %}
+                                                                        {% for project in projects %}
+                                                                    <div class="swiper-slide" style="width: 320px;">
+                                                                        <div class="card profile-project-card shadow-none profile-project-{% if project.status == 'Active' %}success{% elif project.status == 'In Progress' %}warning{% elif project.status == 'Completed' %}info{% else %}danger{% endif %} mb-0" style="width: 320px;">
+                                                                            <div class="card-body p-4">
+                                                                                <div class="d-flex">
+                                                                                    <div class="flex-grow-1 text-muted overflow-hidden">
+                                                                                        <h5 class="fs-14 text-truncate mb-1">
+                                                                                            <a href="#" class="text-dark">{{ project.name }}</a>
+                                                                                        </h5>
+                                                                                        <p class="text-muted text-truncate mb-0">
+                                                                                            Last Update : <span class="fw-semibold text-dark">{{ project.updated_at|timesince }} ago</span>
+                                                                                        </p>
+                                                                                    </div>
+                                                                                    <div class="flex-shrink-0 ms-2">
+                                                                                        <div class="badge badge-soft-{% if project.status == 'Active' %}success{% elif project.status == 'In Progress' %}warning{% elif project.status == 'Completed' %}info{% else %}danger{% endif %} fs-10">
+                                                                                            {{ project.status }}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="d-flex mt-4">
+                                                                                    <div class="flex-grow-1">
+                                                                                        <div class="d-flex align-items-center gap-2">
+                                                                                            <div>
+                                                                                                <h5 class="fs-12 text-muted mb-0">Assigned To :</h5>
+                                                                                            </div>
+                                                                                            <div class="avatar-group">
+                                                                                                {% if project.assignment.all %}
+                                                                                                    {% for tech in project.assignment.all %}
+                                                                                                    <div class="avatar-group-item" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ tech.auth_user.username|default:tech.auth_user.first_name|default:'Unknown User' }}">
+                                                                                                        <div class="avatar-xs">
+                                                                                                            {% if tech.auth_user.picture %}
+                                                                                                                <img src="{{ tech.auth_user.picture.url }}" alt="{{ tech.auth_user.username|default:'User' }}" class="rounded-circle img-fluid" />
+                                                                                                            {% else %}
+                                                                                                                <div class="avatar-title rounded-circle bg-light text-primary">
+                                                                                                                    {% if tech.auth_user.first_name and tech.auth_user.last_name %}
+                                                                                                                        {{ tech.auth_user.first_name|first|upper }}{{ tech.auth_user.last_name|first|upper }}
+                                                                                                                    {% elif tech.auth_user.username %}
+                                                                                                                        {{ tech.auth_user.username|first|upper }}
+                                                                                                                    {% else %}
+                                                                                                                        U
+                                                                                                                    {% endif %}
+                                                                                                                </div>
+                                                                                                            {% endif %}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    {% endfor %}
+                                                                                                {% else %}
+                                                                                                    <div class="avatar-group-item">
+                                                                                                        <div class="avatar-xs">
+                                                                                                            <div class="avatar-title rounded-circle bg-light text-muted">?</div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                {% endif %}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                        {% endfor %}
+                                                                    {% else %}
+                                                                    <div class="swiper-slide" style="width: 320px;">
+                                                                        <div class="card profile-project-card shadow-none profile-project-light mb-0" style="width: 320px;">
+                                                                            <div class="card-body p-4 text-center">
+                                                                                <div class="text-muted">
+                                                                                    <i class="ri-folder-line fs-48 mb-3"></i>
+                                                                                    <h6 class="mb-2">No Projects Assigned</h6>
+                                                                                    <p class="mb-0">No project assigned to {{company.name}}</p>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+
+                                                <!-- RIGHT COLUMN -->
+                                                <div class="col-12 col-lg-6 d-flex">
+                                                    <div class="card w-100">
+
+                                                        <div class="card-header align-items-center d-flex">
+                                                            <h4 class="card-title mb-0 me-2">Recent Activity</h4>
+                                                            <div class="flex-shrink-0 ms-auto">
+                                                                <ul class="nav justify-content-end nav-tabs-custom rounded card-header-tabs border-bottom-0" role="tablist">
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link active" data-bs-toggle="tab" href="#today" role="tab">Today</a>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link" data-bs-toggle="tab" href="#weekly" role="tab">Weekly</a>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link" data-bs-toggle="tab" href="#monthly" role="tab">Monthly</a>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="card-body">
+                                                            <div class="tab-content text-muted">
                                                                         <div class="tab-pane active" id="today" role="tabpanel">
                                                                             <div class="profile-timeline">
                                                                                 <div class="accordion accordion-flush" id="todayExample">
@@ -573,223 +772,13 @@
                                                                                 </div><!--end accordion-->
                                                                             </div>
                                                                         </div>
-                                                                    </div>
-                                                                </div><!-- end card body -->
-                                                            </div><!-- end card -->
-                                                        </div><!-- end col -->
-                                                    </div><!-- end row -->
-
-                                                    <div class="card">
-                                                        <div class="card-body">
-                                                            <h5 class="card-title mb-3">Tickets</h5>
-                                                            <!-- Swiper -->
-                                                            <div class="swiper project-swiper">
-                                                                <div class="d-flex justify-content-end gap-2 mb-2">
-                                                                    <div class="slider-button-prev">
-                                                                        <div class="avatar-title fs-18 rounded px-1">
-                                                                            <i class="ri-arrow-left-s-line"></i>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="slider-button-next">
-                                                                        <div class="avatar-title fs-18 rounded px-1">
-                                                                            <i class="ri-arrow-right-s-line"></i>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="swiper-wrapper">
-                                                                    {% if tickets %}
-                                                                        {% for ticket in tickets %}
-                                                                    <div class="swiper-slide">
-                                                                            <div class="card profile-project-card shadow-none profile-project-{% if ticket.status == 'New' %}success{% elif ticket.status == 'In Progress' %}warning{% elif ticket.status == 'Completed' %}info{% else %}danger{% endif %} mb-0">
-                                                                            <div class="card-body p-4">
-                                                                                <div class="d-flex">
-                                                                                    <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                                            <h5 class="fs-14 text-truncate mb-1"><a href="{% url 'apps:tickets.details' ticket.pk %}" class="text-dark">{{ ticket.name }}</a></h5>
-                                                                                            <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">{{ ticket.updated_at|timesince }} ago</span></p>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                            <div class="badge badge-soft-{% if ticket.status == 'New' %}success{% elif ticket.status == 'In Progress' %}warning{% elif ticket.status == 'Completed' %}info{% else %}danger{% endif %} fs-10">{{ ticket.status }}</div>
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div class="d-flex mt-4">
-                                                                                    <div class="flex-grow-1">
-                                                                                        <div class="d-flex align-items-center gap-2">
-                                                                                            <div>
-                                                                                                    <h5 class="fs-12 text-muted mb-0">Assigned To :</h5>
-                                                                                            </div>
-                                                                                                                                                                                            <div class="avatar-group">
-                                                                                                    {% if ticket.assignment.all %}
-                                                                                                        {% for tech in ticket.assignment.all %}
-                                                                                                        <div class="avatar-group-item" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ tech.auth_user.username|default:tech.auth_user.first_name|default:'Unknown User' }}">
-                                                                                                            <div class="avatar-xs">
-                                                                                                                {% if tech.auth_user.picture %}
-                                                                                                                    <img src="{{ tech.auth_user.picture.url }}" alt="{{ tech.auth_user.username|default:'User' }}" class="rounded-circle img-fluid" />
-                                                                                                                {% else %}
-                                                                                                                    <div class="avatar-title rounded-circle bg-light text-primary">
-                                                                                                                        {% if tech.auth_user.first_name and tech.auth_user.last_name %}
-                                                                                                                            {{ tech.auth_user.first_name|first|upper }}{{ tech.auth_user.last_name|first|upper }}
-                                                                                                                        {% elif tech.auth_user.username %}
-                                                                                                                            {{ tech.auth_user.username|first|upper }}
-                                                                                                                        {% else %}
-                                                                                                                            U
-                                                                                                                        {% endif %}
-                                                                                                                    </div>
-                                                                                                                {% endif %}
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                        {% endfor %}
-                                                                                                    {% else %}
-                                                                                                        <div class="avatar-group-item">
-                                                                                                            <div class="avatar-xs">
-                                                                                                                <div class="avatar-title rounded-circle bg-light text-muted">
-                                                                                                                    ?
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                    {% endif %}
-                                                                                                </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <!-- end card body -->
-                                                                        </div>
-                                                                        <!-- end card -->
-                                                                    </div>
-                                                                        {% endfor %}
-                                                                    {% else %}
-                                                                    <div class="swiper-slide">
-                                                                            <div class="card profile-project-card shadow-none profile-project-light mb-0">
-                                                                                <div class="card-body p-4 text-center">
-                                                                                    <div class="text-muted">
-                                                                                        <i class="ri-ticket-line fs-48 mb-3"></i>
-                                                                                        <h6 class="mb-2">No Tickets Assigned</h6>
-                                                                                        <p class="mb-0">This user has no tickets assigned to them.</p>
-                                                                                    </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                                            </div>
-                                                                    {% endif %}
-                                                                            </div>
-                                                                            <!-- end card body -->
-                                                                        </div>
-                                                                        <!-- end card -->
-                                                                    </div>
-                                                                    <!-- end slide item -->
-                                                                </div>
-                                                                
                                                             </div>
-                                                    
                                                         </div>
-                                                        <!-- end card body -->
-                                                    </div><!-- end card -->
 
-                                                </div><!--end col-->
-                                            </div><!--end row-->
-                                            
-                                            <!-- Projects Section -->
-                                            <div class="row">
-                                                <div class="col-12">
-                                                    <div class="card">
-                                                        <div class="card-body">
-                                                            <h5 class="card-title mb-3">Projects</h5>
-                                                            <!-- Swiper -->
-                                                            <div class="swiper project-swiper">
-                                                                <div class="d-flex justify-content-end gap-2 mb-2">
-                                                                    <div class="slider-button-prev">
-                                                                        <div class="avatar-title fs-18 rounded px-1">
-                                                                            <i class="ri-arrow-left-s-line"></i>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="slider-button-next">
-                                                                        <div class="avatar-title fs-18 rounded px-1">
-                                                                            <i class="ri-arrow-right-s-line"></i>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="swiper-wrapper">
-                                                                    {% if projects %}
-                                                                        {% for project in projects %}
-                                                                    <div class="swiper-slide">
-                                                                            <div class="card profile-project-card shadow-none profile-project-{% if project.status == 'Active' %}success{% elif project.status == 'In Progress' %}warning{% elif project.status == 'Completed' %}info{% else %}danger{% endif %} mb-0">
-                                                                            <div class="card-body p-4">
-                                                                                <div class="d-flex">
-                                                                                    <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                                            <h5 class="fs-14 text-truncate mb-1"><a href="#" class="text-dark">{{ project.name }}</a></h5>
-                                                                                            <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">{{ project.updated_at|timesince }} ago</span></p>
-                                                                                    </div>
-                                                                                    <div class="flex-shrink-0 ms-2">
-                                                                                            <div class="badge badge-soft-{% if project.status == 'Active' %}success{% elif project.status == 'In Progress' %}warning{% elif project.status == 'Completed' %}info{% else %}danger{% endif %} fs-10">{{ project.status }}</div>
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div class="d-flex mt-4">
-                                                                                    <div class="flex-grow-1">
-                                                                                        <div class="d-flex align-items-center gap-2">
-                                                                                            <div>
-                                                                                                    <h5 class="fs-12 text-muted mb-0">Assigned To :</h5>
-                                                                                            </div>
-                                                                                            <div class="avatar-group">
-                                                                                                {% if project.assignment.all %}
-                                                                                                    {% for tech in project.assignment.all %}
-                                                                                                    <div class="avatar-group-item" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ tech.auth_user.username|default:tech.auth_user.first_name|default:'Unknown User' }}">
-                                                                                                        <div class="avatar-xs">
-                                                                                                            {% if tech.auth_user.picture %}
-                                                                                                                <img src="{{ tech.auth_user.picture.url }}" alt="{{ tech.auth_user.username|default:'User' }}" class="rounded-circle img-fluid" />
-                                                                                                            {% else %}
-                                                                                                                <div class="avatar-title rounded-circle bg-light text-primary">
-                                                                                                                    {% if tech.auth_user.first_name and tech.auth_user.last_name %}
-                                                                                                                        {{ tech.auth_user.first_name|first|upper }}{{ tech.auth_user.last_name|first|upper }}
-                                                                                                                    {% elif tech.auth_user.username %}
-                                                                                                                        {{ tech.auth_user.username|first|upper }}
-                                                                                                                    {% else %}
-                                                                                                                        U
-                                                                                                                        {% endif %}
-                                                                                                                    </div>
-                                                                                                                {% endif %}
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                        {% endfor %}
-                                                                                                    {% else %}
-                                                                                                        <div class="avatar-group-item">
-                                                                                                            <div class="avatar-xs">
-                                                                                                                <div class="avatar-title rounded-circle bg-light text-muted">
-                                                                                                                    ?
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                    {% endif %}
-                                                                                                </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <!-- end card body -->
-                                                                        </div>
-                                                                        <!-- end card -->
-                                                                    </div>
-                                                                        {% endfor %}
-                                                                    {% else %}
-                                                                    <div class="swiper-slide">
-                                                                            <div class="card profile-project-card shadow-none profile-project-light mb-0">
-                                                                                <div class="card-body p-4 text-center">
-                                                                                    <div class="text-muted">
-                                                                                        <i class="ri-folder-line fs-48 mb-3"></i>
-                                                                                        <h6 class="mb-2">No Projects Assigned</h6>
-                                                                                        <p class="mb-0">No project assigned to {{company.name}}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    {% endif %}
-                                                                </div>
-                                                                
-                                                            </div>
-                                                    
-                                                        </div>
-                                                        <!-- end card body -->
-                                                    </div><!-- end card -->
-                                                </div><!--end col-->
-                                            </div><!--end row-->
+                                                    </div>
+                                                </div>
+
+                                            </div>
                                         </div>
                                         <div class="tab-pane fade" id="tickets" role="tabpanel">
                                             <div class="card">
@@ -816,7 +805,7 @@
                                                                             </div>
                                                                             <div class="flex-grow-1 ms-2">
                                                                                 <h6 class="mb-0">{{ticket.name}}</h6>
-                                                                                <p class="text-muted mb-0">{{ticket.description|truncatechars:50}}</p>
+                                                                                <p class="text-muted mb-0">{{ticket.description|striptags|truncatechars:40}}</p>
                                                                             </div>
                                                                         </div>
                                                                     </td>
@@ -886,7 +875,7 @@
                                                                                     <h5 class="fs-12 text-muted mb-0">Description :</h5>
                                                                                 </div>
                                                                                 <div class="text-muted">
-                                                                                    <p class="fs-12 mb-0">{{project.description|truncatechars:100|default:"No description"}}</p>
+                                                                                    <p class="fs-12 mb-0">{{project.description|striptags|truncatechars:40|default:"No description"}}</p>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -916,7 +905,7 @@
                                             <div class="card">
                                                 <div class="card-body">
                                                     <div class="d-flex align-items-center mb-4">
-                                                        <h5 class="card-title flex-grow-1 mb-0">Client Files</h5>
+                                                        <h5 class="card-title flex-grow-1 mb-0">User Files</h5>
                                                     </div>
                                                     <div class="row">
                                                         <div class="col-lg-12">
@@ -928,11 +917,12 @@
                                                                             <th scope="col">Type</th>
                                                                             <th scope="col">Size</th>
                                                                             <th scope="col">Upload Date</th>
+                                                                            <th scope="col">Source</th>
                                                                             <th scope="col">Action</th>
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
-                                                                        {% for file in client_files %}
+                                                                        {% for file in user_files %}
                                                                         <tr>
                                                                             <td>
                                                                                 <div class="d-flex align-items-center">
@@ -942,181 +932,33 @@
                                                                                         </div>
                                                                                     </div>
                                                                                     <div class="ms-3 flex-grow-1">
-                                                                                        <h6 class="fs-15 mb-0"><a href="{{file.file.url}}" target="_blank">{{file.file.name|slice:"-50:"}}</a></h6>
+                                                                                        <h6 class="fs-15 mb-0"><a href="{{ file.file.url }}" target="_blank">{{ file.file.name|slice:"-50:" }}</a></h6>
                                                                                     </div>
                                                                                 </div>
                                                                             </td>
-                                                                            <td>{{file.file.name|slice:"-3:"|upper}} File</td>
-                                                                            <td>{{file.file.size|filesizeformat}}</td>
-                                                                            <td>{{file.upload_date}}</td>
+                                                                            <td>{{ file.file.name|slice:"-3:"|upper }} File</td>
+                                                                            <td>{{ file.file.size|filesizeformat }}</td>
+                                                                            <td>{{ file.upload_date }}</td>
+                                                                            <td>{{ file.source_label }}: {{ file.source_name }}</td>
                                                                             <td>
                                                                                 <div class="dropdown">
-                                                                                    <a href="javascript:void(0);" class="btn btn-light btn-icon" id="dropdownMenuLink{{forloop.counter}}" data-bs-toggle="dropdown" aria-expanded="true">
+                                                                                    <a href="javascript:void(0);" class="btn btn-light btn-icon" id="dropdownMenuLink{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="true">
                                                                                         <i class="ri-equalizer-fill"></i>
                                                                                     </a>
-                                                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink{{forloop.counter}}">
-                                                                                        <li><a class="dropdown-item" href="{{file.file.url}}" target="_blank"><i class="ri-eye-fill me-2 align-middle text-muted"></i>View</a></li>
-                                                                                        <li><a class="dropdown-item" href="{{file.file.url}}" download><i class="ri-download-2-fill me-2 align-middle text-muted"></i>Download</a></li>
+                                                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink{{ forloop.counter }}">
+                                                                                        <li><a class="dropdown-item" href="{{ file.file.url }}" target="_blank"><i class="ri-eye-fill me-2 align-middle text-muted"></i>View</a></li>
+                                                                                        <li><a class="dropdown-item" href="{{ file.file.url }}" download><i class="ri-download-2-fill me-2 align-middle text-muted"></i>Download</a></li>
                                                                                     </ul>
                                                                                 </div>
                                                                             </td>
                                                                         </tr>
                                                                         {% empty %}
                                                                         <tr>
-                                                                            <td colspan="5" class="text-center">No files found for this client.</td>
+                                                                            <td colspan="6" class="text-center">No files found. Files from projects and tickets assigned to this user will appear here.</td>
                                                                         </tr>
                                                                         {% endfor %}
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="avatar-sm">
-                                                                                        <div class="avatar-title bg-soft-danger text-danger rounded fs-20">
-                                                                                            <i class="ri-file-pdf-fill"></i>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="ms-3 flex-grow-1">
-                                                                                        <h6 class="fs-15 mb-0"><a href="javascript:void(0);">Bank Management System</a></h6>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </td>
-                                                                            <td>PDF File</td>
-                                                                            <td>8.89 MB</td>
-                                                                            <td>24 Nov 2021</td>
-                                                                            <td>
-                                                                                <div class="dropdown">
-                                                                                    <a href="javascript:void(0);" class="btn btn-light btn-icon" id="dropdownMenuLink3" data-bs-toggle="dropdown" aria-expanded="true">
-                                                                                        <i class="ri-equalizer-fill"></i>
-                                                                                    </a>
-                                                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink3">
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill me-2 align-middle text-muted"></i>View</a></li>
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-download-2-fill me-2 align-middle text-muted"></i>Download</a></li>
-                                                                                        <li class="dropdown-divider"></li>
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line me-2 align-middle text-muted"></i>Delete</a></li>
-                                                                                    </ul>
-                                                                                </div>
-                                                                            </td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td>
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="avatar-sm">
-                                                                                        <div class="avatar-title bg-soft-secondary text-secondary rounded fs-20">
-                                                                                            <i class="ri-video-line"></i>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="ms-3 flex-grow-1">
-                                                                                        <h6 class="fs-15 mb-0"><a href="javascript:void(0);">Tour-video.mp4</a></h6>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </td>
-                                                                            <td>MP4 File</td>
-                                                                            <td>14.62 MB</td>
-                                                                            <td>19 Nov 2021</td>
-                                                                            <td>
-                                                                                <div class="dropdown">
-                                                                                    <a href="javascript:void(0);" class="btn btn-light btn-icon" id="dropdownMenuLink4" data-bs-toggle="dropdown" aria-expanded="true">
-                                                                                        <i class="ri-equalizer-fill"></i>
-                                                                                    </a>
-                                                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink4">
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill me-2 align-middle text-muted"></i>View</a></li>
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-download-2-fill me-2 align-middle text-muted"></i>Download</a></li>
-                                                                                        <li class="dropdown-divider"></li>
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line me-2 align-middle text-muted"></i>Delete</a></li>
-                                                                                    </ul>
-                                                                                </div>
-                                                                            </td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td>
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="avatar-sm">
-                                                                                        <div class="avatar-title bg-soft-success text-success rounded fs-20">
-                                                                                            <i class="ri-file-excel-fill"></i>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="ms-3 flex-grow-1">
-                                                                                        <h6 class="fs-15 mb-0"><a href="javascript:void(0);">Account-statement.xsl</a></h6>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </td>
-                                                                            <td>XSL File</td>
-                                                                            <td>2.38 KB</td>
-                                                                            <td>14 Nov 2021</td>
-                                                                            <td>
-                                                                                <div class="dropdown">
-                                                                                    <a href="javascript:void(0);" class="btn btn-light btn-icon" id="dropdownMenuLink5" data-bs-toggle="dropdown" aria-expanded="true">
-                                                                                        <i class="ri-equalizer-fill"></i>
-                                                                                    </a>
-                                                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink5">
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill me-2 align-middle text-muted"></i>View</a></li>
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-download-2-fill me-2 align-middle text-muted"></i>Download</a></li>
-                                                                                        <li class="dropdown-divider"></li>
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line me-2 align-middle text-muted"></i>Delete</a></li>
-                                                                                    </ul>
-                                                                                </div>
-                                                                            </td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td>
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="avatar-sm">
-                                                                                        <div class="avatar-title bg-soft-info text-info rounded fs-20">
-                                                                                            <i class="ri-folder-line"></i>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="ms-3 flex-grow-1">
-                                                                                        <h6 class="fs-15 mb-0"><a href="javascript:void(0);">Project Screenshots Collection</a></h6>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </td>
-                                                                            <td>Floder File</td>
-                                                                            <td>87.24 MB</td>
-                                                                            <td>08 Nov 2021</td>
-                                                                            <td>
-                                                                                <div class="dropdown">
-                                                                                    <a href="javascript:void(0);" class="btn btn-light btn-icon" id="dropdownMenuLink6" data-bs-toggle="dropdown" aria-expanded="true">
-                                                                                        <i class="ri-equalizer-fill"></i>
-                                                                                    </a>
-                                                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink6">
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill me-2 align-middle"></i>View</a></li>
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-download-2-fill me-2 align-middle"></i>Download</a></li>
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line me-2 align-middle"></i>Delete</a></li>
-                                                                                    </ul>
-                                                                                </div>
-                                                                            </td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td>
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="avatar-sm">
-                                                                                        <div class="avatar-title bg-soft-danger text-danger rounded fs-20">
-                                                                                            <i class="ri-image-2-fill"></i>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="ms-3 flex-grow-1">
-                                                                                        <h6 class="fs-15 mb-0"><a href="javascript:void(0);">Velzon-logo.png</a></h6>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </td>
-                                                                            <td>PNG File</td>
-                                                                            <td>879 KB</td>
-                                                                            <td>02 Nov 2021</td>
-                                                                            <td>
-                                                                                <div class="dropdown">
-                                                                                    <a href="javascript:void(0);" class="btn btn-light btn-icon" id="dropdownMenuLink7" data-bs-toggle="dropdown" aria-expanded="true">
-                                                                                        <i class="ri-equalizer-fill"></i>
-                                                                                    </a>
-                                                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink7">
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill me-2 align-middle"></i>View</a></li>
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-download-2-fill me-2 align-middle"></i>Download</a></li>
-                                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line me-2 align-middle"></i>Delete</a></li>
-                                                                                    </ul>
-                                                                                </div>
-                                                                            </td>
-                                                                        </tr>
                                                                     </tbody>
                                                                 </table>
-                                                            </div>
-                                                            <div class="text-center mt-3">
-                                                                <a href="javascript:void(0);" class="text-success "><i class="mdi mdi-loading mdi-spin fs-20 align-middle me-2"></i> Load more </a>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1304,32 +1146,7 @@
                     return new bootstrap.Tooltip(tooltipTriggerEl);
                 });
                 
-                // Initialize all swipers
-                var swiperElements = document.querySelectorAll('.project-swiper');
-                swiperElements.forEach(function(element) {
-                    new Swiper(element, {
-                        slidesPerView: 1,
-                        spaceBetween: 24,
-                        navigation: {
-                            nextEl: element.querySelector('.slider-button-next'),
-                            prevEl: element.querySelector('.slider-button-prev')
-                        },
-                        breakpoints: {
-                            640: {
-                                slidesPerView: 1,
-                                spaceBetween: 15
-                            },
-                            768: {
-                                slidesPerView: 2,
-                                spaceBetween: 20
-                            },
-                            1200: {
-                                slidesPerView: 3,
-                                spaceBetween: 25
-                            }
-                        }
-                    });
-                });
+                // Swiper init is in profile.init.js (single source of truth)
             });
         </script>
 {% endblock extra_js %}

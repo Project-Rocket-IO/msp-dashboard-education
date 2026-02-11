@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from apps.forms import (
     WebviewIntegrationsAddForm,
 )
-from apps.models import WebviewIntegrations, ClientCompany, ProjectList, TicketList, ClientCompanyFiles, ClientLocations, ClientTeamMembers
+from apps.models import WebviewIntegrations, ClientCompany, ProjectList, TicketList, ClientCompanyFiles, ClientLocations, ClientTeamMembers, ProjectFiles, TicketFiles
 from .utils import *
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
@@ -160,7 +160,7 @@ def pages_create_account(request):
         # ? We're basically converting a dictionary of lists
         # ? to  list of dictionaries, in the following code
         form_data_sets = get_form_data_sets(request.POST)  # properly structure data
-        result = process_form_data_sets(form_data_sets, request.user)
+        result = process_form_data_sets(form_data_sets, request.user, request)
         
         if isinstance(result, tuple) and result[0] == "billing_required":
             # Billing is required - redirect to Stripe checkout
@@ -631,6 +631,29 @@ def pages_profile_with_pk(request, pk):
         all_projects_for_company = projects
     
     client_files = ClientCompanyFiles.objects.filter(client_id=pk)
+    # User files: all files from projects and tickets assigned to this user (company)
+    user_files = []
+    for pf in ProjectFiles.objects.filter(
+        project__in=all_projects_for_company,
+        file__isnull=False
+    ).exclude(file="").select_related("project"):
+        user_files.append({
+            "file": pf.file,
+            "upload_date": pf.upload_date,
+            "source_label": "Project",
+            "source_name": pf.project.name if pf.project else "",
+        })
+    for tf in TicketFiles.objects.filter(
+        ticket__in=all_tickets_for_company,
+        file__isnull=False
+    ).exclude(file="").select_related("ticket"):
+        user_files.append({
+            "file": tf.file,
+            "upload_date": tf.upload_date,
+            "source_label": "Ticket",
+            "source_name": tf.ticket.name if tf.ticket else "",
+        })
+    user_files.sort(key=lambda x: x["upload_date"], reverse=True)
     client_locations = ClientLocations.objects.filter(client_id=pk)
     client_members = ClientTeamMembers.objects.filter(client_id=pk)
     clients = ClientCompany.objects.all().order_by("-name")
@@ -666,6 +689,7 @@ def pages_profile_with_pk(request, pk):
         "all_projects": all_projects,
         "company": company,
         "client_files": client_files,
+        "user_files": user_files,
         "client_locations": client_locations,
         "client_members": client_members,
         "active_tab": active_tab,

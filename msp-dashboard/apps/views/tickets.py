@@ -25,6 +25,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
+from apps.utils import user_can_see_private_comments
 
 # Try to import pandas for Excel processing
 try:
@@ -86,12 +87,10 @@ def apps_tickets_comments_view(request, pk):
     # Get all comments ordered by oldest first
     all_comments = TicketComment.objects.filter(ticket_id=tickets).order_by('date_added')
     
-    # Filter comments based on user role
-    # If user is a client, only show public comments
-    if request.user.groups.filter(name='Client').exists():
+    # Filter comments: only IT Dept, Administrator, Super User (and superuser) see private comments
+    if not user_can_see_private_comments(request.user):
         comments = all_comments.filter(private=False)
     else:
-        # Non-client users can see all comments
         comments = all_comments
 
     context = {"tickets": tickets, "comments": comments}
@@ -164,19 +163,37 @@ def apps_tickets_details_view(request, pk):
     # Get all comments ordered by oldest first
     all_comments = TicketComment.objects.filter(ticket_id=tickets).order_by('date_added')
     
-    # Filter comments based on user role
-    # If user is a client, only show public comments
-    if request.user.groups.filter(name='Client').exists():
+    # Only IT Dept, Administrator, Super User (and superuser) see private comments
+    if not user_can_see_private_comments(request.user):
         comments = all_comments.filter(private=False)
     else:
-        # Non-client users can see all comments
         comments = all_comments
+
+    # Labor entries for this ticket (for combined activity feed)
+    labor_entries = TechnicianLabor.objects.filter(ticket=tickets).select_related(
+        "created_by", "created_by__auth_user", "submitted_by"
+    ).order_by("created_at")
+
+    # Combined activity feed: comments + labor, sorted by date (oldest first)
+    activity_feed = []
+    for c in comments:
+        activity_feed.append({"type": "comment", "date": c.date_added, "obj": c})
+    for labor in labor_entries:
+        activity_feed.append({
+            "type": "labor",
+            "date": labor.created_at,
+            "obj": labor,
+            "labor_hours": labor.minutes // 60,
+            "labor_minutes": labor.minutes % 60,
+        })
+    activity_feed.sort(key=lambda x: x["date"])
     
     technicians = TechnicianUser.objects.all()
     replies = TicketCommentReplies.objects.filter(ticket_id=tickets)
     context = {
         "tickets": tickets,
         "comments": comments,
+        "activity_feed": activity_feed,
         "projects": projects,
         "replies": replies,
         "technicians": technicians,
@@ -202,7 +219,7 @@ def apps_tickets_details_view(request, pk):
     return render(request, "apps/support-tickets/apps-tickets-details.html", context)
 
 
-def get_ticket_list_data(request, per_page=8):
+def get_ticket_list_data(request, per_page=10):
     all_tickets = (
         TicketList.objects.select_related("client")
         .prefetch_related(
@@ -399,7 +416,11 @@ def apps_tickets_edit_view(request, pk):
     technicians = TechnicianUser.objects.all()
     projects = ProjectList.objects.all()
     clients = ClientCompany.objects.all()
-    comments = TicketComment.objects.filter(ticket_id=tickets)
+    all_comments = TicketComment.objects.filter(ticket_id=tickets)
+    if not user_can_see_private_comments(request.user):
+        comments = all_comments.filter(private=False)
+    else:
+        comments = all_comments
     ticket_files = TicketFiles.objects.filter(ticket_id=pk)
     files_count = ticket_files.count()
     comments_count = comments.count()

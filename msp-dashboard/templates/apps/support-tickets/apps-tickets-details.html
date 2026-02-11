@@ -124,326 +124,466 @@
                             </li>
                         </ul>
                         
-                        <div class="row" style="margin: 0;">
-                            <div class="col-xxl-9" style="padding-right: 15px;">
+                        <div class="row g-4">
+
+                            <!-- LEFT COLUMN -->
+                            <div class="col-12 col-lg-8">
                                 <div class="card">
+
+                                    <!-- Ticket Description -->
                                     <div class="card-body p-4">
                                         <h6 class="fw-semibold text-uppercase mb-3">Ticket Description</h6>
                                         {% if tickets.description %}
-                                        <p class="text-muted">{{tickets.description|safe}}</p> 
+                                        <p class="text-muted mb-0">{{ tickets.description|safe }}</p>
                                         {% else %}
-                                        <h5 class="card-title mb-4">No Description</h5>
-                                        {% endif %}                                       
-                                    </div><!--end card-body-->
-                                    <div class="card-body p-4">
-                                        {% if comments %}
-                                        <h2 class="card-title mb-4">Comments</h5>
-                                        {% else %}
-                                        <h5 class="card-title mb-4">No Comments</h5>
+                                        <p class="text-muted mb-0">No Description</p>
                                         {% endif %}
-                                        <div data-simplebar class="px-3 mx-n3" style="max-width: 100%; overflow-x: hidden;">
-                                            
-                                            {% for comment in comments %}
-                                            
-                                            <div class="mb-4 w-100">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="rounded-circle avatar-xs">
-                                                            <div class="avatar-title rounded-circle bg-info">
-                                                                {{comment.user.username|first}}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                    <h5 class="fs-13"> {{comment.user.username}} <small class="text-muted"> {{comment.date_added}} </small>
-                                                    {% if comment.private %}
-                                                    <button class="badge text bg-danger" type="badge" data-bs-toggle="collapse" data-bs-target="#makePublic{{comment.pk}}" aria-expanded="false" aria-controls="collapseExample" >
-                                                        <i class="mdi mdi-account-key"></i> Private</button>
-                                                    {% else %}
-                                                    <button class="badge text bg-success" type="badge" data-bs-toggle="collapse" data-bs-target="#makePrivate{{comment.pk}}" aria-expanded="false" aria-controls="collapseExample" >
-                                                        <i class="mdi mdi-account-multiple-plus"></i> Public</button>
-                                                    {% endif %}    
-                                                    <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="float: right;">
-                                                        <i class="ri-more-fill align-middle"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end">
-                                                        <li><button class="dropdown-item" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample{{comment.pk}}" aria-expanded="false" aria-controls="collapseExample"><i class="ri-reply-fill align-bottom me-2 text-muted"></i>Reply</button>
-                                                        <li><a class="dropdown-item" href="{% url 'apps:tickets.comments.toggle_visibility' tickets.pk comment.pk %}"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> Change Visibility</a></li>
-                                                    {% if perms.apps.delete_own_ticket_comments %}
-                                                    <div class="dropdown-divider"></div>
-                                                    <form action="{% url 'apps:tickets.comments.delete' tickets.pk comment.pk %}" method="post">
-                                                        {% csrf_token %}
-                                                        <li>
-                                                            <button class="dropdown-item" href="#" data-bs-toggle="modal" type="submit">
-                                                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                                                Delete
-                                                            </button>
-                                                        </li>
-                                                    </form>
-                                                    {% endif %}
-                                                    </ul> 
-                                                </h5>
-                                                    <p class="text-muted">{{comment.body}}</p>
-                                                </div>
-                                            </div>
-                                                    
-                                                    {% if replies %}
-                                                    {% for reply in replies %}
-                                                    {% if reply.comment.pk == comment.pk %}
-                                                    <div class="mt-4" style="margin-left: 20px; border-left: 2px solid #e9ecef; padding-left: 15px;">
-                                                        <div class="d-flex align-items-start">
-                                                            <div class="flex-shrink-0">
-                                                                <div class="rounded-circle avatar-xs">
-                                                                    <div class="avatar-title rounded-circle bg-info">
-                                                                        {{reply.user.username|first}}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="flex-grow-1 ms-3">
-                                                            <h5 class="fs-13">{{reply.user}} <small class="text-muted">{{reply.date_added}}</small>
-                                                            {% if reply.private %}
-                                                            <button class="badge text bg-danger" type="badge">
-                                                                <i class="mdi mdi-account-key"></i> Private</button>
-                                                            {% else %}
-                                                            <button class="badge text bg-success" type="badge">
-                                                                <i class="mdi mdi-account-multiple-plus"></i> Public</button>
-                                                            {% endif %}
-                                                            <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="float: right;">
-                                                                <i class="ri-more-fill align-middle"></i>
-                                                            </button>
-                                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                                <li><a class="dropdown-item" href="{% url 'apps:tickets.replies.toggle_visibility' tickets.pk reply.pk %}"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> Change Visibility</a></li>
-                                                            </ul>
-                                                            </h5>
-                                                            <p class="text-muted">{{ reply.body }}</p>
-                                                        </div>
-                                                    </div>
-                                                    {% endif %}
-                                                    {% endfor %}
-                                                    {% endif %}
-                                                            
-                                                    <div class="collapse" id="collapseExample{{comment.pk}}">
-                                                        <div class="card card-body">
-                                                            <form method="POST" action="{% url 'apps:tickets.replies' tickets.pk %}" enctype="multipart/form-data" class="mt-3">
-                                                                {% csrf_token %}
-                                                                {{ form.as_p }}
-                                                                <div class="row g-3">
-                                                                    <div class="col-lg-12">
-                                                                        <label for="bodyTextarea1" class="form-label">Post Reply</label>
-                                                                        <textarea class="form-control bg-light border-light" id="bodyTextarea1" rows="3" placeholder="Leave reply" name="body"></textarea>
-                                                                        <input name="user" type="hidden" value="{{user.pk}}"> 
-                                                                        <input name="ticket" type="hidden" value="{{tickets.pk}}"> 
-                                                                        <input name="comment" type="hidden" value="{{comment.pk}}"> 
-                                                                    </div>
-                                                                    <div class="col-lg-12 text-end">
-                                                                        <button type="button" class="btn btn-light" data-bs-toggle="collapse" data-bs-target="#collapseExample{{comment.pk}}" aria-controls="collapseExample">Close</button>
-                                                                        <button type="submit" class="btn btn-success" id="add-btn">Post Reply</button>
-                                                                    </div>
-                                                                </div>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                            
-                                            
-                                        </div>
-                                        <form method="POST" action="{% url 'apps:tickets.comments' tickets.pk %}" enctype="multipart/form-data" class="mt-3">
-                                            {% csrf_token %}
-                                            {{ form.as_p }}
-                                            <div class="row g-3">
-                                                <div class="col-lg-12">
-                                                    <label for="bodyTextarea1" class="form-label">Leave a Comment</label>
-                                                    <textarea class="form-control bg-light border-light" id="bodyTextarea1" rows="3" placeholder="Enter comment" name="body"></textarea>
-                                                    <input name="user" type="hidden" value="{{user.pk}}"> 
-                                                    <input name="ticket" type="hidden" value="{{tickets.pk}}"> 
-                                                </div>
-                                                <div class="col-lg-12 text-end">
-                                                    <button type="submit" class="btn btn-success" id="add-btn">Post Comment</button>
-                                                </div>
-                                            </div>
-                                        </form>
                                     </div>
-                                    <!-- end card body -->
-                                </div><!--end card-->
-                            </div><!--end col-->
-                            <div class="col-xxl-3" style="padding-left: 15px;">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-3" >Ticket Details</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive table-card">
-                                            <table class="table table-borderless align-middle mb-0">
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="fw-medium">Ticket</td>
-                                                        <td>{{tickets.pk | add:1000}}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-medium">User</td>
-                                                        {% if tickets.client %}
-                                                        <td>
-                                                            <button class="btn btn-light" onclick="location.href = '{% url 'apps:client.details' tickets.client.pk %}';">{{ tickets.client.name }}</button>
-                                                        </td>
-                                                        {% else %}
-                                                        <td>{{tickets.client}}</td>
-                                                        {% endif %}
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-medium">Project</td>
-                                                        {% if tickets.project %}
-                                                        <td>
-                                                            <button class="btn btn-light" onclick="location.href = '{% url 'apps:projects.overview' tickets.project.pk %}';">{{tickets.project}}</button>
-                                                        </td>
-                                                        {% else %}
-                                                        <td>- Not connected to a project</td>
-                                                        {% endif %}
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-medium">Assigned To:</td>   
-                                                        <td>
-                                                            <div class="avatar-group">
-                                                                {% for tech in tickets.assignment.all %}
-                                                                <a href="#userProfileCanvasExample{{tech.pk}}" class="avatar-group-item" data-bs-toggle="offcanvas" data-bs-trigger="hover"
-                                                    data-bs-target="#userProfileCanvasExample{{tech.pk}}" aria-controls="userProfileCanvasExample{{tech.pk}}" title={{tech.auth_user.username}}>
-                                                                    <div class="rounded-circle avatar-xs">
-                                                                        <div class="avatar-title rounded-circle bg-info">
-                                                                            {{tech.auth_user.username|first}}
-                                                                        </div>
-                                                                    </div>
-                                                                </a>
-                                                                {% endfor %}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        
-                                                        <td class="fw-medium">Status:</td>
-                                                        <td>
-                                                            {% if tickets.status == "Closed" %}
-                                                            <span class="badge badge-soft-danger text-uppercase">Closed</span>
-                                                            {% elif tickets.status == "In Progress" %}
-                                                            <span class="badge badge-soft-info text-uppercase">In Progress</span>
-                                                            {% elif tickets.status == "New" %}
-                                                            <span class="badge badge-soft-primary text-uppercase">New</span>
-                                                            {% elif tickets.status == "Postponed" %}
-                                                            <span class="badge badge-soft-dark text-uppercase">Postponed</span>
-                                                            {% elif tickets.status == "Waiting on Client" %}
-                                                            <span class="badge badge-soft-light text-uppercase">Waiting on User</span>
-                                                            {% elif tickets.status == "Waiting on Vendor" %}
-                                                            <span class="badge badge-soft-light text-uppercase">Waiting on Vendor</span>
-                                                            {% elif tickets.status == "Follow-Up" %}
-                                                            <span class="badge badge-soft-secondary text-uppercase">Follow-Up</span>
-                                                            {% elif tickets.status == "Need to Post" %}
-                                                            <span class="badge badge-soft-secondary text-uppercase">Need to Post</span>
-                                                            {% elif tickets.status == "Scheduled" %}
-                                                            <span class="badge badge-soft-success text-uppercase">Scheduled</span>
-                                                            {% endif %}
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-medium">Priority</td>
-                                                        <td class="priority">
-                                                            {% if tickets.priority == "Emergency" %}
-                                                            <span class="badge badge-pill bg-danger text-uppercase">Emergency</span>
-                                                            {% elif tickets.priority == "High" %}
-                                                            <span class="badge bg-danger text-uppercase">High</span>
-                                                            {% elif tickets.priority == "Low" %}
-                                                            <span class="badge bg-info text-uppercase">Low</span>
-                                                            {% elif tickets.priority == "Medium" %}
-                                                            <span class="badge bg-warning text-uppercase">Medium</span>
-                                                            {% endif %}
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-medium">Create Date</td>
-                                                        <td>{{tickets.create_date}}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-medium">Due Date</td>
-                                                        <td>{{tickets.due_date}}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-medium">Last Activity</td>
-                                                        <td>{{tickets.updated_at|naturaltime}}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-medium">Tags</td>
-                                                        <td class="hstack text-wrap gap-1">
-                                                            {% if tickets.tag %}
-                                                            {% for tag in tickets.tag.all %}
-                                                            <span class="badge badge-soft-primary">{{tag.name}}</span>
-                                                            {% endfor %}
-                                                            {% else %}
-                                                            <span class="badge badge-soft-primary">No Tags</span>
-                                                            {% endif %}
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div><!--end card-body-->
-                                </div><!--end card-->
-                                <div class="card">
-                                    <div class="card-header d-flex align-items-center">
-                                        <h6 class="card-title fw-semibold mb-0 flex-grow-1">Files Attachment</h6>
-                                        {% if not perms.apps.change_ticketlist %}
-                                        <div class="flex-shrink-0">
-                                            <a href="{% url 'apps:tickets.edit' tickets.pk %}" class="btn btn-soft-info btn-sm"><i class="ri-upload-2-fill me-1 align-bottom"></i> Upload</a>
-                                        </div>
+
+                                    <!-- Comments -->
+                                    <div class="card-body p-4 border-top">
+                                        {% if activity_feed %}
+                                        <h5 class="card-title mb-3">Comments</h5>
+                                        {% else %}
+                                        <h5 class="card-title mb-3">No Comments</h5>
                                         {% endif %}
 
+                                        <!-- SCROLLING FEED -->
+                                        <div data-simplebar style="max-height: 550px;" class="pe-2">
+                                            <div class="vstack gap-4">
+                                            
+                                            {% for item in activity_feed %}
+
+                                              {% if item.type == "comment" %}
+                                                {% with comment=item.obj %}
+
+                                                <div class="w-100">
+                                                  <div class="d-flex align-items-start">
+
+                                                    <div class="flex-shrink-0">
+                                                      <div class="rounded-circle avatar-xs">
+                                                        <div class="avatar-title rounded-circle bg-info">
+                                                          {{ comment.user.username|first }}
+                                                        </div>
+                                                      </div>
+                                                    </div>
+
+                                                    <div class="flex-grow-1 ms-3 min-w-0">
+
+                                                      <div class="d-flex align-items-start justify-content-between gap-3">
+                                                        <div class="min-w-0">
+                                                          <h6 class="fs-13 mb-1">
+                                                            {{ comment.user.username }}
+                                                            <small class="text-muted ms-2">{{ comment.date_added }}</small>
+
+                                                            {% if comment.private %}
+                                                              <span class="badge bg-danger ms-2">
+                                                                <i class="mdi mdi-account-key"></i> Private
+                                                              </span>
+                                                            {% else %}
+                                                              <span class="badge bg-success ms-2">
+                                                                <i class="mdi mdi-account-multiple-plus"></i> Public
+                                                              </span>
+                                                            {% endif %}
+                                                          </h6>
+                                                        </div>
+
+                                                        <div class="flex-shrink-0">
+                                                          <div class="dropdown">
+                                                            <button class="btn btn-soft-secondary btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                              <i class="ri-more-fill align-middle"></i>
+                                                            </button>
+                                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                              <li>
+                                                                <button class="dropdown-item" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample{{ comment.pk }}" aria-expanded="false">
+                                                                  <i class="ri-reply-fill align-bottom me-2 text-muted"></i> Reply
+                                                                </button>
+                                                              </li>
+                                                              <li>
+                                                                <a class="dropdown-item" href="{% url 'apps:tickets.comments.toggle_visibility' tickets.pk comment.pk %}">
+                                                                  <i class="ri-eye-fill align-bottom me-2 text-muted"></i> Change Visibility
+                                                                </a>
+                                                              </li>
+                                                              {% if perms.apps.delete_own_ticket_comments %}
+                                                                <li><hr class="dropdown-divider"></li>
+                                                                <li>
+                                                                  <form action="{% url 'apps:tickets.comments.delete' tickets.pk comment.pk %}" method="post" class="m-0">
+                                                                    {% csrf_token %}
+                                                                    <button class="dropdown-item" type="submit">
+                                                                      <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                                                    </button>
+                                                                  </form>
+                                                                </li>
+                                                              {% endif %}
+                                                            </ul>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+
+                                                      <p class="text-muted mb-2" style="overflow-wrap: anywhere;">
+                                                        {{ comment.body }}
+                                                      </p>
+
+                                                      <!-- Replies -->
+                                                      {% if replies %}
+                                                        {% for reply in replies %}
+                                                          {% if reply.comment.pk == comment.pk %}
+                                                            <div class="mt-3 ps-3" style="border-left: 2px solid #e9ecef;">
+                                                              <div class="d-flex align-items-start">
+                                                                <div class="flex-shrink-0">
+                                                                  <div class="rounded-circle avatar-xs">
+                                                                    <div class="avatar-title rounded-circle bg-info">
+                                                                      {{ reply.user.username|first }}
+                                                                    </div>
+                                                                  </div>
+                                                                </div>
+                                                                <div class="flex-grow-1 ms-3 min-w-0">
+                                                                  <div class="d-flex align-items-start justify-content-between gap-3">
+                                                                    <div class="min-w-0">
+                                                                      <h6 class="fs-13 mb-1">
+                                                                        {{ reply.user }}
+                                                                        <small class="text-muted ms-2">{{ reply.date_added }}</small>
+
+                                                                        {% if reply.private %}
+                                                                          <span class="badge bg-danger ms-2">
+                                                                            <i class="mdi mdi-account-key"></i> Private
+                                                                          </span>
+                                                                        {% else %}
+                                                                          <span class="badge bg-success ms-2">
+                                                                            <i class="mdi mdi-account-multiple-plus"></i> Public
+                                                                          </span>
+                                                                        {% endif %}
+                                                                      </h6>
+                                                                    </div>
+                                                                    <div class="flex-shrink-0">
+                                                                      <div class="dropdown">
+                                                                        <button class="btn btn-soft-secondary btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                          <i class="ri-more-fill align-middle"></i>
+                                                                        </button>
+                                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                                          <li>
+                                                                            <a class="dropdown-item" href="{% url 'apps:tickets.replies.toggle_visibility' tickets.pk reply.pk %}">
+                                                                              <i class="ri-eye-fill align-bottom me-2 text-muted"></i> Change Visibility
+                                                                            </a>
+                                                                          </li>
+                                                                        </ul>
+                                                                      </div>
+                                                                    </div>
+                                                                  </div>
+
+                                                                  <p class="text-muted mb-0" style="overflow-wrap: anywhere;">
+                                                                    {{ reply.body }}
+                                                                  </p>
+                                                                </div>
+                                                              </div>
+                                                            </div>
+                                                          {% endif %}
+                                                        {% endfor %}
+                                                      {% endif %}
+
+                                                      <!-- Reply collapse -->
+                                                      <div class="collapse mt-3" id="collapseExample{{ comment.pk }}">
+                                                        <div class="card card-body">
+                                                          <form method="POST" action="{% url 'apps:tickets.replies' tickets.pk %}" enctype="multipart/form-data">
+                                                            {% csrf_token %}
+                                                            {{ form.as_p }}
+
+                                                            <div class="mb-3">
+                                                              <label for="bodyTextareaReply{{ comment.pk }}" class="form-label">Post Reply</label>
+                                                              <textarea class="form-control bg-light border-light" id="bodyTextareaReply{{ comment.pk }}" rows="3" placeholder="Leave reply" name="body"></textarea>
+                                                              <input name="user" type="hidden" value="{{ user.pk }}">
+                                                              <input name="ticket" type="hidden" value="{{ tickets.pk }}">
+                                                              <input name="comment" type="hidden" value="{{ comment.pk }}">
+                                                            </div>
+
+                                                            <div class="text-end">
+                                                              <button type="button" class="btn btn-light" data-bs-toggle="collapse" data-bs-target="#collapseExample{{ comment.pk }}">
+                                                                Close
+                                                              </button>
+                                                              <button type="submit" class="btn btn-success">
+                                                                Post Reply
+                                                              </button>
+                                                            </div>
+                                                          </form>
+                                                        </div>
+                                                      </div>
+
+                                                    </div>
+                                                  </div>
+                                                </div>
+
+                                                {% endwith %}
+
+                                              {% else %}
+
+                                                <!-- Labor entry -->
+                                                <div class="w-100">
+                                                  <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                      <div class="rounded-circle avatar-xs">
+                                                        <div class="avatar-title rounded-circle bg-soft-warning text-warning">
+                                                          <i class="ri-time-line"></i>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3 min-w-0">
+                                                      <h6 class="fs-13 mb-1">
+                                                        {% if item.obj.submitted_by %}{{ item.obj.submitted_by.username }}{% else %}<span class="text-muted">—</span>{% endif %}
+                                                        <small class="text-muted ms-2">{{ item.date }}</small>
+                                                        <span class="badge bg-soft-info ms-2">Labor</span>
+                                                      </h6>
+                                                      <p class="text-muted mb-1 small">
+                                                        Labor logged for <strong>{% if item.obj.created_by %}{{ item.obj.created_by.auth_user.username }}{% else %}—{% endif %}</strong>
+                                                        · {{ item.labor_hours }}h {{ item.labor_minutes }}m
+                                                        · Working date: {{ item.obj.created_at|date }}
+                                                      </p>
+                                                      {% if item.obj.comment %}
+                                                        <p class="text-muted mb-0" style="overflow-wrap: anywhere;">{{ item.obj.comment }}</p>
+                                                      {% endif %}
+                                                    </div>
+                                                  </div>
+                                                </div>
+
+                                              {% endif %}
+
+                                            {% endfor %}
+
+                                          </div>
+                                        </div>
+
+                                        <!-- New comment form stays OUTSIDE scrolling area -->
+                                        <form method="POST" action="{% url 'apps:tickets.comments' tickets.pk %}" enctype="multipart/form-data" class="mt-4">
+                                          {% csrf_token %}
+                                          {{ form.as_p }}
+
+                                          <div class="row g-3">
+                                            <div class="col-12">
+                                              <label for="bodyTextarea1" class="form-label">Leave a Comment</label>
+                                              <textarea class="form-control bg-light border-light" id="bodyTextarea1" rows="3" placeholder="Enter comment" name="body"></textarea>
+                                              <input name="user" type="hidden" value="{{ user.pk }}">
+                                              <input name="ticket" type="hidden" value="{{ tickets.pk }}">
+                                            </div>
+                                            <div class="col-12 text-end">
+                                              <button type="submit" class="btn btn-success">Post Comment</button>
+                                            </div>
+                                          </div>
+                                        </form>
+
+                                    </div>
+
+                                </div>
+                              </div>
+
+                              <!-- RIGHT COLUMN -->
+                              <div class="col-12 col-lg-4">
+                                <div class="position-sticky" style="top: 90px;">
+
+                                  <!-- Ticket Details -->
+                                  <div class="card">
+                                    <div class="card-header">
+                                      <h5 class="card-title mb-0">Ticket Details</h5>
                                     </div>
                                     <div class="card-body">
-                                        <div class="vstack gap-2">
-                                            {% if ticket_files %}
-                                            {% for file in ticket_files %}
-                                            <div class="border rounded border-dashed p-2">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0 me-3">
-                                                        <div class="avatar-sm">
-                                                            <div class="avatar-title bg-light text-secondary rounded fs-24">
-                                                                {% if file.extension == 'Zip File' %}
-                                                                <i class="ri-folder-zip-line"></i>
-                                                                {% elif file.extension == 'Power Point' %}
-                                                                <i class="ri-file-ppt-2-line"></i>
-                                                                {% elif file.extension == 'Image' %}
-                                                                <i class="ri-image-2-line"></i>
-                                                                {% elif file.extension == 'CSV' %}
-                                                                <i class="ri-excel-2-line"></i>
-                                                                {% endif %}
-                                                            </div>
+                                      <div class="table-responsive table-card">
+                                        <table class="table table-borderless align-middle mb-0">
+                                          <tbody>
+                                            <tr>
+                                              <td class="fw-medium">Ticket</td>
+                                              <td>{{ tickets.pk|add:1000 }}</td>
+                                            </tr>
+                                            <tr>
+                                              <td class="fw-medium">User</td>
+                                              <td>
+                                                {% if tickets.client %}
+                                                  <button class="btn btn-light" onclick="location.href = '{% url 'apps:client.details' tickets.client.pk %}';">
+                                                    {{ tickets.client.name }}
+                                                  </button>
+                                                {% else %}
+                                                  {{ tickets.client }}
+                                                {% endif %}
+                                              </td>
+                                            </tr>
+                                            <tr>
+                                              <td class="fw-medium">Project</td>
+                                              <td>
+                                                {% if tickets.project %}
+                                                  <button class="btn btn-light" onclick="location.href = '{% url 'apps:projects.overview' tickets.project.pk %}';">
+                                                    {{ tickets.project }}
+                                                  </button>
+                                                {% else %}
+                                                  Not connected to a project
+                                                {% endif %}
+                                              </td>
+                                            </tr>
+
+                                            <tr>
+                                              <td class="fw-medium">Assigned To</td>
+                                              <td>
+                                                <div class="avatar-group">
+                                                  {% for tech in tickets.assignment.all %}
+                                                    <a href="#userProfileCanvasExample{{ tech.pk }}" class="avatar-group-item" data-bs-toggle="offcanvas" data-bs-target="#userProfileCanvasExample{{ tech.pk }}" aria-controls="userProfileCanvasExample{{ tech.pk }}" title="{{ tech.auth_user.username }}">
+                                                      <div class="rounded-circle avatar-xs">
+                                                        <div class="avatar-title rounded-circle bg-info">
+                                                          {{ tech.auth_user.username|first }}
                                                         </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">{{file.file_name}}</a></h5>
-                                                        <div class="text-muted fs-12">{{file.file_size}}</div>
-                                                    </div>
-                                                    <div class="flex-shrink-0 ms-2">
-                                                        <div class="d-flex gap-1">
-                                                            <a class="btn btn-icon text-muted fs-18" href="{% url 'apps:tickets.download_file' file.id%}"><i class="ri-download-2-line"></i></a>
-                                                            <div class="dropdown">
-                                                                <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                    <i class="ri-more-fill"></i>
-                                                                </button>
-                                                                <ul class="dropdown-menu">
-                                                                    <li><a class="dropdown-item rename-file-btn" href="javascript:void(0);" data-file-id="{{file.id}}" data-file-name="{{file.file_name}}"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Rename</a></li>
-                                                                    <li><a class="dropdown-item delete-file-btn" href="javascript:void(0);" data-file-id="{{file.id}}" data-file-name="{{file.file_name}}"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete</a></li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                      </div>
+                                                    </a>
+                                                  {% endfor %}
                                                 </div>
-                                            </div>
-                                            {% endfor %}
-                                            {% endif %}
-                                        </div>
+                                              </td>
+                                            </tr>
+
+                                            <tr>
+                                              <td class="fw-medium">Status</td>
+                                              <td>
+                                                {% if tickets.status == "Closed" %}
+                                                  <span class="badge badge-soft-danger text-uppercase">Closed</span>
+                                                {% elif tickets.status == "In Progress" %}
+                                                  <span class="badge badge-soft-info text-uppercase">In Progress</span>
+                                                {% elif tickets.status == "New" %}
+                                                  <span class="badge badge-soft-primary text-uppercase">New</span>
+                                                {% elif tickets.status == "Postponed" %}
+                                                  <span class="badge badge-soft-dark text-uppercase">Postponed</span>
+                                                {% elif tickets.status == "Waiting on Client" %}
+                                                  <span class="badge badge-soft-light text-uppercase">Waiting on User</span>
+                                                {% elif tickets.status == "Waiting on Vendor" %}
+                                                  <span class="badge badge-soft-light text-uppercase">Waiting on Vendor</span>
+                                                {% elif tickets.status == "Follow-Up" %}
+                                                  <span class="badge badge-soft-secondary text-uppercase">Follow-Up</span>
+                                                {% elif tickets.status == "Need to Post" %}
+                                                  <span class="badge badge-soft-secondary text-uppercase">Need to Post</span>
+                                                {% elif tickets.status == "Scheduled" %}
+                                                  <span class="badge badge-soft-success text-uppercase">Scheduled</span>
+                                                {% endif %}
+                                              </td>
+                                            </tr>
+
+                                            <tr>
+                                              <td class="fw-medium">Priority</td>
+                                              <td class="priority">
+                                                {% if tickets.priority == "Emergency" %}
+                                                  <span class="badge badge-pill bg-danger text-uppercase">Emergency</span>
+                                                {% elif tickets.priority == "High" %}
+                                                  <span class="badge bg-danger text-uppercase">High</span>
+                                                {% elif tickets.priority == "Low" %}
+                                                  <span class="badge bg-info text-uppercase">Low</span>
+                                                {% elif tickets.priority == "Medium" %}
+                                                  <span class="badge bg-warning text-uppercase">Medium</span>
+                                                {% endif %}
+                                              </td>
+                                            </tr>
+
+                                            <tr>
+                                              <td class="fw-medium">Create Date</td>
+                                              <td>{{ tickets.create_date }}</td>
+                                            </tr>
+                                            <tr>
+                                              <td class="fw-medium">Due Date</td>
+                                              <td>{{ tickets.due_date }}</td>
+                                            </tr>
+                                            <tr>
+                                              <td class="fw-medium">Last Activity</td>
+                                              <td>{{ tickets.updated_at|naturaltime }}</td>
+                                            </tr>
+
+                                            <tr>
+                                              <td class="fw-medium">Tags</td>
+                                              <td class="hstack text-wrap gap-1">
+                                                {% if tickets.tag %}
+                                                  {% for tag in tickets.tag.all %}
+                                                    <span class="badge badge-soft-primary">{{ tag.name }}</span>
+                                                  {% endfor %}
+                                                {% else %}
+                                                  <span class="badge badge-soft-primary">No Tags</span>
+                                                {% endif %}
+                                              </td>
+                                            </tr>
+
+                                          </tbody>
+                                        </table>
+                                      </div>
                                     </div>
+                                  </div>
+
+                                  <!-- Files Attachment -->
+                                  <div class="card">
+                                    <div class="card-header d-flex align-items-center">
+                                      <h6 class="card-title fw-semibold mb-0 flex-grow-1">Files Attachment</h6>
+                                      {% if not perms.apps.change_ticketlist %}
+                                        <div class="flex-shrink-0">
+                                          <a href="{% url 'apps:tickets.edit' tickets.pk %}" class="btn btn-soft-info btn-sm">
+                                            <i class="ri-upload-2-fill me-1 align-bottom"></i> Upload
+                                          </a>
+                                        </div>
+                                      {% endif %}
+                                    </div>
+
+                                    <div class="card-body">
+                                      <div class="vstack gap-2">
+                                        {% if ticket_files %}
+                                          {% for file in ticket_files %}
+                                            <div class="border rounded border-dashed p-2">
+                                              <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-3">
+                                                  <div class="avatar-sm">
+                                                    <div class="avatar-title bg-light text-secondary rounded fs-24">
+                                                      {% if file.extension == 'Zip File' %}
+                                                        <i class="ri-folder-zip-line"></i>
+                                                      {% elif file.extension == 'Power Point' %}
+                                                        <i class="ri-file-ppt-2-line"></i>
+                                                      {% elif file.extension == 'Image' %}
+                                                        <i class="ri-image-2-line"></i>
+                                                      {% elif file.extension == 'CSV' %}
+                                                        <i class="ri-excel-2-line"></i>
+                                                      {% endif %}
+                                                    </div>
+                                                  </div>
+                                                </div>
+
+                                                <div class="flex-grow-1 overflow-hidden">
+                                                  <h6 class="fs-13 mb-1">
+                                                    <a href="{% url 'apps:tickets.download_file' file.id %}" class="text-body text-truncate d-block">{{ file.file_name }}</a>
+                                                  </h6>
+                                                  <div class="text-muted fs-12">{{ file.file_size }}</div>
+                                                </div>
+
+                                                <div class="flex-shrink-0 ms-2">
+                                                  <div class="d-flex gap-1">
+                                                    <a class="btn btn-icon text-muted fs-18" href="{% url 'apps:tickets.download_file' file.id %}">
+                                                      <i class="ri-download-2-line"></i>
+                                                    </a>
+                                                    <div class="dropdown">
+                                                      <button class="btn btn-icon text-muted btn-sm fs-18" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="ri-more-fill"></i>
+                                                      </button>
+                                                      <ul class="dropdown-menu">
+                                                        <li>
+                                                          <a class="dropdown-item rename-file-btn" href="javascript:void(0);" data-file-id="{{ file.id }}" data-file-name="{{ file.file_name }}">
+                                                            <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Rename
+                                                          </a>
+                                                        </li>
+                                                        <li>
+                                                          <a class="dropdown-item delete-file-btn" href="javascript:void(0);" data-file-id="{{ file.id }}" data-file-name="{{ file.file_name }}">
+                                                            <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                                          </a>
+                                                        </li>
+                                                      </ul>
+                                                    </div>
+                                                  </div>
+                                                </div>
+
+                                              </div>
+                                            </div>
+                                          {% endfor %}
+                                        {% endif %}
+                                      </div>
+                                    </div>
+                                  </div>
+
                                 </div>
-                            </div><!--end col-->
-                        </div><!--end row-->
+                              </div>
+
+                        </div>
                         
                     </div><!-- container-fluid -->
                 </div><!-- End Page-content -->

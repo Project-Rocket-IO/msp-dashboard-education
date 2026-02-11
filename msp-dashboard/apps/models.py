@@ -992,6 +992,10 @@ class TechnicianLabor(models.Model):
     created_by = models.ForeignKey(TechnicianUser, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     comment = models.TextField(blank=True, null=True)
+    # User who logged this labor entry (e.g. "celine"); created_by is the technician for whom labor was logged (e.g. "john")
+    submitted_by = models.ForeignKey(
+        MSPAuthUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="submitted_labor_entries"
+    )
     # intervals = models.CharField(max_length=75, choices=LABOR_INTERVAL)
 
     # Metadata

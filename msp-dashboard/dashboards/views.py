@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.shortcuts import render
 from django.utils import timezone
+from django_tenants.utils import get_tenant
 
 from apps.models import TicketList, TechnicianLabor, get_tickets_worked_on, ProjectList
 
@@ -154,12 +155,20 @@ def dashboard_analytics_view(request):
         # Store the barchart metrics in the barchart_metrics dictionary
         barchart_metrics[time_frame] = barchartMetrics
 
+    # Get the current tenant's company name
+    try:
+        tenant = getattr(request, 'tenant', None)
+        company_name = tenant.company_name if tenant else "Project Rocket"
+    except:
+        company_name = "Project Rocket"
+    
     # Create the context dictionary to pass to the template
     context = {
         "charts_data": dumps(charts_data),
         "topbar_metrics": dumps(topbar_metrics),
         "barchart_metrics": dumps(barchart_metrics),
-        "tickets_worked_on": get_tickets_worked_on()
+        "tickets_worked_on": get_tickets_worked_on(),
+        "company_name": company_name
     }
 
     # Render the template with the context data
