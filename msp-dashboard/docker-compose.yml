@@ -127,6 +127,8 @@ services:
       --email ${CERTBOT_EMAIL}
       --agree-tos
       --no-eff-email
+      --non-interactive
+      --keep-until-expiring
       -d rocket-education.com
       -d '*.rocket-education.com'
 
@@ -138,7 +140,7 @@ services:
       - ./cloudflare.ini:/cloudflare.ini:ro
       - ssl_certs:/etc/letsencrypt
     entrypoint: sh
-    command: -c "while true; do certbot renew --dns-cloudflare --dns-cloudflare-credentials /cloudflare.ini && nginx -s reload; sleep 12h; done"
+    command: -c "while true; do certbot renew --dns-cloudflare --dns-cloudflare-credentials /cloudflare.ini; sleep 12h; done"
     depends_on:
       - nginx
 
