@@ -41,7 +41,7 @@ class Command(BaseCommand):
                     self.stdout.write(f'Group already exists: {group_name}')
                 
                 permissions = item['fields']['permissions']
-                added_permissions = 0
+                resolved_permissions = []
                 
                 for perm_data in permissions:
                     try:
@@ -53,8 +53,7 @@ class Command(BaseCommand):
                                 content_type__app_label=app_label,
                                 content_type__model=model_name
                             )
-                            group.permissions.add(permission)
-                            added_permissions += 1
+                            resolved_permissions.append(permission)
                         else:
                             self.stdout.write(self.style.WARNING(f'Invalid permission format: {perm_data}'))
                     except Permission.DoesNotExist:
@@ -62,9 +61,11 @@ class Command(BaseCommand):
                     except Exception as e:
                         self.stdout.write(self.style.ERROR(f'Error adding permission {perm_data}: {e}'))
                 
+                group.permissions.set(resolved_permissions)
                 group.save()
-                self.stdout.write(f'Added {added_permissions} permissions to {group_name}')
+                self.stdout.write(
+                    f'Set {len(resolved_permissions)} permissions on {group_name}'
+                )
 
         self.stdout.write(self.style.SUCCESS('Groups and permissions set up successfully!'))
-
 

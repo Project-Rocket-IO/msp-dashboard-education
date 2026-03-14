@@ -3,11 +3,12 @@ from django.db.models.functions import TruncDate, ExtractWeek, ExtractMonth, Cas
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils import timezone
 from django_tenants.utils import get_tenant
 
 from apps.models import TicketList, TechnicianLabor, get_tickets_worked_on, ProjectList
+from apps.access import user_should_land_in_ticket_list
 
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -68,6 +69,9 @@ def dashboard_analytics_view(request):
     Returns:
         HttpResponse: The rendered analytics dashboard page with context data.
     """
+    if user_should_land_in_ticket_list(request.user):
+        return redirect("apps:tickets.list")
+
     today = timezone.now().date()
     last_week = today - timedelta(days=6)
     last_month = today - timedelta(days=30)
@@ -353,4 +357,3 @@ def get_labor_hours(tech_labor, start_date, end_date):
     filters = Q(created_at__date__gte=start_date) & Q(created_at__date__lte=end_date)
     labor_hours = tech_labor.filter(filters).aggregate(total_hours=Sum('minutes'))['total_hours']
     return labor_hours / 60 if labor_hours else 0
-

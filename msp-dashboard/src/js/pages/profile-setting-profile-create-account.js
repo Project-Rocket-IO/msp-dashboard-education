@@ -100,7 +100,7 @@ function createRolesDiv() {
         });
     } else {
         // Fallback to educational roles if Django groups not available
-        var roles = ["Student", "Faculty/Staff", "Administration", "IT Dept", "Super Admin"];
+        var roles = ["Student", "Faculty/Staff", "Administrator", "IT Dept", "Super Admin"];
         roles.forEach(function (role, index) {
             var option = document.createElement("option");
             option.setAttribute("value", String(index + 1));

@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 from django.contrib.messages import constants as messages
 from dotenv import load_dotenv
 from celery.schedules import crontab
@@ -15,11 +16,41 @@ SECRET_KEY = os.environ.get(
 )
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
+
+def normalize_allowed_host(host):
+    host = host.strip()
+    if not host:
+        return ""
+    if "://" in host:
+        parsed = urlparse(host)
+        host = parsed.netloc or parsed.path
+    if host.startswith("*."):
+        return f".{host[2:]}"
+    return host
+
+
+ALLOWED_HOSTS = [
+    host
+    for host in (
+        normalize_allowed_host(host)
+        for host in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    )
+    if host
+]
 
 DIGITAL_OCEAN_EXTERNAL_HOSTNAME = os.environ.get("DIGITAL_OCEAN_EXTERNAL_HOSTNAME")
 if DIGITAL_OCEAN_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(DIGITAL_OCEAN_EXTERNAL_HOSTNAME)
+    ALLOWED_HOSTS.extend(
+        [
+            host
+            for host in (
+                normalize_allowed_host(host)
+                for host in DIGITAL_OCEAN_EXTERNAL_HOSTNAME.split(",")
+            )
+            if host
+        ]
+    )
 
 # CSRF_TRUSTED_ORIGINS in .env will be a string of comma separated values
 CSRF_TRUSTED_ORIGINS = os.environ.get(
@@ -60,7 +91,6 @@ SHARED_APPS = [
     "accounts",
     "apps",
     "calendar_event",
-    "chat",
     "taggit",
     "djstripe",
     "tenants",
@@ -80,7 +110,6 @@ TENANT_APPS = [
     "auditlog",
     "accounts",
     "apps",
-    "chat",
     "dashboards",
     "djstripe",
     "calendar_event",
@@ -266,6 +295,8 @@ ACCOUNT_FORMS = {
 }
 
 SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIAL_AUTH_ASSOCIATE_BY_EMAIL = True
+SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "")
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get(
@@ -360,11 +391,15 @@ TWO_FACTOR_REQUIRE_STAFF = False
 
 LOGIN_URL = "two_factor:login"
 LOGIN_REDIRECT_URL = "/"
+ENTRA_PASSWORD_CHANGE_URL = os.environ.get(
+    "ENTRA_PASSWORD_CHANGE_URL",
+    "https://go.microsoft.com/fwlink/?linkid=2224198",
+)
 
 # Microsoft Entra ID (Azure AD) Settings for External Client Authentication
-# Each tenant provides their own Azure AD configuration
-SOCIAL_AUTH_AZUREAD_OAUTH2_RESOURCE = 'https://graph.microsoft.com'
-SOCIAL_AUTH_AZUREAD_OAUTH2_SCOPE = ['User.Read', 'email', 'profile']
+# Each tenant provides their own Azure AD configuration.
+# Entra v2 uses OIDC scopes instead of the legacy `resource` parameter.
+SOCIAL_AUTH_AZUREAD_OAUTH2_SCOPE = ["openid", "profile", "email", "offline_access"]
 
 OTP_EMAIL_SUBJECT = "MSP Dashboard Verification"
 OTP_EMAIL_BODY_HTML_TEMPLATE_PATH = "two_factor/email/2fa_code_email.html"

@@ -14,7 +14,7 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(','
 # Add your domain and subdomains
 ALLOWED_HOSTS.extend([
     'rocket-command.com',
-    '*.rocket-command.com',
+    '.rocket-command.com',
     'www.rocket-command.com',
 ])
 
@@ -29,6 +29,7 @@ X_FRAME_OPTIONS = 'DENY'
 # SSL/HTTPS settings
 SECURE_SSL_REDIRECT = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 

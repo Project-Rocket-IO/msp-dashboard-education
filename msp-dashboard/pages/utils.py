@@ -1,6 +1,7 @@
 from django.contrib.auth.models import Group
 from django.contrib import messages
 from django.db import transaction
+from apps.access import user_can_manage_school_users
 from apps.models import ClientCompany, TechnicianUser, WebviewIntegrations
 from accounts.forms import TechnicianUserForm, MSPAuthUserForm
 from accounts.models import UserManager, MSPAuthUser
@@ -462,7 +463,7 @@ def get_context_data(user):
     # Add company subscription tier (default to starter)
     context["company_subscription_tier"] = "starter"
     
-    if user.is_superuser:
+    if user_can_manage_school_users(user):
         # Only an admin can create users, we need to fetch clients only for user creation
         context["clients"] = list(ClientCompany.objects.all().values("name", "id"))
         
@@ -532,7 +533,6 @@ def process_profile_update_form(request, user):
             for error in errors:
                 messages.error(request, f"{field}: {error}")
     return form
-
 
 
 

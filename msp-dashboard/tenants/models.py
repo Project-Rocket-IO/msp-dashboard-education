@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django_tenants.models import TenantMixin, DomainMixin
 from django.db import models
+from django.urls import reverse
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 import re
@@ -135,6 +136,12 @@ class MspCompany(MyBaseModel, TenantMixin):
         null=True,
         help_text="Client's Microsoft Entra ID Application Client Secret"
     )
+    entra_id_client_secret_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Optional Microsoft Entra ID client secret identifier for operational tracking"
+    )
 
     auto_create_schema = True
 
@@ -164,6 +171,30 @@ class MspCompany(MyBaseModel, TenantMixin):
         }
         
         return feature.lower() in feature_access.get(tier, [])
+
+    @property
+    def is_entra_id_configured(self):
+        return bool(
+            self.enable_entra_id_auth
+            and self.entra_id_tenant_id
+            and self.entra_id_client_id
+            and self.entra_id_client_secret
+        )
+
+    def get_entra_id_callback_url(self, request=None):
+        callback_path = reverse("entra_id_callback")
+        if request is not None:
+            return request.build_absolute_uri(callback_path)
+
+        if not self.pk:
+            return callback_path
+
+        primary_domain = Domain.objects.filter(tenant=self, is_primary=True).first()
+        if primary_domain is None:
+            return callback_path
+
+        scheme = "http" if primary_domain.domain.endswith("localhost") else "https"
+        return f"{scheme}://{primary_domain.domain}{callback_path}"
 
 
 class Domain(DomainMixin):

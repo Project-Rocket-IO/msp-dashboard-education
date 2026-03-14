@@ -1,7 +1,9 @@
 from .forms import CalendarEventForm
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from rest_framework import viewsets
@@ -10,6 +12,11 @@ from datetime import datetime, timedelta
 import datetime as dt
 from django.db.models import Q
 from accounts.models import TechnicianUser
+from apps.access import (
+    get_visible_projects_queryset,
+    get_visible_tickets_queryset,
+    user_can_manage_calendar_event,
+)
 
 from .models import CalendarEvents, WEEKDAY_CHOICES
 from .serializers import CalendarEventSerializer
@@ -62,7 +69,7 @@ def handle_calendar_event(post_data):
         start_time = post_data.get('start_time', '')
         if start_date and start_time:
             post_data['start'] = f"{start_date} {start_time}:00"
-    
+
     if end:
         post_data['end'] = handle_date(end, post_data)
     elif 'end_date' in post_data and 'end_time' in post_data:
@@ -71,7 +78,7 @@ def handle_calendar_event(post_data):
         end_time = post_data.get('end_time', '')
         if end_date and end_time:
             post_data['end'] = f"{end_date} {end_time}:00"
-    
+
     # Check if 'guests' field is in POST data and has empty values
     if 'guests' in post_data:
         # Convert the 'guests' field into a list and remove empty values
@@ -234,19 +241,31 @@ def handle_repeated_events(post_data):
     return post_data
     
 
+@login_required
 def apps_calendar_view_delete(request):
+    if not request.user.has_perm("calendar_event.delete_calendarevents"):
+        raise PermissionDenied
+
     if request.POST:
         eventid = request.POST.get('delete-event-id')
         
         # Handle prefixed event IDs (e.g., "event_11" -> "11")
         if eventid and eventid.startswith('event_'):
             eventid = eventid.replace('event_', '')
-        
-        CalendarEvents.objects.get(pk=eventid).delete()
-        # messages.suce
+
+        event = get_object_or_404(CalendarEvents, pk=eventid)
+        if not user_can_manage_calendar_event(request.user, event):
+            raise PermissionDenied
+
+        event.delete()
     return redirect("calendar_event:calendar-events")
 
+
+@login_required
 def apps_calendar_view(request):
+    if not request.user.has_perm("calendar_event.view_calendarevents"):
+        raise PermissionDenied
+
     # Get events where user is creator OR attendee (mandatory, optional, or guest)
     events = CalendarEvents.objects.filter(
         Q(creator=request.user) |
@@ -255,10 +274,9 @@ def apps_calendar_view(request):
         Q(guests=request.user)
     ).distinct()
     
-    # Get tickets where user is assigned or has access
     from apps.models import TicketList
-    tickets = TicketList.objects.filter(
-        due_date__isnull=False
+    tickets = get_visible_tickets_queryset(
+        request.user, TicketList.objects.filter(due_date__isnull=False)
     ).distinct()
     
     print(f"DEBUG: Found {tickets.count()} tickets with due dates")
@@ -269,10 +287,9 @@ def apps_calendar_view(request):
             print(f"    ISO format: {ticket.due_date.isoformat()}")
             print(f"    String format: {str(ticket.due_date)}")
     
-    # Get projects where user is assigned or has access
     from apps.models import ProjectList
-    projects = ProjectList.objects.filter(
-        due_date__isnull=False
+    projects = get_visible_projects_queryset(
+        request.user, ProjectList.objects.filter(due_date__isnull=False)
     ).distinct()
     
     print(f"DEBUG: Found {projects.count()} projects with due dates")
@@ -417,7 +434,7 @@ def apps_calendar_view(request):
     if request.method == 'POST':
         # Preprocess the POST data to remove empty 'guests' field values
         clean_form = request.POST.copy()
-        clean_form['creator'] = request.user
+        clean_form['creator'] = str(request.user.pk)
         eventid = clean_form.get('eventid')
 
         print(clean_form)
@@ -453,8 +470,21 @@ def apps_calendar_view(request):
                 # Projects are not calendar events, so we can't update them here
                 print(f"Warning: Attempted to update project {eventid} as calendar event")
                 return redirect("calendar_event:calendar-events")
-        
-        instance = CalendarEvents.objects.get(pk=eventid) if eventid else None
+
+        instance = get_object_or_404(CalendarEvents, pk=eventid) if eventid else None
+        if instance:
+            if not request.user.has_perm("calendar_event.change_calendarevents"):
+                raise PermissionDenied
+            if not user_can_manage_calendar_event(request.user, instance):
+                raise PermissionDenied
+        elif not request.user.has_perm("calendar_event.add_calendarevents"):
+            raise PermissionDenied
+
+        creator_pk = request.user.pk
+        if instance and instance.creator_id:
+            creator_pk = instance.creator_id
+        clean_form['creator'] = str(creator_pk)
+
         if instance:
             if not clean_form.get('start'): 
                 clean_form['start'] = instance.start
@@ -463,7 +493,10 @@ def apps_calendar_view(request):
         form = CalendarEventForm(clean_form, instance=instance)
 
         if form.is_valid():
-            instance = form.save()
+            instance = form.save(commit=False)
+            if not instance.creator_id:
+                instance.creator = request.user
+            instance.save()
             
             # Handle many-to-many relationships for invites AFTER form is saved
             if mandatory_invites_data:
@@ -545,17 +578,16 @@ def apps_calendar_view(request):
 
     return render(request, "apps/apps-calendar.html", context={'events': events_data, 'technicians': technicians_data})
 
+@login_required
 def apps_calendar_edit_view(request, pk):
-    print("EDIT")
-    events = CalendarEvents.objects.filter(creator=request.user)
-    if request.method == 'POST':
-        event = events.filter(creator=request.user, pk=pk)
-        form = CalendarEventForm(request.POST, instance=event)
-        if form.is_valid():
-            return redirect("calendar_event:calendar-events-edit")
-        else:
-            pass
-    return render(request, "apps/apps-calendar.html", context={'events': events})
+    if not request.user.has_perm("calendar_event.view_calendarevents"):
+        raise PermissionDenied
+
+    event = get_object_or_404(CalendarEvents, pk=pk)
+    if not user_can_manage_calendar_event(request.user, event):
+        raise PermissionDenied
+
+    return redirect("calendar_event:calendar-events")
 
 
 class CalendarEventViewSet(viewsets.ModelViewSet):
@@ -563,6 +595,11 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
     serializer_class = CalendarEventSerializer
 
     def get_queryset(self):
+        if not self.request.user.is_authenticated or not self.request.user.has_perm(
+            "calendar_event.view_calendarevents"
+        ):
+            return CalendarEvents.objects.none()
+
         print(self.request.user)
         if self.request.query_params.get('date'):
             date_str = self.request.query_params.get('date')
@@ -623,4 +660,3 @@ def calendar_function_view(request):
     else:
         # User is not authenticated
         return Response({'error': 'User not authenticated'}, status=401)
-    

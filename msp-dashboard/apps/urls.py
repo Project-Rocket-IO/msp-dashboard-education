@@ -76,6 +76,11 @@ urlpatterns = [
     path("support-tickets/bulk-upload/", view=apps_tickets_bulk_upload_view, name="tickets.bulk_upload"
     ),
     path(
+        "support-tickets/delete-bulk/",
+        view=apps_tickets_bulk_delete_view,
+        name="tickets.bulk_delete",
+    ),
+    path(
         "support-tickets/edit/<int:pk>",
         view=apps_tickets_edit_view,
         name="tickets.edit",
@@ -134,6 +139,11 @@ urlpatterns = [
         "support-tickets/download/<int:pk>",
         view=apps_ticket_download_file,
         name="tickets.download_file",
+    ),
+    path(
+        "support-tickets/file/upload/<int:pk>",
+        view=apps_ticket_file_upload_view,
+        name="tickets.file_upload",
     ),
     path(
         "support-tickets/file/<int:pk>/rename",

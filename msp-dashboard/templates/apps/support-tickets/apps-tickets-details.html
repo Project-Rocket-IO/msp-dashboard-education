@@ -51,9 +51,9 @@
                                                                 {% elif tickets.status == "Postponed" %}
                                                                 <span class="badge badge-soft-dark text-uppercase">Postponed</span>
                                                                 {% elif tickets.status == "Waiting on Client" %}
-                                                                <span class="badge badge-soft-light text-uppercase">Waiting on User</span>
+                                                                <span class="badge badge-soft-info text-uppercase">Waiting on User</span>
                                                                 {% elif tickets.status == "Waiting on Vendor" %}
-                                                                <span class="badge badge-soft-light text-uppercase">Waiting on Vendor</span>
+                                                                <span class="badge badge-soft-info text-uppercase">Waiting on Vendor</span>
                                                                 {% elif tickets.status == "Follow-Up" %}
                                                                 <span class="badge badge-soft-secondary text-uppercase">Follow-Up</span>
                                                                 {% elif tickets.status == "Need to Post" %}
@@ -67,6 +67,7 @@
                                                 </div><!--end col-->
                                                 <div class="col-md-auto mt-md-0 mt-4" id="navbar-app">
                                                     <div class="hstack gap-1 flex-wrap">
+                                                        {% if can_log_ticket_labor %}
                                                         <div class="navbar-item" id="start-timer-section">
                                                             <div class="buttons">
                                                                 <button class="btn btn-success add-btn" id="start-timer-btn"><i class="ri-timer-line align-bottom me-1"></i>
@@ -85,6 +86,8 @@
                                                             </div>
                                                         </div>
                                                         <button class="btn btn-danger add-btn mb-0" data-bs-toggle="modal" data-bs-target="#timetrackModal"><i class="ri-add-line align-bottom me-1"></i> Add Time Entry</button>
+                                                        {% endif %}
+                                                        {% if can_edit_ticket_fields %}
                                                         <button type="button" class="btn py-0 fs-16 text-body" id="settingDropdown" data-bs-toggle="dropdown">
                                                             <i class="ri-stack-line"></i>
                                                         </button>
@@ -96,10 +99,9 @@
                                                             <li><a class="dropdown-item" href="{% url 'apps:tickets.complete' tickets.pk %}"><i class="align-bottom me-2 text-muted"></i> Complete Ticket</a></li>
                                                             {% endif %}
 
-                                                            {% if perms.apps.change_ticketlist %}
+                                                            {% if can_edit_ticket_fields %}
                                                             <li><a class="dropdown-item" href="{% url 'apps:tickets.edit' tickets.pk %}"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit Ticket</a></li>
                                                             {% endif %}
-                                                            <li><a class="dropdown-item" href="#shareTicketModal" data-bs-toggle="modal" data-bs-target="#shareTicketModal"><i class="ri-share-forward-fill align-bottom me-2 text-muted"></i> Share Ticket</a></li>
                                                             {% if perms.apps.delete_ticketlist %}
                                                             <div class="dropdown-divider"></div>
                                                             <li><a class="dropdown-item" href="{% url 'apps:tickets.delete_list' tickets.pk %}" data-bs-toggle="modal"
@@ -107,7 +109,8 @@
                                                                 class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
                                                             Delete</a></li>
                                                             {% endif %}
-                                                        </ul>                                                        
+                                                        </ul>
+                                                        {% endif %}
                                                     </div>
                                                 </div><!--end col-->
                                             </div><!--end row-->
@@ -199,12 +202,24 @@
                                                                   <i class="ri-reply-fill align-bottom me-2 text-muted"></i> Reply
                                                                 </button>
                                                               </li>
+                                                              {% if can_manage_private_comments %}
                                                               <li>
                                                                 <a class="dropdown-item" href="{% url 'apps:tickets.comments.toggle_visibility' tickets.pk comment.pk %}">
                                                                   <i class="ri-eye-fill align-bottom me-2 text-muted"></i> Change Visibility
                                                                 </a>
                                                               </li>
-                                                              {% if perms.apps.delete_own_ticket_comments %}
+                                                              {% endif %}
+                                                              {% if perms.apps.delete_ticketcomment %}
+                                                                <li><hr class="dropdown-divider"></li>
+                                                                <li>
+                                                                  <form action="{% url 'apps:tickets.comments.delete' tickets.pk comment.pk %}" method="post" class="m-0">
+                                                                    {% csrf_token %}
+                                                                    <button class="dropdown-item" type="submit">
+                                                                      <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                                                    </button>
+                                                                  </form>
+                                                                </li>
+                                                              {% elif perms.apps.delete_own_ticket_comments and comment.user == user %}
                                                                 <li><hr class="dropdown-divider"></li>
                                                                 <li>
                                                                   <form action="{% url 'apps:tickets.comments.delete' tickets.pk comment.pk %}" method="post" class="m-0">
@@ -261,14 +276,16 @@
                                                                           <i class="ri-more-fill align-middle"></i>
                                                                         </button>
                                                                         <ul class="dropdown-menu dropdown-menu-end">
-                                                                          <li>
-                                                                            <a class="dropdown-item" href="{% url 'apps:tickets.replies.toggle_visibility' tickets.pk reply.pk %}">
-                                                                              <i class="ri-eye-fill align-bottom me-2 text-muted"></i> Change Visibility
-                                                                            </a>
-                                                                          </li>
-                                                                        </ul>
-                                                                      </div>
-                                                                    </div>
+                                                                              {% if can_manage_private_comments %}
+                                                                              <li>
+                                                                                <a class="dropdown-item" href="{% url 'apps:tickets.replies.toggle_visibility' tickets.pk reply.pk %}">
+                                                                                  <i class="ri-eye-fill align-bottom me-2 text-muted"></i> Change Visibility
+                                                                                </a>
+                                                                              </li>
+                                                                              {% endif %}
+                                                                            </ul>
+                                                                          </div>
+                                                                        </div>
                                                                   </div>
 
                                                                   <p class="text-muted mb-0" style="overflow-wrap: anywhere;">
@@ -286,13 +303,9 @@
                                                         <div class="card card-body">
                                                           <form method="POST" action="{% url 'apps:tickets.replies' tickets.pk %}" enctype="multipart/form-data">
                                                             {% csrf_token %}
-                                                            {{ form.as_p }}
-
                                                             <div class="mb-3">
                                                               <label for="bodyTextareaReply{{ comment.pk }}" class="form-label">Post Reply</label>
                                                               <textarea class="form-control bg-light border-light" id="bodyTextareaReply{{ comment.pk }}" rows="3" placeholder="Leave reply" name="body"></textarea>
-                                                              <input name="user" type="hidden" value="{{ user.pk }}">
-                                                              <input name="ticket" type="hidden" value="{{ tickets.pk }}">
                                                               <input name="comment" type="hidden" value="{{ comment.pk }}">
                                                             </div>
 
@@ -354,14 +367,10 @@
                                         <!-- New comment form stays OUTSIDE scrolling area -->
                                         <form method="POST" action="{% url 'apps:tickets.comments' tickets.pk %}" enctype="multipart/form-data" class="mt-4">
                                           {% csrf_token %}
-                                          {{ form.as_p }}
-
                                           <div class="row g-3">
                                             <div class="col-12">
                                               <label for="bodyTextarea1" class="form-label">Leave a Comment</label>
                                               <textarea class="form-control bg-light border-light" id="bodyTextarea1" rows="3" placeholder="Enter comment" name="body"></textarea>
-                                              <input name="user" type="hidden" value="{{ user.pk }}">
-                                              <input name="ticket" type="hidden" value="{{ tickets.pk }}">
                                             </div>
                                             <div class="col-12 text-end">
                                               <button type="submit" class="btn btn-success">Post Comment</button>
@@ -445,9 +454,9 @@
                                                 {% elif tickets.status == "Postponed" %}
                                                   <span class="badge badge-soft-dark text-uppercase">Postponed</span>
                                                 {% elif tickets.status == "Waiting on Client" %}
-                                                  <span class="badge badge-soft-light text-uppercase">Waiting on User</span>
+                                                  <span class="badge badge-soft-info text-uppercase">Waiting on User</span>
                                                 {% elif tickets.status == "Waiting on Vendor" %}
-                                                  <span class="badge badge-soft-light text-uppercase">Waiting on Vendor</span>
+                                                  <span class="badge badge-soft-info text-uppercase">Waiting on Vendor</span>
                                                 {% elif tickets.status == "Follow-Up" %}
                                                   <span class="badge badge-soft-secondary text-uppercase">Follow-Up</span>
                                                 {% elif tickets.status == "Need to Post" %}
@@ -509,16 +518,44 @@
                                   <div class="card">
                                     <div class="card-header d-flex align-items-center">
                                       <h6 class="card-title fw-semibold mb-0 flex-grow-1">Files Attachment</h6>
-                                      {% if not perms.apps.change_ticketlist %}
-                                        <div class="flex-shrink-0">
-                                          <a href="{% url 'apps:tickets.edit' tickets.pk %}" class="btn btn-soft-info btn-sm">
-                                            <i class="ri-upload-2-fill me-1 align-bottom"></i> Upload
-                                          </a>
-                                        </div>
+                                      {% if can_upload_ticket_files %}
+                                      <div class="flex-shrink-0">
+                                        <button
+                                          class="btn btn-soft-info btn-sm"
+                                          type="button"
+                                          data-bs-toggle="collapse"
+                                          data-bs-target="#ticketFileUploadForm"
+                                          aria-expanded="false"
+                                          aria-controls="ticketFileUploadForm"
+                                        >
+                                          <i class="ri-upload-2-fill me-1 align-bottom"></i> Upload
+                                        </button>
+                                      </div>
                                       {% endif %}
                                     </div>
 
                                     <div class="card-body">
+                                      {% if can_upload_ticket_files %}
+                                      <div class="collapse mb-3" id="ticketFileUploadForm">
+                                        <div class="border rounded-3 bg-light-subtle p-3">
+                                          <form method="post" action="{% url 'apps:tickets.file_upload' tickets.pk %}" enctype="multipart/form-data">
+                                            {% csrf_token %}
+                                            <label class="form-label fw-semibold" for="ticket-detail-files">Add files</label>
+                                            <input
+                                              class="form-control"
+                                              id="ticket-detail-files"
+                                              type="file"
+                                              name="files"
+                                              multiple
+                                              accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.webp"
+                                            >
+                                            <div class="d-flex justify-content-end mt-3">
+                                              <button type="submit" class="btn btn-success btn-sm">Upload Files</button>
+                                            </div>
+                                          </form>
+                                        </div>
+                                      </div>
+                                      {% endif %}
                                       <div class="vstack gap-2">
                                         {% if ticket_files %}
                                           {% for file in ticket_files %}
@@ -552,6 +589,7 @@
                                                     <a class="btn btn-icon text-muted fs-18" href="{% url 'apps:tickets.download_file' file.id %}">
                                                       <i class="ri-download-2-line"></i>
                                                     </a>
+                                                    {% if can_manage_ticket_files %}
                                                     <div class="dropdown">
                                                       <button class="btn btn-icon text-muted btn-sm fs-18" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                         <i class="ri-more-fill"></i>
@@ -569,12 +607,15 @@
                                                         </li>
                                                       </ul>
                                                     </div>
+                                                    {% endif %}
                                                   </div>
                                                 </div>
 
                                               </div>
                                             </div>
                                           {% endfor %}
+                                        {% else %}
+                                        <div class="text-muted small">No files uploaded yet.</div>
                                         {% endif %}
                                       </div>
                                     </div>

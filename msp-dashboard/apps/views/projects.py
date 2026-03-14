@@ -1,23 +1,54 @@
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from auditlog.models import LogEntry
 from django.shortcuts import redirect, render, reverse
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.db.models import Prefetch
-from apps.models import ProjectComment, ProjectFiles, PROJECT_STATUS
+from apps.models import (
+    ClientCompany,
+    ClientTeamMembers,
+    ProjectComment,
+    ProjectCommentReplies,
+    ProjectFiles,
+    ProjectList,
+    PROJECT_STATUS,
+    TechnicianUser,
+    TicketList,
+)
 
-from apps.forms import *
-from apps.utils import user_can_see_private_comments
+from apps.access import (
+    get_visible_projects_queryset,
+    get_visible_tickets_queryset,
+    user_can_access_project,
+    user_can_see_private_comments,
+)
+from apps.forms import ProjectCommentAddForm, ProjectListAddForm, ProjectRepliesAddForm
 from django.contrib import messages
 from rbac.decorators import has_permission
 from rbac.utils import paginate_queryset
 
 ##########
 # Projects
+def _get_project_or_404_for_user(request, pk):
+    return get_object_or_404(get_visible_projects_queryset(request.user), pk=pk)
+
+
+def _get_project_comments_queryset(project, user):
+    comments = ProjectComment.objects.filter(project=project).order_by("date_added")
+    if user_can_see_private_comments(user):
+        return comments
+    return comments.filter(private=False)
+
+
+def _get_project_replies_queryset(project, user):
+    replies = ProjectCommentReplies.objects.filter(project=project).order_by("date_added")
+    if user_can_see_private_comments(user):
+        return replies
+    return replies.filter(private=False)
 
 
 def get_projects_data(request, per_page=10):
-    user = request.user
     base_query = ProjectList.objects.select_related("client").prefetch_related(
         Prefetch(
             "assignment", queryset=TechnicianUser.objects.select_related("auth_user")
@@ -28,17 +59,8 @@ def get_projects_data(request, per_page=10):
     )
     page_number = request.GET.get("active_projects_page", 1)
     archived_page_number = request.GET.get("archived_projects_page", 1)
-
-    if hasattr(user, "client"):
-        active_projects = (
-            base_query.filter(client__users=user.client)
-            .exclude(status="Completed")
-            .order_by("-create_date")
-        )
-    else:
-        active_projects = (
-            base_query.all().exclude(status="Completed").order_by("-create_date")
-        )
+    visible_projects = get_visible_projects_queryset(request.user, base_query)
+    active_projects = visible_projects.exclude(status="Completed").order_by("-create_date")
 
     # Calculate ticket counts for each project
     for project in active_projects:
@@ -56,7 +78,7 @@ def get_projects_data(request, per_page=10):
         active_projects, page_number, per_page
     )
 
-    archived_projects = base_query.filter(status="Completed")
+    archived_projects = visible_projects.filter(status="Completed")
     
     # Calculate ticket counts for archived projects too
     for project in archived_projects:
@@ -98,11 +120,7 @@ def get_technicians_data():
 
 
 def get_tickets_data(request):
-    user = request.user
-    if hasattr(user, "client"):
-        tickets = TicketList.objects.filter(client=user.client.company)
-    else:
-        tickets = TicketList.objects.all()
+    tickets = get_visible_tickets_queryset(request.user)
 
     all_tickets_count = tickets.count()
     active_tickets_count = tickets.exclude(status="Closed").count()
@@ -150,25 +168,15 @@ def apps_projects_list_view(request):
 
 
 def apps_projects_overview_view(request, pk):
-    projects = ProjectList.objects.get(pk=pk)
+    projects = _get_project_or_404_for_user(request, pk)
     projects_log = LogEntry.objects.get_for_object(projects)
     technicians = TechnicianUser.objects.all()
     
-    # Get tickets that have both ManyToMany and ForeignKey relationships properly set
-    # Only show tickets that have their ForeignKey pointing to this project
-    tickets = projects.tickets.filter(project=projects)
-    
-    # Get all comments and replies ordered by oldest first
-    all_comments = ProjectComment.objects.filter(project_id=projects).order_by('date_added')
-    all_replies = ProjectCommentReplies.objects.filter(project_id=projects).order_by('date_added')
-    
-    # Only IT Dept, Administrator, Super User (and superuser) see private comments/replies
-    if not user_can_see_private_comments(request.user):
-        comments = all_comments.filter(private=False)
-        replies = all_replies.filter(private=False)
-    else:
-        comments = all_comments
-        replies = all_replies
+    tickets = get_visible_tickets_queryset(
+        request.user, projects.tickets.filter(project=projects)
+    )
+    comments = _get_project_comments_queryset(projects, request.user)
+    replies = _get_project_replies_queryset(projects, request.user)
     
     teammembers = ClientTeamMembers.objects.filter(client_id=projects.client.pk)
 
@@ -176,8 +184,6 @@ def apps_projects_overview_view(request, pk):
     project_files = ProjectFiles.objects.filter(project_id=pk)
     projects_files_log = LogEntry.objects.get_for_objects(project_files)
     project_tickets_count = project_tickets.count()
-
-    print(projects)
 
     context = {
         "tickets": tickets,
@@ -191,17 +197,17 @@ def apps_projects_overview_view(request, pk):
         "project_files": project_files,
         "projects_files_log": projects_files_log,
         "projects_log": projects_log,
+        "can_manage_private_comments": user_can_see_private_comments(request.user),
     }
     return render(request, "apps/projects/apps-projects-overview.html", context)
 
 
 @has_permission("apps.change_projectlist")
 def apps_projects_edit_list_view(request, pk):
-    projects = ProjectList.objects.get(pk=pk)
+    projects = _get_project_or_404_for_user(request, pk)
     technicians = TechnicianUser.objects.all()
     clients = ClientCompany.objects.all().order_by("-name")
-    # Show all tickets (both unassigned and already assigned to this project)
-    tickets = TicketList.objects.all()
+    tickets = get_visible_tickets_queryset(request.user)
     tags = ", ".join([x for x in projects.tag.all().values_list("name", flat=True)])
     if request.method == "POST":
         form = ProjectListAddForm(
@@ -278,7 +284,7 @@ def apps_projects_edit_list_view(request, pk):
 @has_permission("apps.add_projectlist")
 def apps_projects_create_view(request):
     technicians = TechnicianUser.objects.all()
-    tickets = TicketList.objects.all()
+    tickets = get_visible_tickets_queryset(request.user)
     clients = ClientCompany.objects.all().order_by("-name")
 
     context = {
@@ -294,7 +300,10 @@ def apps_projects_create_view(request):
         print("DEBUG: Tickets in POST:", request.POST.getlist('tickets'))
 
         if form.is_valid():
-            project = form.save()
+            project = form.save(commit=False)
+            project.created_by = request.user
+            project.save()
+            form.save_m2m()
             print("DEBUG: Project saved with ID:", project.pk)
 
             # Handle tickets assignment
@@ -331,79 +340,74 @@ def apps_projects_create_view(request):
     return render(request, "apps/projects/apps-projects-create.html", context=context)
 
 
+@has_permission("apps.delete_projectlist")
 def apps_projects_delete_list_view(request, pk):
-    projects = ProjectList.objects.get(pk=pk)
+    projects = _get_project_or_404_for_user(request, pk)
     projects.delete()
     messages.success(request, "Project deleted Successfully!")
     return redirect("apps:projects.list")
 
 
+@login_required
 def apps_projects_comments_view(request, pk):
-    projects = ProjectList.objects.get(pk=pk)
-    context = {"projects": projects}
+    projects = _get_project_or_404_for_user(request, pk)
 
-    if request.method == "POST":
-        form = ProjectCommentAddForm(request.POST or None, request.FILES or None)
+    if request.method != "POST":
+        return redirect(reverse("apps:projects.overview", kwargs={"pk": projects.pk}))
 
-        if form.is_valid():
-            print(form.cleaned_data)
-            form.save()
-            messages.success(request, "Comment inserted Successfully!")
-            # return redirect("apps:tickets.list")
-            return redirect(
-                reverse("apps:projects.overview", kwargs={"pk": projects.pk})
-            )
-        else:
-            print(form.errors)
-            print(form.cleaned_data)
-            print(projects.pk)
-            messages.error(request, "Something went wrong!")
-            return redirect("apps:projects.list")
-            # return redirect(reverse("apps:tickets.list", kwargs={'pk':tickets.pk}))
-    return redirect("apps:project.overview", context)
+    if not request.user.has_perm("apps.add_projectcomment"):
+        raise PermissionDenied
 
+    form = ProjectCommentAddForm(request.POST or None)
 
-def apps_projects_replies_view(request, pk):
-    projects = ProjectList.objects.get(pk=pk)
-    
-    # Get all comments and replies ordered by oldest first
-    all_comments = ProjectComment.objects.filter(project_id=projects).order_by('date_added')
-    all_replies = ProjectCommentReplies.objects.filter(project_id=projects).order_by('date_added')
-    
-    # Only IT Dept, Administrator, Super User (and superuser) see private comments/replies
-    if not user_can_see_private_comments(request.user):
-        comments = all_comments.filter(private=False)
-        replies = all_replies.filter(private=False)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.user = request.user
+        comment.project = projects
+        comment.save()
+        messages.success(request, "Comment inserted Successfully!")
     else:
-        comments = all_comments
-        replies = all_replies
-    
-    context = {"project": projects, "comments": comments, "replies": replies}
+        messages.error(request, "Something went wrong!")
 
-    if request.method == "POST":
-        form = ProjectRepliesAddForm(request.POST or None, request.FILES or None)
-
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Reply inserted Successfully!")
-            # return redirect("apps:tickets.list")
-            return redirect(
-                reverse("apps:projects.overview", kwargs={"pk": projects.pk})
-            )
-        else:
-            print(form.errors)
-            messages.error(request, "Something went wrong!")
-            return redirect(
-                reverse("apps:projects.overview", kwargs={"pk": projects.pk})
-            )
-            # return redirect(reverse("apps:tickets.list", kwargs={'pk':tickets.pk}))
-    return render(request, "apps/projects/apps-projects-overview.html", context)
+    return redirect(reverse("apps:projects.overview", kwargs={"pk": projects.pk}))
 
 
+@login_required
+def apps_projects_replies_view(request, pk):
+    projects = _get_project_or_404_for_user(request, pk)
+
+    if request.method != "POST":
+        return redirect(reverse("apps:projects.overview", kwargs={"pk": projects.pk}))
+
+    if not request.user.has_perm("apps.add_projectcommentreplies"):
+        raise PermissionDenied
+
+    comment = get_object_or_404(
+        ProjectComment, pk=request.POST.get("comment"), project=projects
+    )
+    form = ProjectRepliesAddForm(request.POST or None)
+
+    if form.is_valid():
+        reply = form.save(commit=False)
+        reply.user = request.user
+        reply.project = projects
+        reply.comment = comment
+        reply.save()
+        messages.success(request, "Reply inserted Successfully!")
+    else:
+        messages.error(request, "Something went wrong!")
+
+    return redirect(reverse("apps:projects.overview", kwargs={"pk": projects.pk}))
+
+
+@has_permission("apps.change_projectlist")
 def apps_projects_remove_ticket_view(request, pk):
     ticket = TicketList.objects.get(pk=pk)
     # Find the project that contains this ticket
     project = ProjectList.objects.filter(tickets=ticket).first()
+
+    if not project or not user_can_access_project(request.user, project):
+        raise PermissionDenied
     
     if project:
         # Remove from ManyToManyField relationship
@@ -419,8 +423,11 @@ def apps_projects_remove_ticket_view(request, pk):
         return redirect("apps:projects.list")
 
 
+@login_required
 def apps_projects_download_file(request, pk):
     project_file = get_object_or_404(ProjectFiles, pk=pk)
+    if not project_file.project or not user_can_access_project(request.user, project_file.project):
+        raise PermissionDenied
     file_path = project_file.file.path
     response = FileResponse(open(file_path, "rb"))
     response["Content-Type"] = "application/octet-stream"
@@ -428,17 +435,21 @@ def apps_projects_download_file(request, pk):
     return response
 
 
+@has_permission("apps.change_projectlist")
 def apps_projects_remove_tech_view(request, project_pk, tech_pk):
-    project = ProjectList.objects.get(pk=project_pk)
+    project = _get_project_or_404_for_user(request, project_pk)
     technician = TechnicianUser.objects.get(pk=tech_pk)
     technician.projectlist_set.remove(project)
     messages.success(request, "Technician Removed from Project Successfully!")
     return redirect("apps:projects.list")
 
 
+@login_required
 def apps_projects_comments_toggle_visibility_view(request, project_pk, pk):
-    projects = ProjectList.objects.get(pk=project_pk)
-    comment = ProjectComment.objects.get(pk=pk)
+    projects = _get_project_or_404_for_user(request, project_pk)
+    comment = get_object_or_404(ProjectComment, pk=pk, project=projects)
+    if not user_can_see_private_comments(request.user):
+        raise PermissionDenied
     comment.private = not comment.private
     comment.save()
     if comment.private:
@@ -448,9 +459,12 @@ def apps_projects_comments_toggle_visibility_view(request, project_pk, pk):
     return redirect(reverse("apps:projects.overview", kwargs={"pk": projects.pk}))
 
 
+@login_required
 def apps_projects_replies_toggle_visibility_view(request, project_pk, pk):
-    projects = ProjectList.objects.get(pk=project_pk)
-    reply = ProjectCommentReplies.objects.get(pk=pk)
+    projects = _get_project_or_404_for_user(request, project_pk)
+    reply = get_object_or_404(ProjectCommentReplies, pk=pk, project=projects)
+    if not user_can_see_private_comments(request.user):
+        raise PermissionDenied
     reply.private = not reply.private
     reply.save()
     if reply.private:

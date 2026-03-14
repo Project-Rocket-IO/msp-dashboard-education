@@ -67,7 +67,12 @@
                                 id="active-projects" role="tabpanel"> 
                                 <div class="d-flex gap-4 flex-wrap">
                                     {% for project in projects %}
-                                    <div class="col-xxl-3 col-sm-5 project-card">
+                                    <div
+                                        class="col-xxl-3 col-sm-5 project-card"
+                                        data-project-card
+                                        data-project-pane="active"
+                                        data-search-text="{{ project.name|default_if_none:'' }} {{ project.description|striptags|default_if_none:'' }} {{ project.client.name|default_if_none:'' }} {% for tech in project.assignment.all %}{{ tech.auth_user.username }} {% endfor %}"
+                                    >
                                         <div class="card card-height-100">
                                             <div class="card-body">
                                                 <div class="d-flex flex-column">
@@ -137,9 +142,9 @@
                                                                     
                                                                     {% if project.client.name %}
                                                                         {% if perms.apps.view_clientcompany %}
-                                                                        <button class="btn btn-light" onclick="location.href = '{% url 'apps:client.details' project.client.pk %}';">
+                                                                        <a class="btn btn-light" href="{% url 'pages:pages.profile_with_pk' project.client.pk %}">
                                                                             <p class="text-muted text-truncate-one-lines mb-1">{{ project.client.name }}</p>
-                                                                        </button>
+                                                                        </a>
                                                                         {% endif %}
                                                                     {% else %}
                                                                         <p class="text-muted text-truncate-two-lines mb-3">{{ project.description|safe }}</p>
@@ -326,7 +331,12 @@
                              id="archived-projects" role="tabpanel"> 
                                 <div class="d-flex gap-4 flex-wrap">
                                     {% for project in archived_projects %}
-                                    <div class="col-xxl-3 col-sm-6 project-card">
+                                    <div
+                                        class="col-xxl-3 col-sm-6 project-card"
+                                        data-project-card
+                                        data-project-pane="archived"
+                                        data-search-text="{{ project.name|default_if_none:'' }} {{ project.description|striptags|default_if_none:'' }} {{ project.client.name|default_if_none:'' }} {% for tech in project.assignment.all %}{{ tech.auth_user.username }} {% endfor %}"
+                                    >
                                         <div class="card card-height-100">
                                             <div class="card-body">
                                                 <div class="d-flex flex-column h-100">
@@ -391,9 +401,9 @@
                                                                 <div><br></div>
                                                                 {% if project.client.name %}
                                                                     {% if perms.apps.view_clientcompany %}
-                                                                    <button class="btn btn-light" onclick="location.href = '{% url 'apps:client.details' project.client.pk %}';">
+                                                                    <a class="btn btn-light" href="{% url 'pages:pages.profile_with_pk' project.client.pk %}">
                                                                         <p class="text-muted text-truncate-one-lines mb-1">{{ project.client.name }}</p>
-                                                                    </button>
+                                                                    </a>
                                                                     {% endif %}
                                                                 {% else %}
                                                                     <p class="text-muted text-truncate-two-lines mb-3">{{ project.description|safe }}</p>
@@ -560,6 +570,12 @@
                                     <!-- END PAGINATION -->
                                 </div>
                             </div>
+                        </div>
+                        <div id="project-search-empty" class="text-center py-5" style="display: none;">
+                            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px">
+                            </lord-icon>
+                            <h5 class="mt-2" id="project-search-empty-title">Sorry! No Result Found</h5>
+                            <p class="text-muted mb-0" id="project-search-empty-message">We could not find any projects that matched your search.</p>
                         </div>
                         
                         

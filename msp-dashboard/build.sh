@@ -7,7 +7,8 @@ mkdir -p /var/log/django
 python manage.py collectstatic --noinput
 
 # Run the command to migrate the database
-python manage.py migrate --noinput
+python manage.py migrate_schemas --shared --noinput
+python manage.py migrate_schemas --tenant --noinput
 
 # Run the command to set groups and permissions
 python manage.py loaddata groups.json

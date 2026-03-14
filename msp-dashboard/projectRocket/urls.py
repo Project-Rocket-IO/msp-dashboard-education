@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth.decorators import login_required
+from accounts.views import entra_id_begin, entra_id_callback
 from .views import MyPasswordChangeView, MyPasswordSetView
 from django.conf.urls.static import static
 from django.conf import settings
@@ -18,8 +19,6 @@ urlpatterns = [
     path("apps/", include("apps.urls")),
     # Calender Events
     path("calendar/", include("calendar_event.urls")),
-    # Chat
-    path("chat/", include("chat.urls")),
     # Atlas AI Assistant
     path("atlas/", include("atlas.urls")),
     # Layouts
@@ -39,6 +38,8 @@ urlpatterns = [
     # All Auth
     path("", include(tf_urls)),
     path("account/", include("allauth.urls")),
+    path("oauth2/login/entra-id/", entra_id_begin, name="entra_id_begin"),
+    path("oauth2/callback", entra_id_callback, name="entra_id_callback"),
     path("social-auth/", include("social_django.urls", namespace="social")),
 ]
 

@@ -20,8 +20,10 @@
                         <div class="col-xl-3">
                             <div class="card card-h-100">
                                 <div class="card-body">
+                                    {% if perms.calendar_event.add_calendarevents %}
                                     <button class="btn btn-primary w-100" id="btn-new-event"><i
                                                         class="mdi mdi-plus"></i> Create New Event</button>
+                                    {% endif %}
                                     <div id="external-events">
                                         <br>
                                         <p class="text-muted">Drag and drop your event or click in the calendar</p>

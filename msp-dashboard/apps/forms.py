@@ -128,6 +128,7 @@ class ClientTeamMembersAddForm(forms.ModelForm):
 class TicketListAddForm(forms.ModelForm):
     assignment = forms.ModelMultipleChoiceField(
         queryset=TechnicianUser.objects.all(),
+        required=False,
         widget=forms.CheckboxSelectMultiple,
     )
 
@@ -182,7 +183,7 @@ class ProjectListAddForm(forms.ModelForm):
 class TicketCommentAddForm(forms.ModelForm):
     class Meta:
         model = TicketComment
-        fields = "__all__"
+        fields = ["body"]
 
 
 class TicketCommentUpdateForm(forms.ModelForm):
@@ -194,19 +195,19 @@ class TicketCommentUpdateForm(forms.ModelForm):
 class TicketRepliesAddForm(forms.ModelForm):
     class Meta:
         model = TicketCommentReplies
-        fields = ["body", "user", "comment", "ticket"]
+        fields = ["body"]
 
 
 class ProjectRepliesAddForm(forms.ModelForm):
     class Meta:
         model = ProjectCommentReplies
-        fields = ["body", "user", "comment", "project"]
+        fields = ["body"]
 
 
 class ProjectCommentAddForm(forms.ModelForm):
     class Meta:
         model = ProjectComment
-        fields = "__all__"
+        fields = ["body"]
 
 
 class TechnicianLaborAddForm(forms.ModelForm):

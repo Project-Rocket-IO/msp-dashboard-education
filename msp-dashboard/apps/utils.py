@@ -3,20 +3,7 @@ import re
 from django.conf import settings
 from django_tenants.utils import get_tenant
 
-# Roles that may view private comments (tickets, projects). Faculty/Staff and Student see only public.
-PRIVATE_COMMENT_VIEWER_GROUPS = ("IT Dept", "Administrator", "Super User", "Super Admin")
-
-
-def user_can_see_private_comments(user):
-    """
-    Return True if the user may see private comments (IT Dept, Administrator, Super User, or superuser).
-    Faculty/Staff, Student, Client, and others see only public comments.
-    """
-    if not user or not user.is_authenticated:
-        return False
-    if getattr(user, "is_superuser", False):
-        return True
-    return user.groups.filter(name__in=PRIVATE_COMMENT_VIEWER_GROUPS).exists()
+from apps.access import user_can_see_private_comments
 
 
 def sanitize_filename(filename):
@@ -177,4 +164,4 @@ def create_tenant_directories():
         subdir_path = os.path.join(settings.MEDIA_ROOT, current_schema, subdir)
         os.makedirs(subdir_path, exist_ok=True)
     
-    return os.path.join(settings.MEDIA_ROOT, current_schema) 
+    return os.path.join(settings.MEDIA_ROOT, current_schema)

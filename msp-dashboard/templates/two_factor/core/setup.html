@@ -24,7 +24,7 @@
                 <ul class="list-unstyled">
                     <li><i class="ri-check-line text-success me-2"></i>Google Authenticator</li>
                     <li><i class="ri-check-line text-success me-2"></i>Microsoft Authenticator</li>
-                    {% if request.tenant.enable_entra_id_auth %}
+                    {% if request.tenant.is_entra_id_configured %}
                     <li><i class="ri-check-line text-success me-2"></i>Microsoft Authenticator - Entra ID</li>
                     {% endif %}
                     <li><i class="ri-check-line text-success me-2"></i>Authy</li>
@@ -32,7 +32,7 @@
                 </ul>
             </div>
             
-            {% if request.tenant.enable_entra_id_auth %}
+            {% if request.tenant.is_entra_id_configured %}
             <div class="mb-4">
                 <div class="alert alert-info" role="alert">
                     <h6 class="alert-heading">

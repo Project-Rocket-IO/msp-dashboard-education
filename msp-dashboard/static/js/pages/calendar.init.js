@@ -809,10 +809,13 @@ document.addEventListener("DOMContentLoaded", async function() {
     console.log("Upcoming events populated");
     
     // Event listeners
-    document.getElementById("btn-new-event").addEventListener("click", function(e) {
-        console.log("Create New Event button clicked");
-        showAddNewEventModal();
-    });
+    const newEventBtn = document.getElementById("btn-new-event");
+    if (newEventBtn) {
+        newEventBtn.addEventListener("click", function(e) {
+            console.log("Create New Event button clicked");
+            showAddNewEventModal();
+        });
+    }
     
     console.log("Calendar initialization complete!");
 });

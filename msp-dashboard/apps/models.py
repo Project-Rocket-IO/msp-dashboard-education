@@ -383,6 +383,13 @@ class TicketList(models.Model):
         default="Add description for Ticket: ", null=True, blank=True
     )
     client = models.ForeignKey("ClientCompany", on_delete=models.CASCADE)
+    created_by = models.ForeignKey(
+        MSPAuthUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_tickets",
+    )
     assignment = models.ManyToManyField(TechnicianUser)
     create_date = models.DateField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -484,6 +491,13 @@ class ProjectList(models.Model):
     logo = models.ImageField(upload_to=project_directory_path, blank=True, null=True)
     name = models.CharField(max_length=50)
     client = models.ForeignKey("ClientCompany", on_delete=models.CASCADE)
+    created_by = models.ForeignKey(
+        MSPAuthUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_projects",
+    )
     description = RichTextField(
         default="Please add Project description... ", null=True, blank=True
     )
@@ -667,6 +681,8 @@ class ClientCompanyFiles(models.Model, File):
 
 
 class ClientCompany(MyBaseModel, models.Model):
+    """School person record retained on the historical ClientCompany table."""
+
     logo = models.ImageField(
         upload_to=client_directory_path,
         blank=True,
@@ -705,7 +721,8 @@ class ClientCompany(MyBaseModel, models.Model):
     )
 
     class Meta:
-        verbose_name_plural = "Crm Companies"
+        verbose_name = "User"
+        verbose_name_plural = "Users"
 
     @property
     def main_tech_object(self):

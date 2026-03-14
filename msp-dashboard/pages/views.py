@@ -3,19 +3,32 @@ from django.core.mail import send_mail
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.generic import TemplateView
 from django.contrib.auth.models import Group
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, logout
+from django.conf import settings
 from apps.forms import (
     WebviewIntegrationsAddForm,
 )
+from apps.access import user_can_manage_school_users
 from apps.models import WebviewIntegrations, ClientCompany, ProjectList, TicketList, ClientCompanyFiles, ClientLocations, ClientTeamMembers, ProjectFiles, TicketFiles
 from .utils import *
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import update_session_auth_hash
 from django.core.paginator import Paginator
 from rbac.utils import paginate_queryset
-from rbac.decorators import has_permission
 from apps.models import TechnicianUser
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 # Create your views here.
+
+
+def _get_safe_redirect_target(request, fallback_url):
+    redirect_to = request.POST.get("next") or request.GET.get("next")
+    if redirect_to and url_has_allowed_host_and_scheme(
+        redirect_to,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect_to
+    return fallback_url
 
 
 class PagesView(TemplateView):
@@ -154,6 +167,10 @@ def pages_webview_delete_view(request, pk):
 @login_required
 def pages_create_account(request):
     """Create a User Profile Settings Page using Admin"""
+    if not user_can_manage_school_users(request.user):
+        messages.error(request, "You do not have access to create user accounts.")
+        return redirect("pages:pages.profile_settings")
+
     if request.method == "POST":
         print("DEBUG: Form submitted to pages_create_account")
         
@@ -193,76 +210,64 @@ def pages_create_account(request):
 
 
 @login_required
-@has_permission("accounts.view_technicianuser")
 def pages_profile_settings(request):
     """Update User Profile Settings Page"""
     user = request.user
-    
-    # Check if user is superuser or administrator
-    if not (user.is_superuser or user.groups.filter(name__in=['Administrator', 'Super User']).exists()):
-        messages.error(request, "Access denied. Only administrators and superusers can access this page.")
-        return redirect("pages:pages.profile")
+
+    can_manage_users = user_can_manage_school_users(user)
     
     context = get_context_data(user)
-    
-    # Add DEBUG setting to context for JavaScript
-    from django.conf import settings
+    context["can_manage_users"] = can_manage_users
     context['settings'] = settings
     
-    # Add groups to context for dynamic role options - Only educational roles
-    from django.contrib.auth.models import Group
-    educational_roles = ['Student', 'Faculty/Staff', 'Administrator', 'IT Dept']
-    available_groups = Group.objects.filter(name__in=educational_roles).order_by('name')
-    context['available_groups'] = available_groups
-    
-    # Keep original non_client_users for modals, but create filtered version for display
-    if 'non_client_users' in context:
-        # Store original list for modals
-        context['all_users_for_modals'] = context['non_client_users']
-        # Filter out Student users for display only
-        context['non_client_users'] = [user for user in context['non_client_users'] if not user.groups.filter(name='Student').exists()]
-        
-        # Add assignment information for all users in modals context
-        for user in context['all_users_for_modals']:
-            # Check if the user has an assignment stored in the title field
-            if user.title and user.title.startswith('Assigned to: '):
-                client_name = user.title.replace('Assigned to: ', '')
+    if can_manage_users:
+        educational_roles = ['Student', 'Faculty/Staff', 'Administrator', 'IT Dept']
+        available_groups = Group.objects.filter(name__in=educational_roles).order_by('name')
+        context['available_groups'] = available_groups
+
+        if 'non_client_users' in context:
+            context['all_users_for_modals'] = context['non_client_users']
+            context['non_client_users'] = [
+                listed_user
+                for listed_user in context['non_client_users']
+                if not listed_user.groups.filter(name='Student').exists()
+            ]
+
+            for listed_user in context['all_users_for_modals']:
+                if listed_user.title and listed_user.title.startswith('Assigned to: '):
+                    client_name = listed_user.title.replace('Assigned to: ', '')
+                    try:
+                        assigned_client = ClientCompany.objects.get(name=client_name)
+                        listed_user.assigned_to_client = assigned_client
+                        print(f"DEBUG: Modal user {listed_user.username} assigned to {assigned_client.name} (ID: {assigned_client.id})")
+                    except ClientCompany.DoesNotExist:
+                        listed_user.assigned_to_client = None
+                        print(f"DEBUG: Client company '{client_name}' not found for modal user {listed_user.username}")
+                else:
+                    listed_user.assigned_to_client = None
+                    print(f"DEBUG: Modal user {listed_user.username} has no assignment (title: '{listed_user.title}')")
+
+        available_clients = ClientCompany.objects.all().order_by('name')
+        context['available_users'] = available_clients
+
+        User = get_user_model()
+        student_users = User.objects.filter(groups__name='Student').order_by('first_name', 'username')
+
+        for student in student_users:
+            if student.title and student.title.startswith('Assigned to: '):
+                client_name = student.title.replace('Assigned to: ', '')
                 try:
                     assigned_client = ClientCompany.objects.get(name=client_name)
-                    user.assigned_to_client = assigned_client
-                    print(f"DEBUG: Modal user {user.username} assigned to {assigned_client.name} (ID: {assigned_client.id})")
+                    student.assigned_to_client = assigned_client
+                    print(f"DEBUG: Student {student.username} assigned to {assigned_client.name} (ID: {assigned_client.id})")
                 except ClientCompany.DoesNotExist:
-                    user.assigned_to_client = None
-                    print(f"DEBUG: Client company '{client_name}' not found for modal user {user.username}")
+                    student.assigned_to_client = None
+                    print(f"DEBUG: Client company '{client_name}' not found for student {student.username}")
             else:
-                user.assigned_to_client = None
-                print(f"DEBUG: Modal user {user.username} has no assignment (title: '{user.title}')")
-    
-    # Add available client companies for student assignment
-    available_clients = ClientCompany.objects.all().order_by('name')
-    context['available_users'] = available_clients  # Keep the same context key for compatibility
-    
-    # Add student users for the student users table
-    User = get_user_model()
-    student_users = User.objects.filter(groups__name='Student').order_by('first_name', 'username')
-    
-    # Add assignment information for students
-    for student in student_users:
-        # Check if the student has an assignment stored in the title field
-        if student.title and student.title.startswith('Assigned to: '):
-            client_name = student.title.replace('Assigned to: ', '')
-            try:
-                assigned_client = ClientCompany.objects.get(name=client_name)
-                student.assigned_to_client = assigned_client
-                print(f"DEBUG: Student {student.username} assigned to {assigned_client.name} (ID: {assigned_client.id})")
-            except ClientCompany.DoesNotExist:
                 student.assigned_to_client = None
-                print(f"DEBUG: Client company '{client_name}' not found for student {student.username}")
-        else:
-            student.assigned_to_client = None
-            print(f"DEBUG: Student {student.username} has no assignment (title: '{student.title}')")
-    
-    context['student_users'] = student_users
+                print(f"DEBUG: Student {student.username} has no assignment (title: '{student.title}')")
+
+        context['student_users'] = student_users
     
 
 
@@ -270,7 +275,7 @@ def pages_profile_settings(request):
     session_id = request.GET.get('session_id')
     user_created = request.GET.get('user_created')
     
-    if session_id and user_created == 'true':
+    if can_manage_users and session_id and user_created == 'true':
         # Payment was successful, try to create user manually
         try:
             import stripe
@@ -308,13 +313,18 @@ def pages_profile_settings(request):
 
     if request.method == "POST":
         action = request.POST.get("action")
-        
+
+        if action in {"edit_user", "delete_user"} and not can_manage_users:
+            messages.error(request, "You do not have access to manage other user accounts.")
+            return redirect("pages:pages.profile_settings")
+
         if action == "edit_user":
             # Handle user editing
             user_id = request.POST.get("user_id")
             try:
                 User = get_user_model()
                 target_user = User.objects.get(user_id=user_id)
+                new_group = target_user.groups.first()
                 
                 # Update user fields
                 target_user.first_name = request.POST.get("first_name", "")
@@ -541,6 +551,15 @@ def pages_profile_settings(request):
 
 @login_required
 def change_password_view(request):
+    tenant = getattr(request, "tenant", None)
+    if getattr(tenant, "is_entra_id_configured", False):
+        return redirect(settings.ENTRA_PASSWORD_CHANGE_URL)
+
+    redirect_target = _get_safe_redirect_target(
+        request,
+        reverse("pages:pages.profile_settings"),
+    )
+
     if request.method == "POST":
         # Clear messages, remove warning message as soon the password is changed
         storage = messages.get_messages(request)
@@ -554,29 +573,37 @@ def change_password_view(request):
 
         if not user.check_password(current_password):
             messages.error(request, "Current password is incorrect.")
-            return redirect("pages:pages.profile_settings")
+            return redirect(redirect_target)
 
         if new_password != confirm_password:
             messages.error(request, "New passwords do not match.")
-            return redirect("pages:pages.profile_settings")
+            return redirect(redirect_target)
 
         if len(new_password) < 8:
             messages.error(request, "New password must be at least 8 characters long.")
-            return redirect("pages:pages.profile_settings")
+            return redirect(redirect_target)
 
         user.set_password(new_password)
         user.password_needs_change = False
         user.save()
-        update_session_auth_hash(
-            request, user
-        )  # Important to keep the user logged in after password change
-        messages.success(request, "Password successfully changed.")
+        logout(request)
+        messages.success(request, "Password successfully changed. Please sign in again.")
+        return redirect("two_factor:login")
 
-    return redirect("pages:pages.profile_settings")
+    return redirect(redirect_target)
 
 
 @login_required
 def set_password_view(request):
+    tenant = getattr(request, "tenant", None)
+    if getattr(tenant, "is_entra_id_configured", False):
+        return redirect(settings.ENTRA_PASSWORD_CHANGE_URL)
+
+    redirect_target = _get_safe_redirect_target(
+        request,
+        reverse("pages:pages.profile_settings"),
+    )
+
     if request.method == "POST":
         new_password = request.POST.get("password1")
         confirm_password = request.POST.get("password2")
@@ -585,20 +612,20 @@ def set_password_view(request):
 
         if new_password != confirm_password:
             messages.error(request, "New passwords do not match.")
-            return redirect("pages:pages.profile_settings")
+            return redirect(redirect_target)
 
         if len(new_password) < 8:
             messages.error(request, "New password must be at least 8 characters long.")
-            return redirect("pages:pages.profile_settings")
+            return redirect(redirect_target)
 
         user.set_password(new_password)
+        user.password_needs_change = False
         user.save()
-        update_session_auth_hash(
-            request, user
-        )  # Important to keep the user logged in after password change
-        messages.success(request, "Password successfully set.")
+        logout(request)
+        messages.success(request, "Password successfully set. Please sign in again.")
+        return redirect("two_factor:login")
 
-    return redirect("pages:pages.profile_settings")
+    return redirect(redirect_target)
 
 #############
 # FAQ PAGES #

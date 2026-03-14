@@ -45,11 +45,13 @@
                         <li class="menu-title"><span data-key="t-home">Home</span></li>
                         
                         <!-- Dashboard - Available in all tiers -->
+                        {% if has_dashboard_access %}
                         <li class="nav-item">
-                            <a class="nav-link menu-link {% if user.client %}disabled-link{% endif %}" href="{% url 'home'  %}">
+                            <a class="nav-link menu-link" href="{% url 'home'  %}">
                                 <i class="ri-line-chart-line"></i> <span data-key="t-dashboard">Dashboard</span>
                             </a>
                         </li>
+                        {% endif %}
 
                         <!-- Tickets - Available in all tiers -->
                         {% if perms.apps.view_ticketlist or perms.apps.view_own_ticketlist %}
@@ -61,7 +63,7 @@
                         {% endif %}
 
                         <!-- Projects - Available in all tiers -->
-                        {% if perms.apps.view_ticketlist or perms.apps.view_own_ticketlist %}
+                        {% if perms.apps.view_projectlist or perms.apps.view_own_projects %}
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{% url 'apps:projects.list' %}">
                                 <i class="ri-stack-fill"></i> <span data-key="t-projects">Projects</span>
@@ -162,4 +164,3 @@
         <!-- Vertical Overlay-->
         <div class="vertical-overlay"></div>
 {% endblock sidebar %}
-    

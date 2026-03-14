@@ -5,13 +5,15 @@
         "name": "Student",
         "permissions": [
           ["add_ticketcomment", "apps", "ticketcomment"],
+          ["add_ticketcommentreplies", "apps", "ticketcommentreplies"],
           ["delete_own_ticket_comments", "apps", "ticketcomment"],
           ["view_ticketcomment", "apps", "ticketcomment"],
           ["add_ticketfiles", "apps", "ticketfiles"],
           ["view_ticketfiles", "apps", "ticketfiles"],
           ["add_ticketlist", "apps", "ticketlist"],
           ["change_ticketlist", "apps", "ticketlist"],
-          ["view_own_ticketlist", "apps", "ticketlist"]
+          ["view_own_ticketlist", "apps", "ticketlist"],
+          ["view_calendarevents", "calendar_event", "calendarevents"]
         ]
       }
     },
@@ -20,16 +22,13 @@
       "fields": {
         "name": "Faculty/Staff",
         "permissions": [
-          ["add_projectcomment", "apps", "projectcomment"],
-          ["add_projectlist", "apps", "projectlist"],
-          ["change_projectlist", "apps", "projectlist"],
-          ["view_projectlist", "apps", "projectlist"],
           ["add_ticketcomment", "apps", "ticketcomment"],
+          ["add_ticketcommentreplies", "apps", "ticketcommentreplies"],
           ["delete_own_ticket_comments", "apps", "ticketcomment"],
+          ["view_ticketcomment", "apps", "ticketcomment"],
           ["add_ticketfiles", "apps", "ticketfiles"],
           ["view_ticketfiles", "apps", "ticketfiles"],
           ["add_ticketlist", "apps", "ticketlist"],
-          ["change_ticketlist", "apps", "ticketlist"],
           ["view_own_ticketlist", "apps", "ticketlist"]
         ]
       }
@@ -55,6 +54,12 @@
           ["view_own_ticketlist", "apps", "ticketlist"],
           ["view_ticket_stats", "apps", "ticketlist"],
           ["view_ticketlist", "apps", "ticketlist"],
+          ["add_calendarevents", "calendar_event", "calendarevents"],
+          ["change_calendarevents", "calendar_event", "calendarevents"],
+          ["delete_calendarevents", "calendar_event", "calendarevents"],
+          ["view_calendarevents", "calendar_event", "calendarevents"],
+          ["view_clientcompany", "apps", "clientcompany"],
+          ["view_technicianuser", "accounts", "technicianuser"],
           ["add_djstripeinvoicetotaltaxamount", "djstripe", "djstripeinvoicetotaltaxamount"],
           ["change_djstripeinvoicetotaltaxamount", "djstripe", "djstripeinvoicetotaltaxamount"],
           ["view_djstripeinvoicetotaltaxamount", "djstripe", "djstripeinvoicetotaltaxamount"],
@@ -94,15 +99,22 @@
         "name": "IT Dept",
         "permissions": [
           ["add_projectcomment", "apps", "projectcomment"],
+          ["add_projectcommentreplies", "apps", "projectcommentreplies"],
           ["add_projectlist", "apps", "projectlist"],
           ["change_projectlist", "apps", "projectlist"],
           ["view_projectlist", "apps", "projectlist"],
           ["add_ticketcomment", "apps", "ticketcomment"],
+          ["add_ticketcommentreplies", "apps", "ticketcommentreplies"],
           ["add_ticketfiles", "apps", "ticketfiles"],
           ["view_ticketfiles", "apps", "ticketfiles"],
           ["add_ticketlist", "apps", "ticketlist"],
           ["change_ticketlist", "apps", "ticketlist"],
-          ["view_ticketlist", "apps", "ticketlist"]
+          ["view_ticketlist", "apps", "ticketlist"],
+          ["add_calendarevents", "calendar_event", "calendarevents"],
+          ["change_calendarevents", "calendar_event", "calendarevents"],
+          ["delete_calendarevents", "calendar_event", "calendarevents"],
+          ["view_calendarevents", "calendar_event", "calendarevents"],
+          ["view_clientcompany", "apps", "clientcompany"]
         ]
       }
     },
@@ -122,8 +134,10 @@
           ["view_projectlist", "apps", "projectlist"],
           ["delete_projectlist", "apps", "projectlist"],
           ["add_ticketcomment", "apps", "ticketcomment"],
+          ["add_ticketcommentreplies", "apps", "ticketcommentreplies"],
           ["delete_ticketcomment", "apps", "ticketcomment"],
           ["add_projectcomment", "apps", "projectcomment"],
+          ["add_projectcommentreplies", "apps", "projectcommentreplies"],
           ["delete_projectcomment", "apps", "projectcomment"],
           ["add_ticketfiles", "apps", "ticketfiles"],
           ["view_ticketfiles", "apps", "ticketfiles"],
@@ -136,13 +150,14 @@
           ["change_mspauthuser", "accounts", "mspauthuser"],
           ["delete_mspauthuser", "accounts", "mspauthuser"],
           ["view_mspauthuser", "accounts", "mspauthuser"],
+          ["view_technicianuser", "accounts", "technicianuser"],
           ["add_group", "auth", "group"],
           ["change_group", "auth", "group"],
           ["delete_group", "auth", "group"],
           ["view_group", "auth", "group"],
-          ["change_technicianuser", "accounts", "technicianuser"]
+          ["change_technicianuser", "accounts", "technicianuser"],
+          ["view_clientcompany", "apps", "clientcompany"]
         ]
       }
     }
   ]
-  

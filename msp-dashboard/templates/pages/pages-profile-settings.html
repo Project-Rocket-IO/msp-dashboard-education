@@ -220,8 +220,7 @@
                                                     Change Password
                                                 </a>
                                             </li>
-                                            {% load role_checks %}
-                                            {% if user|has_admin_or_super_user_role %}
+                                            {% if can_manage_users %}
                                             <li class="nav-item">
                                                 <a class="nav-link" data-bs-toggle="tab" href="#new-account" role="tab">
                                                     <i class="far fa-envelope"></i>
@@ -497,12 +496,21 @@
                                             
                                             <!--start tab-pane-->
                                             <div class="tab-pane" id="changePassword" role="tabpanel">
-                                                {% if user.has_usable_password %}
-                                                <form action="{% url 'pages:pages.profile.password.change' %}" method="POST" enctype="multipart/form-data">
+                                                {% if request.tenant.is_entra_id_configured %}
+                                                <div class="alert alert-info mb-0" role="alert">
+                                                    <h5 class="alert-heading mb-2">
+                                                        <i class="ri-microsoft-line align-middle me-1"></i>
+                                                        Password managed by Microsoft Entra ID
+                                                    </h5>
+                                                    <p class="mb-3">Your organization manages passwords through Microsoft. Use the Microsoft account portal to update or reset your password.</p>
+                                                    <a class="btn btn-primary" href="{{ entra_password_change_url }}" target="_blank" rel="noopener">
+                                                        Open Microsoft Password Settings
+                                                    </a>
+                                                </div>
                                                 {% else %}
-                                                <form action="{% url 'pages:pages.profile.password.set' %}" method="POST" enctype="multipart/form-data">
-                                                {% endif %}
+                                                <form action="{% if user.has_usable_password %}{% url 'pages:pages.profile.password.change' %}{% else %}{% url 'pages:pages.profile.password.set' %}{% endif %}" method="POST" enctype="multipart/form-data">
                                                     {% csrf_token %}
+                                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                                     <div class="row g-2">
                                                         {% if user.has_usable_password %}
                                                         <!-- If user was not logged in using their socials -->
@@ -555,10 +563,11 @@
                                                     </div>
                                                     <!--end row-->
                                                 </form>
+                                                {% endif %}
                                             </div>
                                             <!--end tab-pane-->
 
-                                            {% if user|has_admin_or_super_user_role %}
+                                            {% if can_manage_users %}
                                             <!--start tab-pane-->
                                             <div class="tab-pane" id="new-account" role="tabpanel">
                                                 <form action="{% url 'pages:pages.profile_create_account' %}" method="POST" enctype="multipart/form-data" id="user-creation-form">
@@ -1158,8 +1167,8 @@
                     const selectedOption = roleSelect.options[roleSelect.selectedIndex];
                     const roleName = selectedOption ? selectedOption.text : 'User';
                     
-                    // Only require billing for Super User, IT Dept, or Administration roles
-                    const paidRoles = ['Super User', 'IT Dept', 'Administration'];
+                    // Only require billing for IT Dept or Administrator roles.
+                    const paidRoles = ['IT Dept', 'Administrator'];
                     if (paidRoles.includes(roleName)) {
                         const subscriptionTiers = {
                             'starter': { name: 'Starter Tier', price: 35 },

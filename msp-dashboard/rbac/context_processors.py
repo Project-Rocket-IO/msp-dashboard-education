@@ -1,3 +1,6 @@
+from django.conf import settings
+
+from apps.access import user_can_access_dashboard, user_should_land_in_ticket_list
 from rbac.subscription_access import check_feature_access, get_available_features
 
 
@@ -16,7 +19,10 @@ def subscription_context(request):
         context['available_features'] = get_available_features(tenant)
         
         # Add feature access checks based on company's subscription
-        context['has_dashboard_access'] = check_feature_access(request, 'dashboard')
+        context['has_dashboard_access'] = (
+            check_feature_access(request, 'dashboard')
+            and user_can_access_dashboard(getattr(request, 'user', None))
+        )
         context['has_tickets_access'] = check_feature_access(request, 'tickets')
         context['has_projects_access'] = check_feature_access(request, 'projects')
         context['has_clients_access'] = check_feature_access(request, 'clients')
@@ -45,7 +51,9 @@ def subscription_context(request):
         context['company_subscription_tier'] = 'starter'
         context['company_subscription_name'] = 'Starter Tier'
         context['available_features'] = ['dashboard', 'tickets', 'projects', 'clients', 'invoicing', 'calendar']
-        context['has_dashboard_access'] = True
+        context['has_dashboard_access'] = user_can_access_dashboard(
+            getattr(request, 'user', None)
+        )
         context['has_tickets_access'] = True
         context['has_projects_access'] = True
         context['has_clients_access'] = True
@@ -60,5 +68,10 @@ def subscription_context(request):
         context['has_profile_settings_access'] = True
         context['has_help_center_access'] = True
         context['has_file_system_access'] = True
+
+    context['entra_password_change_url'] = settings.ENTRA_PASSWORD_CHANGE_URL
+    context['home_redirects_to_tickets'] = user_should_land_in_ticket_list(
+        getattr(request, 'user', None)
+    )
     
     return context 
